@@ -10,8 +10,8 @@ setup(
     name='nanovar',
     version=__version__,
     packages=find_packages(),
-    package_data={'nanovar.model': ['ANN.E63B400L2N12-5D0.4-0.3SGDsee31_het_v1.h5'],
-                  'nanovar.gaps': ['hg19_filter.bed', 'hg38_filter.bed', 'mm10_filter.bed'],
+    package_data={'nanovar.model': ['*.h5'],
+                  'nanovar.gaps': ['*.bed'],
                   'nanovar.css': ['*.css'],
                   'nanovar.js': ['*.js']},
     include_package_data=True,
@@ -21,17 +21,17 @@ setup(
     license='gpl-3.0',
     author='Tham Cheng Yong',
     author_email='chengyong.tham@u.nus.edu',
-    description='NanoVar is a long-read structural variant caller.',
+    description='A tool for structural variant calling using long reads.',
     keywords=['nanovar', 'structural variant caller', 'sv', 'nanopore', 'long read', 'low coverage', 'low depth'],
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     install_requires=['biopython==1.75', 'pybedtools==0.8.0', 'scipy==1.2.1', 'matplotlib==2.2.4', 'numpy==1.16.3',
                       'keras==2.2.4', 'tensorflow==1.13.1', 'natsort==6.2.0'],
     python_requires='>=3.7',
     classifiers=[
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3.7",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
     ]
 )

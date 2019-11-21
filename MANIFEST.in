@@ -1,2 +1,7 @@
 include *.txt
 include README.md
+include nanovar/gaps/*.bed
+include nanovar/css/*.css
+include nanovar/js/*.js
+include nanovar/model/*.h5
+
