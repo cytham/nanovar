@@ -58,10 +58,9 @@ cp hs-blastn ~/bin
 ### 2. Installation
 NanoVar requires Python 3.7.
 
-It is ***highly recommended*** to install NanoVar within a virtual environment (i.e. pipenv or conda). 
+There are four ways to install NanoVar:
 
-Choose one way to install:
-#### 1. [Pipenv](https://github.com/pypa/pipenv)
+#### Option 1: [Pipenv](https://github.com/pypa/pipenv) (Recommended)
 ```
 mkdir nanovar_env && cd nanovar_env  # Create a project directory and enter
 pipenv install nanovar  # Install NanoVar and create virtualenv
@@ -69,7 +68,7 @@ pipenv shell  # Activate virtualenv
 nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
 exit  # Exit virtualenv
 ```
-#### 2. [Conda](https://docs.conda.io/en/latest/miniconda.html)
+#### Option 2: [Conda](https://docs.conda.io/en/latest/miniconda.html) (Recommended)
 ```
 conda create -n nanovar_env python=3.7  # Create virtualenv
 conda activate nanovar_env  # Activate virtualenv
@@ -77,11 +76,11 @@ conda install -n nanovar_env nanovar  # Install NanoVar within virtualenv
 nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
 conda deactivate  # Exit virtualenv
 ```
-#### 3. Pip
+#### Option 3: Pip
 ```
 pip install nanovar
 ```
-#### 4. Download source code
+#### Option 4: Download source code
 Download source code from [Releases](https://github.com/cytham/nanovar/releases) or clone git repository
 ```
 tar zxvf nanovar-x.x.tar.gz  # Download tarball from release
