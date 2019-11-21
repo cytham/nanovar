@@ -33,7 +33,7 @@ NanoVar is a neural-network-based genomic structural variant (SV) caller that ut
 NanoVar requires three executable binaries: _makeblastdb_, _windowmasker_ and _hs-blastn_.
 Please install these programs and make sure their executables are in PATH or specify their paths when running NanoVar.
 
-##### 1. _makeblastdb_ and _windowmasker_
+#### 1. _makeblastdb_ and _windowmasker_
 ```
 # Download NCBI-BLAST v2.3.0+ from NCBI FTP server
 wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.3.0/ncbi-blast-2.3.0+-x64-linux.tar.gz
@@ -44,7 +44,7 @@ tar zxf ncbi-blast-2.3.0+-x64-linux.tar.gz
 # Copy makeblastdb and windowmasker binaries to PATH (e.g. ~/bin)
 cp ncbi-blast-2.3.0+/bin/makeblastdb ~/bin && cp ncbi-blast-2.3.0+/bin/windowmasker ~/bin
 ```
-##### 2. _hs-blastn_
+#### 2. _hs-blastn_
 ```
 # Download and compile
 git clone https://github.com/chenying2016/queries.git
@@ -61,7 +61,7 @@ NanoVar requires Python 3.7.
 It is ***highly recommended*** to install NanoVar within a virtual environment (i.e. pipenv or conda). 
 
 Choose one way to install:
-##### 1. [Pipenv](https://github.com/pypa/pipenv)
+#### 1. [Pipenv](https://github.com/pypa/pipenv)
 ```
 mkdir nanovar_env && cd nanovar_env  # Create a project directory and enter
 pipenv install nanovar  # Install NanoVar and create virtualenv
@@ -69,7 +69,7 @@ pipenv shell  # Activate virtualenv
 nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
 exit  # Exit virtualenv
 ```
-##### 2. [Conda](https://docs.conda.io/en/latest/miniconda.html)
+#### 2. [Conda](https://docs.conda.io/en/latest/miniconda.html)
 ```
 conda create -n nanovar_env python=3.7  # Create virtualenv
 conda activate nanovar_env  # Activate virtualenv
@@ -77,11 +77,11 @@ conda install -n nanovar_env nanovar  # Install NanoVar within virtualenv
 nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
 conda deactivate  # Exit virtualenv
 ```
-##### 3. Pip
+#### 3. Pip
 ```
 pip install nanovar
 ```
-##### 4. Download source code
+#### 4. Download source code
 Download source code from [Releases](https://github.com/cytham/nanovar/releases) or clone git repository
 ```
 tar zxvf nanovar-x.x.tar.gz  # Download tarball from release
