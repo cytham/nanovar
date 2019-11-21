@@ -4,7 +4,7 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.2.1 - Nov 21, 2019
+Version 1.2.0 - Nov 21, 2019
     * Program language migration to entirely Python 3.7
     * Distributed as a python PyPI package and a conda package
     * Added requirements of Blast binaries from NCBI-BLAST Version 2.3.0+ and HS-BLASTN v0.0.5+
