@@ -1,0 +1,9 @@
+*.pyc
+*.pyo
+.pypirc
+build/
+dist/
+.idea/
+*.egg-info/
+venv/
+test/

@@ -1,0 +1,42 @@
+NanoVar Changelog
+
+
+Release Summary:
+
+
+Version 1.2.1 - Nov 21, 2019
+    * Program language migration to entirely Python 3.7
+    * Distributed as a python PyPI package and a conda package
+    * Added requirements of Blast binaries from NCBI-BLAST Version 2.3.0+ and HS-BLASTN v0.0.5+
+    * Added new parameters: --minalign, --buffer, --force
+    * Changed input FASTQ/FASTA, reference genome and working directory to positional arguments
+    * Changed default minimum SV len to 25 bp
+    * Removed short-read support and bowtie2 requirements
+    * Improved VCF file formating
+        * Added FORMAT column
+        * Added genotype, read-depth and allele read-depth information
+        * For BND SV type, ALT coloumn now shows a breakend record as specified in VCFv4.2
+        * For BND SV type, INFO field "SV2" is added to indicate translocation (TLO) or transposition (TPO)
+        * Changed INFO field naming: LCOV to SR, PROB to NN
+        * Removed INFO fields: SCOV, SVRATIO
+        * SV len is now estimated for tandem duplications
+        * FILTER column now shows "PASS" if SV score above/equal to score threshold, or "FAIL" if SV score below score threshold
+        * Replaced read_name in each SV ID with an arbituary SV number
+
+
+Version 1.1.1 - Aug 29, 2019 [Archieved]
+    * Added gcc, ldd library requirements
+    * Added Tensorflow installation check
+
+
+Version 1.1.0 - June 23, 2019 [Archieved]
+    * Migration from Python 2 to Python 3
+
+
+Version 1.0.1 - June 21, 2019 [Archieved]
+    * Fixed chromsome naming bug
+    * Fixed python pip installation of updated packages
+
+
+Version 1.0 - May 12, 2019 [Archieved]
+    * Initial release
