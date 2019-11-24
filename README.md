@@ -8,15 +8,14 @@
 <p align="center">
   <img src="http://benoukraf-lab.com/wp-content/uploads/2019/05/Nanovarlogo.png" width="200" alt="accessibility text" align='left'>
 </p>  
+
 <br/><br/>
 
 ## NanoVar - Structural variant caller using low-depth long-read sequencing  
-<br/><br/>
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
  Oxford Nanopore Technologies (ONT). It characterizes SVs with high accuracy and speed using only 4x depth
   sequencing for homozygous SVs and 8x depth for heterozygous SVs. NanoVar reduces sequencing cost and computational requirements
    which makes it compatible with large cohort SV-association studies or routine clinical SV investigations.  
-
 
 ### Basic capabilities
 * Performs long-read mapping (HS-Blastn, Chen et al., 2015) and SV discovery in a single rapid pipeline.
@@ -27,7 +26,6 @@ NanoVar is a neural-network-based genomic structural variant (SV) caller that ut
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
-
 
 ## Getting Started
 
