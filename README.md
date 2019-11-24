@@ -9,6 +9,7 @@
   <img src="http://benoukraf-lab.com/wp-content/uploads/2019/05/Nanovarlogo.png" width="200" alt="accessibility text" align='left'>
 </p>  
 
+
 ## NanoVar - Structural variant caller using low-depth long-read sequencing  
 
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
