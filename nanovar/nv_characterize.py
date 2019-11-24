@@ -99,7 +99,7 @@ class VariantDetect:
                 else:
                     # Parse breakpoints
                     logging.info("SV detected, parsing SV breakend for entry %s" % str(co))
-                    final = breakpoint_parser(out2, self.minlen, sig_index)
+                    final = breakpoint_parser(out2, self.minlen, sig_index, co)
                     self.total_out.extend(final)
                 temp1 = []
                 chromocollect = []
@@ -258,12 +258,13 @@ def getbitscore(line):
 
 
 # Parse SV breakpoints
-def breakpoint_parser(out, minlen, sig_index):
+def breakpoint_parser(out, minlen, sig_index, seed):
     cutoff = minlen - 1
     final = []
     ran = "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     ran_len = 5
     read_name = out.split('\t')[0]
+    random.seed(seed)
     if out.split('\t')[17] == '':
         complex_sv = 0
     else:

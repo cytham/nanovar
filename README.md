@@ -1,14 +1,21 @@
+[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.org/cytham/nanovar)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
+[![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
+[![Conda](https://img.shields.io/conda/v/bioconda/nanovar)]()
+[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](https://github.com/cytham/nanovar/releases)
+[![PyPI license](https://img.shields.io/pypi/l/nanovar)](https://github.com/cytham/nanovar/blob/master/LICENSE.txt)
+
 <p align="center">
   <img src="http://benoukraf-lab.com/wp-content/uploads/2019/05/Nanovarlogo.png" width="200" alt="accessibility text" align='left'>
 </p>
- 
-# NanoVar - Structural variant caller using low-depth long-read sequencing
+
+## NanoVar - Structural variant caller using low-depth long-read sequencing
 
 ## Introduction
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
- Oxford Nanopore Technologies (ONT). It characterizes homozygous SVs with high accuracy and speed using only 4x depth
-  sequencing and 8x depth for heterozygous SVs. NanoVar reduces sequencing cost and computational requirements which makes it
-   compatible for large-scale cohort SV-association studies or routine clinical SV investigations.  
+ Oxford Nanopore Technologies (ONT). It characterizes SVs with high accuracy and speed using only 4x depth
+  sequencing for homozygous SVs and 8x depth for heterozygous SVs. NanoVar reduces sequencing cost and computational requirements
+   which makes it compatible with large cohort SV-association studies or routine clinical SV investigations.  
 
 
 ### Basic capabilities
@@ -24,16 +31,38 @@ NanoVar is a neural-network-based genomic structural variant (SV) caller that ut
 
 ## Getting Started
 
-### 1. Requirements and Prerequisites
+### Operating system: 
+* Linux (x86_64 architecture, tested in Ubuntu 14.04, 16.04, 18.04)  
 
-#### Operating system requirements: 
-* Linux (x86_64 architecture, tested in Ubuntu 16.04 and Ubuntu 14.04)  
+### Installation:
+There are three ways to install NanoVar:
+#### Option 1: Conda (Recommended)
+```
+# Installing from bioconda automatically installs all dependencies 
+conda install -c bioconda nanovar
+```
+#### Option 2: Pip (See dependencies below)
+```
+# Installing from PyPI requires own installation of dependencies, see below
+pip3 install nanovar
+```
+#### Option 3: GitHub (See dependencies below)
+```
+# Installing from GitHub requires own installation of dependencies, see below
+git clone https://github.com/cytham/nanovar.git 
+cd nanovar 
+pip install .
+```
+### Installation of dependencies
+* bedtools >=2.26.0
+* makeblastdb and windowmasker
+* hs-blastn
 
-#### Prerequisite programs:
-NanoVar requires three executable binaries: _makeblastdb_, _windowmasker_ and _hs-blastn_.
-Please install these programs and make sure their executables are in PATH or specify their paths when running NanoVar.
+Please make sure each executable binary is in PATH.
+##### 1. _bedtools_
+Please visit [here](https://bedtools.readthedocs.io/en/latest/content/installation.html) for instructions to install.
 
-#### 1. _makeblastdb_ and _windowmasker_
+##### 2. _makeblastdb_ and _windowmasker_
 ```
 # Download NCBI-BLAST v2.3.0+ from NCBI FTP server
 wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.3.0/ncbi-blast-2.3.0+-x64-linux.tar.gz
@@ -44,7 +73,7 @@ tar zxf ncbi-blast-2.3.0+-x64-linux.tar.gz
 # Copy makeblastdb and windowmasker binaries to PATH (e.g. ~/bin)
 cp ncbi-blast-2.3.0+/bin/makeblastdb ~/bin && cp ncbi-blast-2.3.0+/bin/windowmasker ~/bin
 ```
-#### 2. _hs-blastn_
+##### 2. _hs-blastn_
 ```
 # Download and compile
 git clone https://github.com/chenying2016/queries.git
@@ -54,44 +83,7 @@ make
 # Copy hs-blastn binary to path (e.g. ~/bin)
 cp hs-blastn ~/bin
 ```
-
-### 2. Installation
-NanoVar requires Python 3.7.
-
-There are four ways to install NanoVar:
-
-#### Option 1: [Pipenv](https://github.com/pypa/pipenv) (Recommended)
-```
-mkdir nanovar_env && cd nanovar_env  # Create a project directory and enter
-pipenv install nanovar  # Install NanoVar and create virtualenv
-pipenv shell  # Activate virtualenv
-nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
-exit  # Exit virtualenv
-```
-#### Option 2: [Conda](https://docs.conda.io/en/latest/miniconda.html) (Recommended)
-```
-conda create -n nanovar_env python=3.7  # Create virtualenv
-conda activate nanovar_env  # Activate virtualenv
-conda install -n nanovar_env nanovar  # Install NanoVar within virtualenv
-nanovar read.fa ref.fa ./output  # Run NanoVar within virtualenv
-conda deactivate  # Exit virtualenv
-```
-#### Option 3: Pip
-```
-pip install nanovar
-```
-#### Option 4: Download source code
-Download source code from [Releases](https://github.com/cytham/nanovar/releases) or clone git repository
-```
-tar zxvf nanovar-x.x.tar.gz  # Download tarball from release
-# or
-git clone https://github.com/cytham/nanovar.git 
-
-cd nanovar 
-pip install .  # or python setup.py install
-```
-
-### 3. Quick run
+### Quick run
 
 ```
 nanovar [Options] -t 24 -f hg38 read.fa ref.fa working_dir 

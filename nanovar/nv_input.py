@@ -90,9 +90,9 @@ low-depth long-read sequencing data.""",
     parser.add_argument("-q", "--quiet", action='store_true',
                         help="hide verbose")
 
-    parser.add_argument("-t", "--threads", type=int,
+    parser.add_argument("-t", "--threads", type=int, choices=range(1, 55), metavar="[1-54]",
                         default=2,
-                        help="number of available threads for use. [2]")
+                        help="number of available threads for use, max=54 [2]")
 
     parser.add_argument("--force", action='store_true',
                         help="run full pipeline, do not skip any redundant steps (e.g. index generation)")

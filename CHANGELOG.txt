@@ -4,7 +4,16 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.2.0 - Nov 21, 2019
+Version 1.2.1 - Nov 24, 2019
+    * Added running progress spinner
+    * Added bedtools as a pre-requisite for pybedtools
+    * Added installation of dependencies if using conda
+    * Updated MANIFEST.in
+    * Updated README.md, added badges
+    * Tested in Python 3.5, 3.6, 3.7
+
+
+Version 1.2-alpha - Nov 21, 2019
     * Program language migration to entirely Python 3.7
     * Distributed as a python PyPI package and a conda package
     * Added requirements of Blast binaries from NCBI-BLAST Version 2.3.0+ and HS-BLASTN v0.0.5+

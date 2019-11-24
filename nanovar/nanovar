@@ -25,13 +25,14 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 __author__ = 'CY Tham'
 import os
 import sys
-# import time
+import time
 import logging
 import nanovar
-# import threading
+import random
+import threading
 from datetime import datetime
 from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe
-# from progress.spinner import MoonSpinner
+from progress.spinner import Spinner
 
 
 def main():
@@ -48,6 +49,7 @@ def main():
     buff = args.buffer
     score_threshold = args.score
     threads = args.threads
+    true_threads = threads
     quiet = args.quiet
     force = args.force
     model_path = os.path.join(os.path.dirname(nanovar.__file__), 'model', 'ANN.E63B400L2N12-5D0.4-0.3SGDsee31_het_v1.h5')
@@ -66,23 +68,29 @@ def main():
         sys.stdout = open(os.devnull, 'w')
     else:
         # Print initiation message
-        print("NanoVar initiated")
-        print("Running...")
+        now = datetime.now()
+        now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(now_str, "- NanoVar started")
+        if threads > 1:
 
-    #
-    #     # Spinner progress
-    #     def run_spinner(spin):
-    #         # a = 10000
-    #         while True:
-    #             spin.next()
-    #             time.sleep(0.2)
-    #             # a -= 1
-    #
-    #     spinner = MoonSpinner('Running ')
-    #     thread_spin = threading.Thread(target=run_spinner, args=(spinner,))
-    #     thread_spin.start()
-    #     # run_spinner(spinner)
-    #     threads -= 1
+            def sleep():
+                t = 0.01
+                t += t * random.uniform(-0.2, 0.2)
+                time.sleep(t)
+
+            # Spinner progress
+            def run_spinner(spin):
+                while True:
+                    spin.next()
+                    sleep()
+
+            spinner = Spinner('Mapping reads and calling SVs - ')
+            thread_spin = threading.Thread(target=run_spinner, args=(spinner,))
+            thread_spin.setDaemon(True)
+            thread_spin.start()
+            threads -= 1
+        else:
+            print('Mapping reads and calling SVs -')
 
     # Setup working directory
     if not os.path.exists(wk_dir):
@@ -164,9 +172,13 @@ def main():
     run.parse_detect()
     run.cluster_nn()
     run.vcf_report()
-    logging.info('Run completed')
-    # thread_spin.join()
-    print('Run completed')
+    logging.info('NanoVar ended')
+    now = datetime.now()
+    if true_threads > 1:
+        now_str = now.strftime("\n[%d/%m/%Y %H:%M:%S]")
+    else:
+        now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+    print(now_str, "- NanoVar ended")
 
 
 if __name__ == "__main__":

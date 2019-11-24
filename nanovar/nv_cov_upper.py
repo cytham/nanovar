@@ -23,8 +23,9 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import numpy as np
 import matplotlib
-from pybedtools import BedTool
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from pybedtools import BedTool
 from scipy.interpolate import spline
 
 

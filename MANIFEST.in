@@ -1,7 +1,6 @@
 include *.txt
 include README.md
-include nanovar/gaps/*.bed
-include nanovar/css/*.css
-include nanovar/js/*.js
-include nanovar/model/*.h5
-
+recursive-include nanovar/gaps *.bed
+recursive-include nanovar/model *.h5
+recursive-include nanovar/css *.css
+recursive-include nanovar/js *.js
