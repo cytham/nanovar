@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.org/cytham/nanovar)
+[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.com/cytham/nanovar)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
 [![Conda](https://img.shields.io/conda/v/bioconda/nanovar)]()
