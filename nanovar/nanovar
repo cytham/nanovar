@@ -74,7 +74,7 @@ def main():
         if threads > 1:
 
             def sleep():
-                t = 0.01
+                t = 0.15
                 t += t * random.uniform(-0.2, 0.2)
                 time.sleep(t)
 

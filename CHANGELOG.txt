@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.2.3 - Nov 25, 2019
+    * Fixed progress spinner by increasing sleep time
+
+
 Version 1.2.2 - Nov 25, 2019
     * Updated dependency versions
     * Changed spline in nv_cov_upper to make_interp_spline due to scipy update
