@@ -27,10 +27,9 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=['numpy>=1.17.3', 'scipy>=1.2.1', 'biopython>=1.74', 'pybedtools>=0.8.0', 'matplotlib>=2.2.3',
                       'tensorflow>=2.0.0', 'natsort>=6.2.0', 'progress>=1.4'],
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     classifiers=[
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

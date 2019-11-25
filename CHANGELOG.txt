@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.2.5 - Nov 25, 2019
+    * Python 3.5 is no longer supported
+
+
 Version 1.2.4 - Nov 25, 2019
     * Replaced keras with tf.keras (>=2.0.0) to avoid compatibility errors
     * Fixed progress spinner overflow by adding boolean
