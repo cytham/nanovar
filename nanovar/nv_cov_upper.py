@@ -26,7 +26,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pybedtools import BedTool
-from scipy.interpolate import spline
+from scipy.interpolate import make_interp_spline, BSpline
 
 
 # Generate upper overlap limit, depth of coverage, and coverage curve plot
@@ -112,13 +112,14 @@ def curve(data, n, upper_limit, wk_dir):
     for i in c:
         p.append(data.count(i))
     p.append(n - sum(p))
-    y = [(float(z)/n) for z in p]
+    y = np.array([(float(z)/n) for z in p])
     # theoretical = [0.0915, 0.0441, 0.1032, 0.1498, 0.1739, 0.1626,
     # 0.1132, 0.0808, 0.0412, 0.0247, 0.0097, 0.0028, 0.0015,
     # 0.0006, 0.0002, 0.0002, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    c = range(int(upper_limit)+1)
-    xnew = np.linspace(0, int(upper_limit), 100)
-    smooth = spline(c, y, xnew)
+    c = np.array(range(int(upper_limit)+1))
+    xnew = np.linspace(c.min(), c.max(), 100)
+    spl = make_interp_spline(c, y)
+    smooth = spl(xnew)
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10, 'xtick.labelsize': 12, 'ytick.labelsize': 12,
               'font.family': 'Arial, Helvetica, sans-serif'}
     matplotlib.rcParams.update(params)

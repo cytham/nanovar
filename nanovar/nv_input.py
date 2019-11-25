@@ -58,7 +58,7 @@ low-depth long-read sequencing data.""",
                         help="BED file with genomic regions to be excluded. \
                              (e.g. telomeres and centromeres). \
                              Either specify name of in-built reference genome filter \
-                             (i.e. hg38, hg19, mm10, mm9) or provide FULL path to \
+                             (i.e. hg38, hg19, mm10) or provide FULL path to \
                              own BED file. [None]")
 
     parser.add_argument("-l", "--minlen", type=int,
