@@ -4,6 +4,11 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.2.4 - Nov 25, 2019
+    * Replaced keras with tf.keras (>=2.0.0) to avoid compatibility errors
+    * Fixed progress spinner overflow by adding boolean
+
+
 Version 1.2.3 - Nov 25, 2019
     * Fixed progress spinner by increasing sleep time
 

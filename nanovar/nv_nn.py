@@ -21,12 +21,8 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import os
-import sys
 import numpy as np
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w')
-from keras.models import load_model
-sys.stderr = stderr
+from tensorflow.keras.models import load_model
 
 
 # Neural network inferencing

@@ -74,17 +74,18 @@ def main():
         if threads > 1:
 
             def sleep():
-                t = 0.15
-                t += t * random.uniform(-0.2, 0.2)
+                t = 0.05
+                t += t * random.uniform(-0.1, 0.1)
                 time.sleep(t)
 
             # Spinner progress
             def run_spinner(spin):
-                while True:
+                while prog_spin:
                     spin.next()
                     sleep()
 
             spinner = Spinner('Mapping reads and calling SVs - ')
+            prog_spin = True
             thread_spin = threading.Thread(target=run_spinner, args=(spinner,))
             thread_spin.setDaemon(True)
             thread_spin.start()
@@ -174,6 +175,8 @@ def main():
     run.vcf_report()
     logging.info('NanoVar ended')
     now = datetime.now()
+    prog_spin = False
+    time.sleep(2)
     if true_threads > 1:
         now_str = now.strftime("\n[%d/%m/%Y %H:%M:%S]")
     else:
