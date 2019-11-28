@@ -150,7 +150,7 @@ def finalprob(leadname, fellow, probdict):
 # Output SV read overlap partners
 def svread_ovl(wk_dir, out_nn):
     data = open(os.path.join(wk_dir, 'svread-overlap.tsv'), 'w')
-    data.write('Leader_index~readname\tSupporting_readname~index1,Supporting_readname~index2...')
+    data.write('Leader_index~readname\tSupporting_readname~index1,Supporting_readname~index2...\n')
     for line in out_nn:
         lead = line.split('\t')[8].split('~')[1] + '~' + line.split('\t')[8].split('~')[0]
         data.write(lead + '\t' + line.split('\t')[11] + '\n')

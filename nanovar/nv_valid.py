@@ -198,7 +198,7 @@ def bed_valid(filter_path, contig_len_dict):
                 except TypeError:
                     logging.critical("Error: Genome filter BED non-integer at line %s" % str(c))
                     raise TypeError("Error: Genome filter BED non-integer at line %s" % str(c))
-                if contig_bed_dict[cid][0] < start and contig_bed_dict[cid][1] > end:
+                if contig_bed_dict[cid][0] <= start and contig_bed_dict[cid][1] >= end:
                     if start <= end:
                         return True
                     else:

@@ -4,6 +4,11 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.2.6 - Nov 28, 2019
+    * Fixed svread-overlap.tsv file formating in nv_nn.py
+    * Fixed operation bug in nv_valid.py l201
+
+
 Version 1.2.5 - Nov 25, 2019
     * Python 3.5 is no longer supported
 
