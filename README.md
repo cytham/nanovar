@@ -1,17 +1,17 @@
-[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.com/cytham/nanovar)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
-[![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
-[![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
-[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](https://github.com/cytham/nanovar/releases)
-[![PyPI license](https://img.shields.io/pypi/l/nanovar)](https://github.com/cytham/nanovar/blob/master/LICENSE.txt)
-
 <p align="center">
   <img src="http://benoukraf-lab.com/wp-content/uploads/2019/05/Nanovarlogo.png" width="200" alt="accessibility text" align='left'>
 </p>  
 
 <br/><br/>
 
-## NanoVar - Structural variant caller using low-depth long-read sequencing  
+## NanoVar - Structural variant caller using low-depth long-read sequencing
+[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.com/cytham/nanovar)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
+[![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
+[![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
+[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](https://github.com/cytham/nanovar/releases)
+[![PyPI license](https://img.shields.io/pypi/l/nanovar)](https://github.com/cytham/nanovar/blob/master/LICENSE.txt)
+  
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
  Oxford Nanopore Technologies (ONT). It characterizes SVs with high accuracy and speed using only 4x depth
   sequencing for homozygous SVs and 8x depth for heterozygous SVs. NanoVar reduces sequencing cost and computational requirements
