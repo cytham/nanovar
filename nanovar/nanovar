@@ -46,17 +46,24 @@ def main():
     minlen = args.minlen
     splitpct = args.splitpct
     minalign = args.minalign
+    mincov = args.mincov
     buff = args.buffer
     score_threshold = args.score
+    homo_t = args.homo
+    het_t = args.hetero
     threads = args.threads
     true_threads = threads
     quiet = args.quiet
     force = args.force
-    model_path = os.path.join(os.path.dirname(nanovar.__file__), 'model', 'ANN.E63B400L2N12-5D0.4-0.3SGDsee31_het_v1.h5')
+    model_path = os.path.join(os.path.dirname(nanovar.__file__), 'model', 'ANN.E63B400L2N12-5D0.4-0.3SGDsee31_het_v2.h5')
     filter_bed_dir = os.path.join(os.path.dirname(nanovar.__file__), 'gaps')
     mdb = args.mdb
     wmk = args.wmk
     hsb = args.hsb
+
+    # Check homo_t > het_t
+    if homo_t <= het_t:
+        raise Exception("Error: --homo threshold %s is less than or equal to --hetero threshold %s" % (str(homo_t), str(het_t)))
 
     # Check for required executables
     mdb = check_exe(mdb, 'makeblastdb')
@@ -128,11 +135,14 @@ def main():
     logging.info('Reference genome: %s' % ref_path)
     logging.info('Working directory: %s' % wk_dir)
     logging.info('Filter file: %s' % genome_filter)
+    logging.info('Minimum number of reads for calling a breakend: %s' % str(mincov))
     logging.info('Minimum SV len: %s' % str(minlen))
     logging.info('Mapping percent for split-read: %s' % str(splitpct))
     logging.info('Length buffer for clustering: %s' % str(buff))
     logging.info('Score threshold: %s' % str(score_threshold))
-    logging.info('Number of threads: %s\n' % str(threads))
+    logging.info('Homozygous read ratio threshold: %s' % str(homo_t))
+    logging.info('Heterozygous read ratio threshold: %s' % str(het_t))
+    logging.info('Number of threads: %s\n' % str(true_threads))
     logging.info('Total number of reads in FASTQ/FASTA: %s\n' % str(fastx_check[1]))
     logging.info('NanoVar started')
 
@@ -169,7 +179,8 @@ def main():
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     from nanovar.nv_characterize import VariantDetect
     run = VariantDetect(wk_dir, blast_cmd_tab[1], rlen_dict, splitpct, minalign, filter_path, minlen, buff, model_path,
-                        total_gsize, contig_len_dict, score_threshold, read_path, read_name, ref_path, ref_name, blast_cmd_tab[0])
+                        total_gsize, contig_len_dict, score_threshold, read_path, read_name, ref_path, ref_name, blast_cmd_tab[0],
+                        mincov, homo_t, het_t)
     run.parse_detect()
     run.cluster_nn()
     run.vcf_report()

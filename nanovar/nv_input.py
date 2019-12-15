@@ -61,6 +61,10 @@ low-depth long-read sequencing data.""",
                              (i.e. hg38, hg19, mm10) or provide FULL path to \
                              own BED file. [None]")
 
+    parser.add_argument("-c", "--mincov", type=int,
+                        default=1,
+                        help="minimum number of reads required to call a breakend [1]")
+
     parser.add_argument("-l", "--minlen", type=int,
                         default=25,
                         help="minimum length of SV to be detected. [25]")
@@ -79,9 +83,17 @@ low-depth long-read sequencing data.""",
                         help="nucleotide length buffer for SV breakend clustering. [50]")
 
     parser.add_argument("-s", "--score", type=float,
-                        default=2.6,
+                        default=1.0,
                         help="score threshold for defining PASS/FAIL SVs in VCF. \
-                             Default score 2.6 was derived from simulated analysis. [2.6]")
+                             Default score 1.0 was estimated from simulated analysis. [1.0]")
+
+    parser.add_argument("--homo", type=float,
+                        default=0.75,
+                        help="Lower limit of a breakend read ratio to classify a homozygous state [0.75]")
+
+    parser.add_argument("--hetero", type=float,
+                        default=0.35,
+                        help="Lower limit of a breakend read ratio to classify a heterozygous state [0.35]")
 
     parser.add_argument("-v", "--version", action='version',
                         version=__version__,

@@ -35,7 +35,7 @@ from nanovar.nv_report import create_report
 class VariantDetect:
 
     def __init__(self, wk_dir, data, rlen_dict, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
-                 contig_len_dict, thres, read_path, read_name, ref_path, ref_name, blast_cmd):
+                 contig_len_dict, thres, read_path, read_name, ref_path, ref_name, blast_cmd, mincov, homo_t, het_t):
         self.dir = wk_dir
         self.table = data
         self.rlendict = rlen_dict
@@ -53,6 +53,9 @@ class VariantDetect:
         self.refpath = ref_path
         self.refname = ref_name
         self.blastcmd = blast_cmd
+        self.mincov = mincov
+        self.homo_t = homo_t
+        self.het_t = het_t
         self.basecov = 0
         self.maxovl = 0
         self.depth = 0
@@ -85,20 +88,21 @@ class VariantDetect:
                     chromocollect.append(data[i].split('\t')[1].strip())
                 co += 1
                 # Parse entries and correct overlap alignments
-                logging.info("Parsing blast output read %s" % str(co))
+                # logging.info("Parsing blast output read %s" % str(co))
                 subdata = entry_parser(temp1, chromocollect, overlap_tolerance)
                 for entry in subdata:
                     self.total_subdata.append('\t'.join(entry.split('\t')[0:5]))
                     # Add to base coverage
                     self.basecov += int(entry.split('\t')[2])
                 # SV detection
-                logging.info("Detecting SV for entry %s" % str(co))
+                # logging.info("Detecting SV for entry %s" % str(co))
                 out1, out2 = sv_detect(subdata, self.splitpct, self.minalign, gapdict)
                 if out1 == '' and out2 == '':
-                    logging.info("SV breakend not found, skipping entry %s" % str(co))
+                    # logging.info("SV breakend not found, skipping entry %s" % str(co))
+                    pass
                 else:
                     # Parse breakpoints
-                    logging.info("SV detected, parsing SV breakend for entry %s" % str(co))
+                    # logging.info("SV detected, parsing SV breakend for entry %s" % str(co))
                     final = breakpoint_parser(out2, self.minlen, sig_index, co)
                     self.total_out.extend(final)
                 temp1 = []
@@ -113,15 +117,18 @@ class VariantDetect:
             logging.warning("Sequencing depth is less than 4x, output may not be comprehensive")
         logging.info("Read overlap upper limit: %s" % str(self.maxovl))
         logging.info("Clustering SV breakends")
-        cluster_out = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl)
+        cluster_out = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov)
         logging.info("Neural network inference")
-        self.out_nn = inference(cluster_out, self.total_out, self.model)
+        if cluster_out:
+            self.out_nn = inference(cluster_out, self.total_out, self.model)
+        else:
+            self.out_nn = []
         svread_ovl(self.dir, self.out_nn)
 
     def vcf_report(self):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.refname, self.rpath, self.rname,
-                   self.blastcmd, self.contig)
+                   self.blastcmd, self.contig, self.homo_t, self.het_t)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname, self.refname,
                       self.num_limit, self.ratio_limit)
@@ -133,7 +140,7 @@ def entry_parser(temp1, chromocollect, overlap_tol):
     num_chr = len(chromocollect)  # Total number of chromosomes aligned
     num_align = len(temp1)  # Total number of alignments
     while len(temp1) != 0:
-        temp1.sort(key=getbitscore, reverse=True)  # Order by bitscore
+        # temp1.sort(key=getbitscore, reverse=True)  # Order by bitscore
         # Lock in lead alignment with the highest bitscore
         temp2.append(temp1[0] + '\tn=' + str(num_align) + '\t' + str(num_chr) + 'chr')
         leadrange = [int(temp1[0].split('\t')[5]), int(temp1[0].split('\t')[5]) + int(temp1[0].split('\t')[6])]

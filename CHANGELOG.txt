@@ -4,6 +4,17 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.2.7 - Dec 15, 2019
+    * Upgraded model (v4)
+    * Changed default score threshold to 1.0
+    * Added --mincov argument
+    * Added genotype prediction thresholds --homo --hetero
+    * Fixed make_interp_spline bug (Thanks to Asma)
+    * Fixed logging oversize
+    * Fixed HTML figures and file path link
+    * Disabled sorting by bitscore
+
+
 Version 1.2.6 - Nov 28, 2019
     * Fixed svread-overlap.tsv file formating in nv_nn.py
     * Fixed operation bug in nv_valid.py l201

@@ -24,7 +24,7 @@ from collections import OrderedDict
 from pybedtools import BedTool
 
 
-def sv_cluster(subdata, parse, buf, maxovl):
+def sv_cluster(subdata, parse, buf, maxovl, mincov):
     rangedict, svsizedictsort, infodict, bed_str1, bed_str2 = rangecollect(parse, buf)
     bed1 = BedTool(bed_str1, from_string=True)
     bed1 = bed1.sort()
@@ -55,7 +55,7 @@ def sv_cluster(subdata, parse, buf, maxovl):
             intersect2.append('\t'.join(line))
     newdictnouniq = remove_uniq(newdict)  # Remove unique identifier from read name
     svnormalcov = intersection2(intersect2, newdict, newdictnouniq, infodict, classdict)
-    output = arrange(newdict, infodict, svnormalcov, maxovl)
+    output = arrange(newdict, infodict, svnormalcov, maxovl, mincov)
     return output
 
 
@@ -378,6 +378,23 @@ def svbed(x, infodict):
     return bed_str4
 
 
+def svbed_test(x, infodict):
+    totalsvbed = []
+    for key in x:
+        for i in infodict[key]:
+            if len(i.split('\t')[6].split('~')) == 2:  # Not Inter translocation
+                totalsvbed.append('\t'.join(i.split('\t')[4:6]) + '\t' + str(int(i.split('\t')[5]) + 1) + '\t' + key)
+            elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
+                totalsvbed.append('\t'.join(i.split('\t')[4:6]) + '\t' + str(int(i.split('\t')[5]) + 1) + '\t' + key)
+    bed_str4 = '\n'.join(totalsvbed)
+    return bed_str4
+
+# Use maxovl for normalcov
+# DEL, INV average normalcov
+# Dup remain same calculation
+# for BND calculate normal cov based on 1 breakend according to bitscore
+
+
 # Function to count total number of unique reads in an overlaping breakpoint entry
 def countcov(key, x):
     readdict = OrderedDict()
@@ -388,16 +405,17 @@ def countcov(key, x):
 
 
 # Function to parse lead overlaping breakpoint entry and long read coverage into output
-def arrange(x, infodict, svnormalcov, maxovl):
+def arrange(x, infodict, svnormalcov, maxovl, mincov):
     output = []
     for key in x:
         lcov = countcov(key, x)
-        if lcov == 1:
-            for n in infodict[key]:
-                output.append(n + '\t' + str(lcov) + '\t.\t' + str(svnormalcov[key]))
-        elif 1 < lcov < maxovl:
-            for n in infodict[key]:
-                output.append(n + '\t' + str(lcov) + '\t' + ','.join(x[key]) + '\t' + str(svnormalcov[key]))
+        if lcov >= mincov:
+            if lcov == 1:
+                for n in infodict[key]:
+                    output.append(n + '\t' + str(lcov) + '\t.\t' + str(svnormalcov[key]))
+            elif 1 < lcov < maxovl:
+                for n in infodict[key]:
+                    output.append(n + '\t' + str(lcov) + '\t' + ','.join(x[key]) + '\t' + str(svnormalcov[key]))
     return output
 
 

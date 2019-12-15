@@ -27,7 +27,7 @@ from natsort import natsorted
 from nanovar import __version__
 
 
-def create_vcf(wk_dir, thres, nn_out, ref_path, ref_name, read_path, read_name, blast_cmd, contig_len_dict):
+def create_vcf(wk_dir, thres, nn_out, ref_path, ref_name, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t):
     u = 0
     rdata = nn_out
     # Calculating number of entries
@@ -60,7 +60,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, ref_name, read_path, read_name, 
             filt = filterer(float(phred), thres)
             dp = str(covl + normcov)
             ratio = round(float(covl) / int(dp), 3)
-            geno = genotyper(ratio)
+            geno = genotyper(ratio, homo_t, het_t)
             if bp_name == 'Nov_Ins':
                 sv = '<INS>'
                 sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
@@ -220,10 +220,10 @@ def filterer(x, thres):
 
 
 # Predict SV genotype
-def genotyper(x):
-    if x == 1.0:
+def genotyper(x, homo_t, het_t):
+    if x >= homo_t:
         return "1/1"
-    elif x <= 0.75:
+    elif x >= het_t:
         return "0/1"
     else:
         return "./."

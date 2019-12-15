@@ -107,7 +107,7 @@ def mad(x):
 
 # Plot curve
 def curve(data, n, upper_limit, wk_dir):
-    c = range(int(upper_limit))
+    c = range(max(int(upper_limit), 10))
     p = []
     for i in c:
         p.append(data.count(i))
@@ -116,7 +116,7 @@ def curve(data, n, upper_limit, wk_dir):
     # theoretical = [0.0915, 0.0441, 0.1032, 0.1498, 0.1739, 0.1626,
     # 0.1132, 0.0808, 0.0412, 0.0247, 0.0097, 0.0028, 0.0015,
     # 0.0006, 0.0002, 0.0002, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    c = np.array(range(int(upper_limit)+1))
+    c = np.array(range(max(int(upper_limit), 10)+1))
     xnew = np.linspace(c.min(), c.max(), 100)
     spl = make_interp_spline(c, y)
     smooth = spl(xnew)

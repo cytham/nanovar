@@ -38,9 +38,10 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     # matplotlib.use('Agg')
     timenow = datetime.datetime.now()
     fwd = os.path.join(os.getcwd(), wk_dir, 'fig')
+    fwd_fig = './fig'
     threshold = thres
     num_header = len(contig_len_dict) + 24
-    vcf_path = os.path.join(wk_dir, '%s-%s.pass.nanovar.vcf' % (read_name, ref_name))
+    vcf_path = os.path.join(wk_dir, '%s-%s.total.nanovar.vcf' % (read_name, ref_name))
     vcf_data = open(vcf_path, 'r').read().splitlines()
     vcf = sorted(vcf_data[num_header:], key=lambda x: float(x.split('\t')[5]), reverse=True)
     # Creating variables
@@ -59,7 +60,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
         ratio = round(lcov/(lcov + ncov), 3)
         ratiolist.append(ratio)
         if float(i.split('\t')[5]) >= threshold:
-            if n < num_limit and ratio <= ratio_limit:
+            if ratio <= ratio_limit:
                 n += 1
                 if i.split('\t')[4].startswith('<'):
                     sv_type = i.split('\t')[4].strip('<>')
@@ -72,22 +73,22 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                     svdict[sv_type] += 1
                     if sv_type == 'DEL':
                         try:
-                            dellen.append(int(sv_len))
+                            dellen.append(svlencap(int(sv_len)))
                         except ValueError:
                             delnolen += 1
                     elif sv_type == 'INS':
                         try:
-                            inslen.append(int(sv_len))
+                            inslen.append(svlencap(int(sv_len)))
                         except ValueError:
                             insnolen += 1
                     elif sv_type == 'INV':
                         try:
-                            invlen.append(int(sv_len))
+                            invlen.append(svlencap(int(sv_len)))
                         except ValueError:
                             invnolen += 1
                     elif sv_type == 'DUP':
                         try:
-                            duplen.append(int(sv_len))
+                            duplen.append(svlencap(int(sv_len)))
                         except ValueError:
                             dupnolen += 1
                 else:
@@ -100,7 +101,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                                  str(ratio), i.split('\t')[9].split(':')[0], i.split('\t')[2]])
                     svdict['BND'] += 1
                     try:
-                        bndlen.append(int(sv_len))
+                        bndlen.append(svlencap(int(sv_len)))
                     except ValueError:
                         bndnolen += 1
     totalsvlen = [dellen, inslen, invlen, bndlen, duplen]
@@ -114,8 +115,10 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     sv_len_dict(fwd, totalsvlen, tab)
     sv_type_dist(svdict, fwd)
     read_len_dict(rlen_dict, fwd)
+    # Resize data for table
+    data2 = data[0:num_limit]
     # Write HTML
-    create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, ref_name, read_path, ref_path, threshold, n, totalsv)
+    create_html(data2, fwd_fig, wk_dir, vcf_path, timenow, read_name, ref_name, read_path, ref_path, threshold, n, totalsv)
     # Copy css and js directories
     css = os.path.join(os.path.dirname(nanovar.__file__), 'css')
     js = os.path.join(os.path.dirname(nanovar.__file__), 'js')
@@ -123,6 +126,14 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     js_to = os.path.join(os.getcwd(), wk_dir, 'js')
     null = copy_tree(css, css_to)
     null = copy_tree(js, js_to)
+
+
+# SV Length cap
+def svlencap(x):
+    if x >= 10000:
+        return 10000
+    else:
+        return x
 
 
 # Scatter plots generation
@@ -133,7 +144,7 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     ax = fig.add_subplot(111)
     ax.scatter(ratiolist, scorelist, c='#7d3f5d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
-    ax.annotate("Threshold=" + str(threshold), xy=(0.05, threshold+0.2))
+    ax.annotate("Threshold=" + str(threshold), xy=(0.8, threshold+0.2))
     ax.set_facecolor('#ebebff')
     plt.ylabel('Confidence score')
     plt.xlabel('Breakend read ratio')
@@ -143,7 +154,10 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     fig = plt.figure(figsize=(8, 6))
     fig.patch.set_facecolor('#f6f7f9')
     ax = fig.add_subplot(111)
-    mcov = max(lcovlist)
+    if lcovlist:
+        mcov = max(max(lcovlist), 10)
+    else:
+        mcov = 10
     ax.scatter(lcovlist, scorelist, c='#3f5d7d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
     ax.annotate("Threshold=" + str(threshold), xy=(mcov - 2.8, threshold+0.2))
@@ -151,6 +165,7 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     plt.ylabel('Confidence score')
     plt.xlabel('Number of breakend-supporting reads')
     plt.ylim(bottom=-0.3)
+    plt.xlim(right=mcov)
     plt.savefig(os.path.join(fwd, 'scatter2.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(), edgecolor='none')
 
 
@@ -179,21 +194,33 @@ def sv_len_dict(fwd, totalsvlen, tab):
 def sv_type_dist(svdict, fwd):
     fig, ax = plt.subplots(figsize=(10, 5), subplot_kw=dict(aspect="equal"))
     fig.patch.set_facecolor('#f6f7f9')
-    label = [str(svdict['DEL']) + " Deletions",
-             str(svdict['INS']) + " Insertions",
-             str(svdict['INV']) + " Inversions",
-             str(svdict['DUP']) + " TandemDups",
-             str(svdict['BND']) + " Breakends (TLO/TPO)"]
-    x = [svdict['DEL'], svdict['INS'], svdict['INV'], svdict['DUP'], svdict['BND']]
+    svnamedict = {"DEL": " Deletions", "INS": " Insertions",
+                  "INV": " Inversions", "DUP": " TandemDups",
+                  "BND": " Breakends (TLO/TPO)"}
+    label = []
+    data = []
+    for key in svdict:
+        if svdict[key] > 0:
+            label.append(str(svdict[key]) + svnamedict[key])
+            data.append(svdict[key])
+    # label = [str(svdict['DEL']) + " Deletions",
+    #          str(svdict['INS']) + " Insertions",
+    #          str(svdict['INV']) + " Inversions",
+    #          str(svdict['DUP']) + " TandemDups",
+    #          str(svdict['BND']) + " Breakends (TLO/TPO)"]
+    # data = [svdict['DEL'], svdict['INS'], svdict['INV'], svdict['DUP'], svdict['BND']]
 
     def func(pct, allvals):
         absolute = int(pct/100.*np.sum(allvals))
         return "{:.1f}%".format(pct, absolute)
 
-    explode = (0.02, 0.02, 0.02, 0.02, 0.02)
-    wedges, text, autotexts = ax.pie(x, wedgeprops=dict(width=0.5), startangle=-40, autopct=lambda pct: func(pct, x),
+    explode = []
+    for i in range(len(data)):
+        explode.append(0.02)
+    explode = tuple(explode)  # explode = (0.02, 0.02, 0.02, 0.02, 0.02)
+    wedges, text, autotexts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40, autopct=lambda pct: func(pct, data),
                                      textprops=dict(color="white"), counterclock=False, pctdistance=0.75,
-                                     colors=['#7d3f5d', '#3f5d7d', '#7d5f3f', '#3f7c7d', '#403f7d'],
+                                     colors=['#7d3f5d', '#7d5f3f', '#3f5d7d', '#3f7c7d', '#403f7d'],
                                      explode=explode)
     bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
     kw = dict(xycoords='data', textcoords='data', arrowprops=dict(arrowstyle="-"),
@@ -206,8 +233,9 @@ def sv_type_dist(svdict, fwd):
         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
         connectionstyle = "angle,angleA=0,angleB={}".format(ang)
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-        ax.annotate(label[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
-                    horizontalalignment=horizontalalignment, **kw)
+        if data[i] > 0:
+            ax.annotate(label[i], xy=(x, y), xytext=(1.35*np.sign(x), 1.4*y),
+                        horizontalalignment=horizontalalignment, **kw)
 
     plt.setp(autotexts, size=11)
     ax.text(0, 0, 'SV types', ha='center')
@@ -367,7 +395,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, ref_name, read_
         <p style="clear: both;">
         <br>
         <h4 style="text-align:center;"><u>1. Table of output SVs</u></h4>
-        <h5 style="text-align:center;">Showing """ + str(n) + """ out of """ + str(totalsv) + """ total SVs</h5>
+        <h5 style="text-align:center;">Showing """ + str(len(data)) + """ out of """ + str(totalsv) + """ total SVs</h5>
         <table id="NanoVar_report_table" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%">
             <thead>
                 <tr>
@@ -455,7 +483,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, ref_name, read_
             <figure>
                 <h4 style="text-align:center;"><u>5. Scatter plot between SV confidence score and read depth</u></h4>
                 <img src=""" + '"' + fwd + """/scatter2.png" alt="5. Scatter plot between SV confidence score and read depth" 
-                title=""" + '"' + fwd + '/figures/scatter2.png' + '"' + """>
+                title=""" + '"' + fwd + '/scatter2.png' + '"' + """>
             </figure>
             <br>
             <br>
@@ -466,7 +494,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, ref_name, read_
             <figure>
                 <h4 style="text-align:center;"><u>6. Distribution of read lengths of input FASTA</u></h4>
                 <img src=""" + '"' + fwd + """/read_length_dist.png" alt="6. Distribution of read lengths of input FASTA" 
-                title=""" + '"' + fwd + '/figures/read_length_dist.png' + '"' + """>
+                title=""" + '"' + fwd + '/read_length_dist.png' + '"' + """>
             </figure>
             <br>
             <br>
