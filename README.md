@@ -99,6 +99,7 @@ nanovar [Options] -t 24 -f hg38 read.fa ref.fa working_dir
 ## Documentation
 See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
+
 ## Versioning
 See [CHANGELOG](https://github.com/cytham/nanovar/blob/master/CHANGELOG.txt)
 
@@ -115,5 +116,6 @@ https://www.biorxiv.org/content/10.1101/662940v1
 
 This project is licensed under GNU General Public License - see [LICENSE.txt](https://github.com/cytham/nanovar/blob/master/LICENSE.txt) for details.
 
-## Simulation datasets
-SV-simulated datasets used for evaluating SV calling accuracy can be downloaded [here](https://doi.org/10.5281/zenodo.2599376).
+## Simulation datasets and scripts used in the manuscript
+SV-simulated datasets used for evaluating SV calling accuracy can be downloaded [here](https://doi.org/10.5281/zenodo.2599376). Scripts used to generate the simulated datasets as well programs for tools' comparisons are avaialble [here](https://github.com/benoukraflab/nanovar/tree/master/scripts).
+
