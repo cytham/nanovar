@@ -119,3 +119,5 @@ This project is licensed under GNU General Public License - see [LICENSE.txt](ht
 ## Simulation datasets and scripts used in the manuscript
 SV-simulated datasets used for evaluating SV calling accuracy can be downloaded [here](https://doi.org/10.5281/zenodo.2599376). Scripts used to generate the simulated datasets as well programs for tools' comparisons are avaialble [here](https://github.com/benoukraflab/nanovar/tree/master/scripts).
 
+Although NanoVar is provided with a universal model and threshold score, instructions and scripts required for building a custom neural-network model is availabe [here](https://github.com/benoukraflab/nanovar/blob/master/scripts/NNtrain_tutorial.md).
+
