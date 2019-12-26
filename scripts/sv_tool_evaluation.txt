@@ -1,0 +1,537 @@
+
+### Tool SV calling and evaluation
+
+# Obtained hg19 reference FASTA from BSgenome
+twoBitToFa ./R/site-library/BSgenome.Hsapiens.UCSC.hg19/extdata/single_sequences.2bit hg19_ucsc.fa
+
+# Extact hg19 main chromosomes (Python commands)
+contig_names = [chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX, chrY]
+
+out = open('hg19_ucsc_main.fa', 'w')
+
+with open('hg19_ucsc.fa') as f:
+    for line in f:
+        if line.split(' ')[0].strip('>') in contig_names:
+            line1 = line
+            line2 = next(f)
+            out.write(line1 + '\n' + line2 + '\n')
+        else:
+            line2 = next(f)
+
+out.close()
+
+# Make hg19 N region 400 buffer
+twoBitInfo -nBed ./R/site-library/BSgenome.Hsapiens.UCSC.hg19/extdata/single_sequences.2bit hg19_ucsc.2bit.nbed
+awk -F'\t' '{print $1"\t"$2-400"\t"$3+400}' hg19_ucsc.2bit.nbed | awk -F'\t' '{if ($2<0) print $1"\t0\t"$3; else print $0}' > hg19_ucsc.2bit.nbed.wide400
+
+
+
+
+# Run NanoVar
+# Simulation data and NA12878 data
+nanovar -t 24 sim1_32k_homo_4X_reads.fa hg19_ucsc_main.fa ./nanovar/
+
+# Patient data
+nanovar -t 24 patient1.fa hg38.fa ./nanovar/ -f hg38 -c 2
+
+# Convert NanoVar VCF to SV breakend BED file
+# For 32k SV genome
+bcftools view -H sim1_32k_homo_4X_reads.total.nanovar.vcf | awk -F';' '{print $1"\t"$2}' | perl -pe 's/END=//g' | awk -F'\t' '{if ($9 != ".") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"\n"$1"\t"$9"\t"$9+1"\t"$5"\t"$6"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$6"\t"NR}' | bedtools sort -i - > hg19_SV.output.total.bed
+
+# For 10k SV genome
+bcftools view -H sim1_10k_homo_4X_reads.total.nanovar.vcf | awk -F';' '{print $1"\t"$2}' | perl -pe 's/END=//g' | awk -F'\t' '{if ($9 != ".") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"i\n"$1"\t"$9"\t"$9+1"\t"$5"\t"$6"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$6"\t"NR"i"}' | bedtools sort -i - > hg19_SV.output.total.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a hg19_SV.output.total.bed -b hg19_ucsc.2bit.nbed.wide400 > hg19_SV.output.total.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' hg19_SV.output.total.removedN.bed > hg19_SV.output.total.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a hg19_SV.output.total.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > hg19_SV.output.total.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b hg19_SV.output.total.removedN.bed | cut -f 4 > hg19_SV.output.total.removedN.bed-fn
+
+
+
+
+# Run Sniffles
+ngmlr -t 24 -r hg19_ucsc_main.fa -q sim1_32k_homo_4X_reads.fa -o sim1_32k_homo_4X_reads-ngmlr-hg19main.sam -x ont
+samtools view -@ 10 -Sb sim1_32k_homo_4X_reads-ngmlr-hg19main.sam | samtools sort -@ 10 - -o sim1_32k_homo_4X_reads-ngmlr-hg19main.sort.bam
+sniffles -t 24 -s 2 -m sim1_32k_homo_4X_reads-ngmlr-hg19main.sort.bam -v sim1_32k_homo_4X_reads-ngmlr-hg19main.sniffles.vcf
+
+# Convert Sniffles VCF to SV breakend BED file
+# For 32k SV genome
+bcftools view -H sim1_32k_homo_4X_reads-ngmlr-hg19main.sniffles.vcf | awk -F';' '{print $1"\t"$3"\t"$4}' | perl -pe 's/CHR2=//g' | perl -pe 's/END=//g' | awk -F'\t' '{print $1"\t"$2"\t"$2+1"\t"$5"\t"$7"\t"NR"\n"$9"\t"$10"\t"$10+1"\t"$5"\t"$7"\t"NR"-"}' | bedtools sort -i - > hg19_SV-ngmlr-hg19main.sniffles.bed
+
+# For 10k SV genome
+bcftools view -H hg19_SV-ngmlr-hg19main.sniffles.vcf | awk -F';' '{print $1"\t"$3"\t"$4}' | perl -pe 's/CHR2=//g' | perl -pe 's/END=//g' | awk -F'\t' '{print $1"\t"$2"\t"$2+1"\t"$5"\t"$7"\t"NR"i\n"$9"\t"$10"\t"$10+1"\t"$5"\t"$7"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-ngmlr-hg19main.sniffles.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a hg19_SV-ngmlr-hg19main.sniffles.bed -b hg19_ucsc.2bit.nbed.wide400 > hg19_SV-ngmlr-hg19main.sniffles.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' hg19_SV-ngmlr-hg19main.sniffles.removedN.bed > hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a hg19_SV-ngmlr-hg19main.sniffles.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b hg19_SV-ngmlr-hg19main.sniffles.removedN.bed > hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn
+
+
+
+
+# Run Picky
+lastdb -uNEAR -R01 hg19_ucsc_main.lastdb hg19_ucsc_main.fa
+samtools dict hg19_ucsc_main.fa -o hg19_ucsc_main.seq.dict
+faToFastq -qual=H sim1_32k_homo_4X_reads.fa sim1_32k_homo_4X_reads.fq
+
+## LongRead.sh
+# Script start
+# general installation
+export LASTAL=lastal
+export PICKY=./Picky-0.2.a/src/picky.pl
+
+# general configuration
+export LASTALDB=./hg19_ucsc_main.lastdb
+export LASTALDBFASTA=./hg19_ucsc_main.fa
+export NTHREADS=24
+
+# FASTQ file
+export RUN=sim1_32k_homo_4X_reads
+
+# reads alignments
+time (${LASTAL} -C2 -K2 -r1 -q3 -a2 -b1 -v -v -P${NTHREADS} -Q1 ${LASTALDB} ${RUN}.fastq 2>${RUN}.lastal.log | ${PICKY} selectRep --thread ${NTHREADS} --preload 6 1>${RUN}.align 2>${RUN}.selectRep.log)
+
+# call SVs
+time (cat ${RUN}.align | ${PICKY} callSV --oprefix ${RUN} --fastq ${RUN}.fastq --genome ${LASTALDBFASTA} --exclude=chrM --sam)
+
+# generate VCF format
+${PICKY} xls2vcf --xls ${RUN}.profile.DEL.xls --xls ${RUN}.profile.INS.xls --xls ${RUN}.profile.INDEL.xls --xls ${RUN}.profile.INV.xls --xls ${RUN}.profile.TTLC.xls --xls ${RUN}.profile.TDSR.xls --xls ${RUN}.profile.TDC.xls > ${RUN}.allsv.vcf
+
+# Script end
+
+# Run LongRead.sh script
+./LongRead.sh
+
+# Convert Picky VCF to SV breakend BED file
+# For 32k SV genome
+tail -n +25 sim1_32k_homo_4X_reads.allsv.vcf | awk -F';' '{print $1"\t"$3"\t"$5}' | perl -pe 's/END=//g' | perl -pe 's/RE=//g' | perl -pe 's/SVTYPE=//g' | awk -F'\t' '{if ($9 != "BND") print $1"\t"$2"\t"$2+1"\t"$5"\t"$10"\t"NR"\n"$1"\t"$9"\t"$9+1"\t"$5"\t"$10"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t"$9"\t"$10"\t"NR}' | bedtools sort -i - > hg19_SV.ONT_reads.allsv.bed
+
+# For 10k SV genome
+tail -n +25 sim1_32k_homo_4X_reads.allsv.vcf | awk -F';' '{print $1"\t"$3"\t"$5}' | perl -pe 's/END=//g' | perl -pe 's/RE=//g' | perl -pe 's/SVTYPE=//g' | awk -F'\t' '{if ($9 != "BND") print $1"\t"$2"\t"$2+1"\t"$5"\t"$10"\t"NR"i\n"$1"\t"$9"\t"$9+1"\t"$5"\t"$10"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t"$9"\t"$10"\t"NR"i"}' | bedtools sort -i - > hg19_SV.ONT_reads.allsv.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a hg19_SV.ONT_reads.allsv.bed -b hg19_ucsc.2bit.nbed.wide400 > hg19_SV.ONT_reads.allsv.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' hg19_SV.ONT_reads.allsv.removedN.bed > hg19_SV.ONT_reads.allsv.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a hg19_SV.ONT_reads.allsv.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > hg19_SV.ONT_reads.allsv.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b hg19_SV.ONT_reads.allsv.removedN.bed > hg19_SV.ONT_reads.allsv.removedN.bed-fn
+
+
+
+
+# Run SVIM
+ngmlr -t 24 -r hg19_ucsc_main.fa -q sim1_32k_homo_4X_reads.fa -o sim1_32k_homo_4X_reads-ngmlr-hg19main.sam -x ont
+samtools view -@ 10 -Sb sim1_32k_homo_4X_reads-ngmlr-hg19main.sam | samtools sort -@ 10 - -o sim1_32k_homo_4X_reads-ngmlr-hg19main.sort.bam
+samtools index sim1_32k_homo_4X_reads-ngmlr-hg19main.sort.bam
+svim alignment ./ sim1_32k_homo_4X_reads-ngmlr-hg19main.sort.bam hg19_ucsc_main.fa
+
+# Convert SVIM VCF to SV breakend BED file
+# For 32k SV genome
+bcftools view -H final_results.vcf | cut -f 1,2,3,4,5,6,8 | awk -F';' '{print $1"\t"$2"\t"$3}' |  perl -pe 's/END=//g' | perl -pe 's/SVTYPE=//g' | perl -pe 's/CUTPASTE\t//g' | awk -F'\t' '{if ($7 != "BND") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"\n"$1"\t"$8"\t"$8+1"\t"$5"\t"$6"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t"$7"\t"$6"\t"NR}' | bedtools sort -i - > final_results.bed
+
+# For 10k SV genome
+bcftools view -H final_results.vcf | cut -f 1,2,3,4,5,6,8 | awk -F';' '{print $1"\t"$2"\t"$3}' |  perl -pe 's/END=//g' | perl -pe 's/SVTYPE=//g' | perl -pe 's/CUTPASTE\t//g' | awk -F'\t' '{if ($7 != "BND") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"i\n"$1"\t"$8"\t"$8+1"\t"$5"\t"$6"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t"$7"\t"$6"\t"NR"i"}' | bedtools sort -i - > final_results.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a final_results.bed -b hg19_ucsc.2bit.nbed.wide400 > final_results.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' final_results.removedN.bed > final_results.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a final_results.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > final_results.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b final_results.removedN.bed > final_results.removedN.bed-fn
+
+
+
+
+# Run NanoSV
+# For mapping simulation data and NA12878
+minimap2 -t24 -ax map-ont hg19_ucsc_main.fa sim1_32k_homo_4X_reads.fa | samtools view -@10 -Sb - | samtools sort -@10 - -o sim1_32k_homo_4X_reads-mm-hg19main.sort.bam
+samtools index sim1_32k_homo_4X_reads-mm-hg19main.sort.bam
+
+# For mapping Patient1 data
+# Make LAST database hg38
+lastdb -v -P 24 hg38.lastdb hg38.fa
+# Make sample reads from first 20,000 reads
+head -n 40000 patient1.fa > 20k_sample.fasta
+# LAST training
+last-train -P24 hg38.lastdb 20k_sample.fasta > trainparam.par
+# LAST mapping
+lastal -P24 -p trainparam.par hg38.lastdb patient1.fa | last-split > patient1.last-hg38.maf
+
+maf-convert -f hg38.seq.dict sam -r 'ID:1 PL:ONT SM:patient1' patient1.last-hg38.maf | samtools view -@ 10 -Sb - | samtools sort -@ 10 - -o patient1.last-hg38.sort.bam
+
+# Edit default BED file for coverage calculation
+perl -pe 's/^/chr/g' ./python3.5/dist-packages/nanosv/bedfiles/human_hg19.bed > ./python3.5/dist-packages/nanosv/bedfiles/human_hg19.bed
+# Or create own BED file for coverage calculation
+bedtools random -l 1 -n 1200000 -g hg38.fa.fai | bedtools sort -i - > hg38mA_random.bed
+bedtools intersect -v -a hg38mA_random.bed -b hg38mainA.2bit.nbed | shuf -n 1000000 | bedtools sort -i - | cut -f 1-3 > hg38mA_random_nogap.bed
+
+## NanoSV config.ini
+#Reads segments options
+[Filter options]
+# Maximum number of segments per read resulting from the mapping of the read the a reference sequence
+max_split = 10
+# Minimum percentage of identical bases of the mapped segment relative to the reference sequence      
+min_pid = 0.7
+# Minimum mapping quality of the segment
+min_mapq = 20
+
+#Parameters for tuning detection and clustering of breakpoints:
+[Detection options]
+# Maximum distance between two adjacent break-end positions
+cluster_distance = 10
+# Minimum number of breakpoint-junctions (i.e. split-read junctions) for clustering
+cluster_count = 2
+# Minimum flanking length, to consider a read a reference read
+refreads_distance = 100
+# Minimum length of unmapped sequence for hanging reads that overlap a break-end
+hanging_length = 20
+# Maximum distance to search for the MATEID, i.e. a reciprocal breakpoint-junction, for example an inversion consist of two breakpoint-junctions (3’-to-3’ and 5’-to-5’)
+mate_distance = 300
+# If TRUE, NanoSV will check the depth of coverage for possible breakpoint-junctions with orientations that indicate a possible deletion or duplication (3’-to-5’ and 5’-to-3’)
+depth_support = True
+
+#Parameters for setting the FILTER flag in the vcf output:
+[Output filter options]
+# Filter flag: LowQual, if the QUAL score is lower
+qual_flag = 20
+# Filter flag: SVcluster, if there are more SVs within a window size, they will be marked as SVcluster
+window_size = 1000
+# Filter flag: SVcluster, indicating the number of SVs within a certain window size (set by window_size above)
+svcluster = 2
+# Filter flag: MapQual, if the median mapq is lower than specified by this parameter
+mapq_flag = 80
+# Filter flag: PID, if the median percentage identity is lower than specified by this parameter
+pid_flag = 0.80
+# Filter flag: Gap, if the median GAP is higher than specified by this parameter
+gap_flag = 100
+# Filter flag: CIPOS|CIEND, if the CIPOS|CIEND bigger than specified by this parameter
+ci_flag = 30
+
+# Parameters for tuning computational resources
+[Runtime options]
+# Number of threads to use with sambamba
+sambamba_threads = 24
+
+# Call SVs with NanoSV (Simulation/NA12878)
+NanoSV -s samtools -c config.ini -o hg19_SV-mm-hg19main-NanoSV.vcf sim1_32k_homo_4X_reads-mm-hg19main.sort.bam
+
+# Call SVs with NanoSV (Patient1)
+NanoSV -s samtools -c config.ini -b hg38mA_random_nogap.bed -o patient1-NanoSV.vcf patient1.last-hg38.sort.bam
+
+# Convert NanoSV VCF to SV breakend BED file (Command has to be customized for each run because every VCF format is different)
+# Manually edit each VCF to move ##fileformat=VCFv4.1 to the top if necessary
+
+# Sim1 32k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/DEPTHPVAL=.*;END=//g'  | perl -pe 's/DEPTHPVAL=.*BND/./g' | perl -pe 's/IMPRECISE.*BND/./g' | perl -pe 's/PLENGTH.*BND/./g' | perl -pe 's/IMPRECISE.*END=//g'| perl -pe 's/PLENGTH.*END=//g' | perl -pe 's/;GAP.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim2 32k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/IMPRECISE.*;END=//g' | perl -pe 's/SVMETHOD=.*;END=//g' | perl -pe 's/IMPRECISE.*BND/./g' | perl -pe 's/SVMETHOD=.*BND/./g' | perl -pe 's/;GAP.*//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim3 32k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/SVTYPE=BND.*/./g' | perl -pe 's/SVLEN.*END=//g' | perl -pe 's/SVLEN=.*;\./\./g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 32k heterozygous 4X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/GAP=.*=BND/./g' | perl -pe 's/GAP=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 32k heterozygous 8X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/RT=.*=BND/./g' | perl -pe 's/\tEND=/\t/g' | perl -pe 's/MATEID=.*\.;/.;/g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' |  awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 32k heterozygous 12X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/PID=.*BND/./g' | perl -pe 's/\tEND=/\t/g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' |  awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 10k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/RLENGTH=.*BND/./g' | perl -pe 's/RLENGTH=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim2 10k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/SVTYPE=BND.*/./g' | perl -pe 's/SVTYPE=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim3 10k homozygous
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/SVMETHOD=.*BND/./g' | perl -pe 's/SVLEN=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 10k heterozygous 4X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/SVTYPE=BND.*/./g' | perl -pe 's/SVTYPE=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 10k heterozygous 8X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/CIEND=.*BND/./g' |perl -pe 's/CIEND=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# Sim1 10k heterozygous 12X
+bcftools view -H hg19_SV-mm-hg19main-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/CIPOS=.*BND/./g' |perl -pe 's/CIPOS=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"NR"i\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"NR"i-"; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"NR"i\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"NR"i-"}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# NA12878-4X
+bcftools view -H NA12878-6.3mil-mm-hg19-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/CIEND=.*BND/./g'| perl -pe 's/CIEND=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"$1"."$2"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"$1"."$5; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"$1"."$2"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"$3"."$4}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+# NA12878-8X
+bcftools view -H NA12878-12.5mil-mm-hg19-NanoSV.vcf | cut -f 1,2,5,6,8 | perl -pe 's/GAP=.*BND/./g'| perl -pe 's/GAP=.*;END=//g' | perl -pe 's/;.*//g' | perl -pe 's/\w*\](.*):(.*)\]\w*/$1\t$2/g' | perl -pe 's/\w*\[(.*):(.*)\[\w*/$1\t$2/g' | awk -F'\t' '{if ($6 != ".") print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"$1"."$2"\n"$1"\t"$5"\t"$5+1"\t"$3"\t"$4"\t"$1"."$5; else print $1"\t"$2"\t"$2+1"\t<BND>\t"$5"\t"$1"."$2"\n"$3"\t"$4"\t"$4+1"\t<BND>\t"$5"\t"$3"."$4}' | bedtools sort -i - > hg19_SV-nanosv.bed
+
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a hg19_SV-nanosv.bed -b hg19_ucsc.2bit.nbed.wide400 > hg19_SV-nanosv.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' hg19_SV-nanosv.removedN.bed > hg19_SV-nanosv.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a hg19_SV-nanosv.removedN.bed -b sim1_32k_gtruth.bed  | awk -F'\t' '{print $6"\t"$5"\t"$10}' > hg19_SV-nanosv.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed  -b hg19_SV-nanosv.removedN.bed > hg19_SV-nanosv.removedN.bed-fn
+
+
+
+
+# Run novoBreak
+# Map short-reads with minimap2
+minimap2 -ax sr hg19_ucsc_main.fa sim1_32k_genome.DWGSIM.bwa.read1.fastq.gz sim1_32k_genome.DWGSIM.bwa.read2.fastq.gz -t 50 | samtools view -@ 5 -Sb - | samtools sort -@ 5 - -o sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam
+samtools index sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam
+run_novoBreak.sh ./novoBreak_distribution_v1.1.3rc hg19_ucsc_main.fa sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam hg19m_mock.bam 24 ./
+NOTE: hg19m_mock.bam is a mock low-coverage BAM file created from the hg19 reference genome.
+
+# Convert novoBreak VCF to SV breakend BED file 
+# For 32k SV genome
+tail -n +23 novoBreak.pass.flt.vcf | awk -F';' '{print $1"\t"$8"\t"$9}' | perl -pe 's/CHR2=//g' | perl -pe 's/END=//g' |  awk -F'\t' '{if ($5=="<TRA>") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR; else print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"\n"$9"\t"$10"\t"$10+1"\t"$5"\t"$6"\t"NR"-"}' | bedtools sort -i - > novoBreak.pass.flt.bed
+
+# For 10k SV genome
+tail -n +23 novoBreak.pass.flt.vcf | awk -F';' '{print $1"\t"$8"\t"$9}' | perl -pe 's/CHR2=//g' | perl -pe 's/END=//g' |  awk -F'\t' '{if ($5=="<TRA>") print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"i"; else print $1"\t"$2"\t"$2+1"\t"$5"\t"$6"\t"NR"i\n"$9"\t"$10"\t"$10+1"\t"$5"\t"$6"\t"NR"i-"}' | bedtools sort -i - > novoBreak.pass.flt.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a novoBreak.pass.flt.bed -b hg19_ucsc.2bit.nbed.wide400 > novoBreak.pass.flt.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' novoBreak.pass.flt.removedN.bed > novoBreak.pass.flt.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a novoBreak.pass.flt.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > novoBreak.pass.flt.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b novoBreak.pass.flt.removedN.bed > novoBreak.pass.flt.removedN.bed-fn
+
+
+
+
+# Run Delly
+# Map short-reads with minimap2
+minimap2 -ax sr hg19_ucsc_main.fa sim1_32k_genome.DWGSIM.bwa.read1.fastq.gz sim1_32k_genome.DWGSIM.bwa.read2.fastq.gz -t 50 | samtools view -@ 5 -Sb - | samtools sort -@ 5 - -o sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam
+java -jar ~/myprograms/picard.jar MarkDuplicates I=sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam O=sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam.markdup M=marked_dup_metrics.txt
+samtools index sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam.markdup
+delly call -x ./delly/excludeTemplates/human.hg19.excl.tsv -g hg19_ucsc_main.fa -o hg19m_SV.DWGSIM-mm-hg19m-delly.bcf sim1_32k_genome.DWGSIM-mm-hg19m.sort.bam.markdup
+
+# Convert Delly VCF to SV breakend BED file
+# For 32k SV genome
+bcftools view -H hg19m_SV.DWGSIM-mm-hg19m-delly.bcf | cut -f 1,2,7,8 | perl -pe "s/IMPRECISE;SVTYPE=//g" | perl -pe 's/PRECISE;SVTYPE=//g' | perl -pe 's/;SVMETHOD.*;CHR2=/\t/g' | perl -pe 's/;END=/\t/g' |perl -pe 's/;.*//g' | awk -F'\t' '{if ($1!=$5) print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR"\n"$5"\t"$6"\t"$6+1"\t<"$4">\t"$3"\t"NR"-"; else if ($4=="INS") print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR; else print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR"\n"$1"\t"$6"\t"$6+1"\t<"$4">\t"$3"\t"NR"-"}' | bedtools sort -i - > hg19m_SV.DWGSIM-mm-hg19m-delly.bed
+
+# For 10k SV genome
+bcftools view -H hg19m_SV.DWGSIM-mm-hg19m-delly.bcf | cut -f 1,2,7,8 | perl -pe "s/IMPRECISE;SVTYPE=//g" | perl -pe 's/PRECISE;SVTYPE=//g' | perl -pe 's/;SVMETHOD.*;CHR2=/\t/g' | perl -pe 's/;END=/\t/g' |perl -pe 's/;.*//g' | awk -F'\t' '{if ($1!=$5) print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR"i\n"$5"\t"$6"\t"$6+1"\t<"$4">\t"$3"\t"NR"i-"; else if ($4=="INS") print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR"i"; else print $1"\t"$2"\t"$2+1"\t<"$4">\t"$3"\t"NR"i\n"$1"\t"$6"\t"$6+1"\t<"$4">\t"$3"\t"NR"i-"}' | bedtools sort -i - > hg19m_SV.DWGSIM-mm-hg19m-delly.bed
+
+# Remove SVs caused by N-sequence junction
+bedtools intersect -v -a hg19m_SV.DWGSIM-mm-hg19m-delly.bed -b hg19_ucsc.2bit.nbed.wide400 > hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed
+
+# Total callset
+awk -F'\t' '{print $6"\t"$5}' hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed > hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset
+
+# True positives
+bedtools intersect -wa -wb -a hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed -b sim1_32k_gtruth.bed | awk -F'\t' '{print $6"\t"$5"\t"$10}' > hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp
+
+# False negatives
+bedtools intersect -v -a sim1_32k_gtruth.bed -b hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed > hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn
+
+
+
+# Combine 32k and 10k homozygous SV results of each tool
+
+cd ../../combine1/nanovar
+cat ../../seed1/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed1_ins/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed1/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed1_ins/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed1/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed1_ins/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+cd ../../combine2/nanovar
+cat ../../seed2/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed2_ins/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed2/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed2_ins/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed2/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed2_ins/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+cd ../../combine3/nanovar
+cat ../../seed3/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed3_ins/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed3/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed3_ins/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed3/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed3_ins/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+
+cd ../../combine1/sniffles
+cat ../../seed1/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed1_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed1/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed1_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed1/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed1_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+cd ../../combine2/sniffles
+cat ../../seed2/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed2_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed2/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed2_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed2/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed2_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+cd ../../combine3/sniffles
+cat ../../seed3/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed3_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed3/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed3_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed3/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed3_ins/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+
+cd ../../combine1/picky
+cat ../../seed1/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed1_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed1/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed1_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed1/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed1_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+cd ../../combine2/picky
+cat ../../seed2/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed2_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed2/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed2_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed2/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed2_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+cd ../../combine3/picky
+cat ../../seed3/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed3_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed3/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed3_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed3/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed3_ins/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+
+cd ../../combine1/svim
+cat ../../seed1/svim/final_results.removedN.bed.callset ../../seed1_ins/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed1/svim/final_results.removedN.bed-tp ../../seed1_ins/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed1/svim/final_results.removedN.bed-fn ../../seed1_ins/svim/final_results.removedN.bed-fn > total-fn
+cd ../../combine2/svim
+cat ../../seed2/svim/final_results.removedN.bed.callset ../../seed2_ins/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed2/svim/final_results.removedN.bed-tp ../../seed2_ins/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed2/svim/final_results.removedN.bed-fn ../../seed2_ins/svim/final_results.removedN.bed-fn > total-fn
+cd ../../combine3/svim
+cat ../../seed3/svim/final_results.removedN.bed.callset ../../seed3_ins/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed3/svim/final_results.removedN.bed-tp ../../seed3_ins/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed3/svim/final_results.removedN.bed-fn ../../seed3_ins/svim/final_results.removedN.bed-fn > total-fn
+
+cd ../../combine1/nanoSV
+cat ../../seed1/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed1_ins/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed1/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed1_ins/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed1/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed1_ins/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+cd ../../combine2/nanoSV
+cat ../../seed2/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed2_ins/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed2/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed2_ins/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed2/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed2_ins/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+cd ../../combine3/nanoSV
+cat ../../seed3/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed3_ins/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed3/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed3_ins/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed3/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed3_ins/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+
+cd ../../combine1/novobreak
+cat ../../seed1/novobreak/novoBreak.pass.flt.removedN.bed.callset ../../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed.callset > total.callset
+cat ../../seed1/novobreak/novoBreak.pass.flt.removedN.bed-tp ../../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed-tp > total-tp
+cat ../../seed1/novobreak/novoBreak.pass.flt.removedN.bed-fn ../../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed-fn > total-fn
+cd ../../combine2/novobreak
+cat ../../seed2/novobreak/novoBreak.pass.flt.removedN.bed.callset ../../seed2_ins/novobreak/novoBreak.pass.flt.removedN.bed.callset > total.callset
+cat ../../seed2/novobreak/novoBreak.pass.flt.removedN.bed-tp ../../seed2_ins/novobreak/novoBreak.pass.flt.removedN.bed-tp > total-tp
+cat ../../seed2/novobreak/novoBreak.pass.flt.removedN.bed-fn ../../seed2_ins/novobreak/novoBreak.pass.flt.removedN.bed-fn > total-fn
+cd ../../combine3/novobreak
+cat ../../seed3/novobreak/novoBreak.pass.flt.removedN.bed.callset ../../seed3_ins/novobreak/novoBreak.pass.flt.removedN.bed.callset > total.callset
+cat ../../seed3/novobreak/novoBreak.pass.flt.removedN.bed-tp ../../seed3_ins/novobreak/novoBreak.pass.flt.removedN.bed-tp > total-tp
+cat ../../seed3/novobreak/novoBreak.pass.flt.removedN.bed-fn ../../seed3_ins/novobreak/novoBreak.pass.flt.removedN.bed-fn > total-fn
+
+cd ../../combine1/delly
+cat ../../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset ../../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset > total.callset
+cat ../../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp ../../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp > total-tp
+cat ../../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn ../../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn > total-fn
+cd ../../combine2/delly
+cat ../../seed2/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset ../../seed2_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset > total.callset
+cat ../../seed2/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp ../../seed2_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp > total-tp
+cat ../../seed2/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn ../../seed2_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn > total-fn
+cd ../../combine3/delly
+cat ../../seed3/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset ../../seed3_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset > total.callset
+cat ../../seed3/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp ../../seed3_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp > total-tp
+cat ../../seed3/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn ../../seed3_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn > total-fn
+
+
+
+# Combine 32k and 10k homozygous SV results of each tool
+
+cd ../combine4x/nanovar
+cat ../../seed1/4x/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed1_ins/4x/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed1/4x/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed1_ins/4x/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed1/4x/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed1_ins/4x/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+cd ../../combine8x/nanovar
+cat ../../seed1/8x/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed1_ins/8x/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed1/8x/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed1_ins/8x/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed1/8x/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed1_ins/8x/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+cd ../../combine12x/nanovar
+cat ../../seed1/12x/nanovar/hg19_SV.output.total.removedN.bed.callset ../../seed1_ins/12x/nanovar/hg19_SV.output.total.removedN.bed.callset > total.callset
+cat ../../seed1/12x/nanovar/hg19_SV.output.total.removedN.bed-tp ../../seed1_ins/12x/nanovar/hg19_SV.output.total.removedN.bed-tp > total-tp
+cat ../../seed1/12x/nanovar/hg19_SV.output.total.removedN.bed-fn ../../seed1_ins/12x/nanovar/hg19_SV.output.total.removedN.bed-fn > total-fn
+
+cd ../../combine4x/sniffles
+cat ../../seed1/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed1_ins/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed1/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed1_ins/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed1/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed1_ins/4x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+cd ../../combine8x/sniffles
+cat ../../seed1/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed1_ins/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed1/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed1_ins/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed1/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed1_ins/8x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+cd ../../combine12x/sniffles
+cat ../../seed1/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset ../../seed1_ins/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed.callset > total.callset
+cat ../../seed1/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp ../../seed1_ins/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-tp > total-tp
+cat ../../seed1/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn ../../seed1_ins/12x/sniffles/hg19_SV-ngmlr-hg19main.sniffles.removedN.bed-fn > total-fn
+
+cd ../../combine4x/picky
+cat ../../seed1/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed1_ins/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed1/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed1_ins/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed1/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed1_ins/4x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+cd ../../combine8x/picky
+cat ../../seed1/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed1_ins/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed1/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed1_ins/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed1/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed1_ins/8x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+cd ../../combine12x/picky
+cat ../../seed1/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset ../../seed1_ins/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed.callset > total.callset
+cat ../../seed1/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp ../../seed1_ins/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-tp > total-tp
+cat ../../seed1/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn ../../seed1_ins/12x/picky/hg19_SV.ONT_reads.allsv.removedN.bed-fn > total-fn
+
+cd ../../combine4x/svim
+cat ../../seed1/4x/svim/final_results.removedN.bed.callset ../../seed1_ins/4x/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed1/4x/svim/final_results.removedN.bed-tp ../../seed1_ins/4x/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed1/4x/svim/final_results.removedN.bed-fn ../../seed1_ins/4x/svim/final_results.removedN.bed-fn > total-fn
+cd ../../combine8x/svim
+cat ../../seed1/8x/svim/final_results.removedN.bed.callset ../../seed1_ins/8x/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed1/8x/svim/final_results.removedN.bed-tp ../../seed1_ins/8x/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed1/8x/svim/final_results.removedN.bed-fn ../../seed1_ins/8x/svim/final_results.removedN.bed-fn > total-fn
+cd ../../combine12x/svim
+cat ../../seed1/12x/svim/final_results.removedN.bed.callset ../../seed1_ins/12x/svim/final_results.removedN.bed.callset > total.callset
+cat ../../seed1/12x/svim/final_results.removedN.bed-tp ../../seed1_ins/12x/svim/final_results.removedN.bed-tp > total-tp
+cat ../../seed1/12x/svim/final_results.removedN.bed-fn ../../seed1_ins/12x/svim/final_results.removedN.bed-fn > total-fn
+
+cd ../../combine4x/nanoSV
+cat ../../seed1/4x/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed1_ins/4x/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed1/4x/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed1_ins/4x/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed1/4x/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed1_ins/4x/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+cd ../../combine8x/nanoSV
+cat ../../seed1/8x/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed1_ins/8x/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed1/8x/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed1_ins/8x/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed1/8x/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed1_ins/8x/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+cd ../../combine12x/nanoSV
+cat ../../seed1/12x/nanoSV/hg19_SV-nanosv.removedN.bed.callset ../../seed1_ins/12x/nanoSV/hg19_SV-nanosv.removedN.bed.callset > total.callset
+cat ../../seed1/12x/nanoSV/hg19_SV-nanosv.removedN.bed-tp ../../seed1_ins/12x/nanoSV/hg19_SV-nanosv.removedN.bed-tp > total-tp
+cat ../../seed1/12x/nanoSV/hg19_SV-nanosv.removedN.bed-fn ../../seed1_ins/12x/nanoSV/hg19_SV-nanosv.removedN.bed-fn > total-fn
+
+cd combine_novobreak
+cat ../seed1/novobreak/novoBreak.pass.flt.removedN.bed.callset ../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed.callset > total.callset
+cat ../seed1/novobreak/novoBreak.pass.flt.removedN.bed-tp ../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed-tp > total-tp
+cat ../seed1/novobreak/novoBreak.pass.flt.removedN.bed-fn ../seed1_ins/novobreak/novoBreak.pass.flt.removedN.bed-fn > total-fn
+
+cd combine_delly
+cat ../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset ../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed.callset > total.callset
+cat ../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp ../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-tp > total-tp
+cat ../seed1/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn ../seed1_ins/delly/hg19m_SV.DWGSIM-mm-hg19m-delly.removedN.bed-fn > total-fn
+
+
+# Refer to precision_recall.py or sv_class_radar.txt for subsequent analysis
+

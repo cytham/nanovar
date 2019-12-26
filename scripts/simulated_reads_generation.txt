@@ -1,0 +1,114 @@
+
+### Long-read simulation using NanoSim (v1.0.0, https://github.com/bcgsc/NanoSim) and short-read simulation using DWGSIM (v0.1.11, https://github.com/nh13/DWGSIM)
+
+## Patient 1 and Patient 2 MinION long read LAST alignment (v938, http://last.cbrc.jp/)
+
+# Merged patient1 and patient 2 FASTAs
+cat patient1-ONT.fa patient2-ONT.fa | perl -pe 's/ .*//g' > patient1n2.fa
+
+# Make LAST database of hg38 analysis set (hg38a.fa)
+lastdb -P 24 -uNEAR -R01 hg38a hg38a.fa
+
+# LAST model training
+last-train -P 24 hg38a patient1n2.fa > patient1n2.par
+
+# LAST alignment
+lastal -P 24 -p patient1n2.par -N 7 hg38a patient1n2.fa | last-split -m1 > patient1n2.last-hg38a.maf
+
+# Split MAF into one read per newline
+tail -n +22 patient1n2.last-hg38a.maf | perl -pe 's/(.)\n/$1\t/g' > patient1n2.last-hg38a.maf.splitlines
+
+# Convert MAF to TAB
+maf-convert -n tab patient1n2.last-hg38a.maf > patient1n2.last-hg38a.tab
+
+# Create boolean for good alignment reads (allowing 100 unmapped bases at start and end of read)
+awk '{if ($8>=100 || $11-$9-$8 >= 100) print "0"; else print "1"}' patient1n2.last-hg38a.tab > patient1n2.last-hg38a.tab.100less.boolean
+
+# Create a refined MAF with only good alignment reads (Python commands)
+import pandas as pd
+df = pd.read_table('patient1n2.last-hg38a.tab.100less.boolean', header=None)
+bool = (df[0] == 1)
+l = len(bool)
+data = open('patient1n2.last-hg38a.maf.splitlines', 'r').read().splitlines()
+output = open('patient1n2.last-hg38a.maf.100less', 'w')
+for i in range(l):
+    if bool.iloc[i] == True:
+        output.write(data[i] + '\n')
+
+output.close()
+
+# Reformat MAF back to original format (Shell commands)
+perl -pe 's/\t/\n/g' patient1n2.last-hg38a.maf.100less > patient1n2.last-hg38a.maf.100less.nosplit
+
+# Get header from original MAF
+head -n 21 patient1n2.last-hg38a.maf > patient1n2.last-hg38a.maf.header
+
+# Merge header and MAF
+cat patient1n2.last-hg38a.maf.header patient1n2.last-hg38a.maf.100less.nosplit > patient1n2.last-hg38a.100less.final.maf
+
+# Convert filtered MAF to TAB
+maf-convert -n tab patient1n2.last-hg38a.100less.final.maf > patient1n2.last-hg38a.100less.final.tab
+
+# Extract names of reads
+cut -f 7 patient1n2.last-hg38a.100less.final.tab | sort | uniq > patient1n2.last-hg38a.100less.final.tab.names
+
+# Extract FASTA according to read names (Python commands)
+read_names = open('patient1n2.last-hg38a.100less.final.tab.names', 'r').read().splitlines()
+out = open('patient1n2.100less.fa', 'w')
+
+with open('patient1n2.fa') as f:
+    for line in f:
+        if line.split(' ')[0].strip('>') in read_names:
+            line1 = line
+            line2 = next(f)
+            out.write(line1 + '\n' + line2 + '\n')
+        else:
+            line2 = next(f)
+
+out.close()
+
+
+## Real long-read analysis and generation by NanoSim
+read_analysis.py -i patient1n2.100less.fa -r hg38a.fa -m patient1n2.last-hg38a.100less.final.maf
+
+# Generate simulation long-reads from SV genome using NanoSim (4X, homozygous SVs)
+simulator.py linear -r sim1_32k_genome.fa -o sim1_32k_homo_4X_reads.fa -c ./training -n 2080000
+simulator.py linear -r sim1_10k_genome.fa -o sim1_10k_homo_4X_reads.fa -c ./training -n 2080000
+simulator.py linear -r sim2_32k_genome.fa -o sim2_32k_homo_4X_reads.fa -c ./training -n 2080000
+simulator.py linear -r sim2_10k_genome.fa -o sim2_10k_homo_4X_reads.fa -c ./training -n 2080000
+simulator.py linear -r sim3_32k_genome.fa -o sim3_32k_homo_4X_reads.fa -c ./training -n 2080000
+simulator.py linear -r sim3_10k_genome.fa -o sim3_10k_homo_4X_reads.fa -c ./training -n 2080000
+
+# Generate simulation long-reads from SV genome using NanoSim (4X, heterozygous SVs)
+simulator.py linear -r sim1_32k_genome.fa -o hg19_32SV.ONT_reads.fasta -c ./training -n 1040000
+simulator.py linear -r sim1_10k_genome.fa -o hg19_10SV.ONT_reads.fasta -c ./training -n 1040000
+simulator.py linear -r hg19_ucsc_main.fa -o hg19_ref.ONT_reads.fasta -c ./training -n 1040000
+cat hg19_32SV.ONT_reads.fasta hg19_ref.ONT_reads.fasta > sim1_32k_het_4X_reads.fa
+cat hg19_10SV.ONT_reads.fasta hg19_ref.ONT_reads.fasta > sim1_10k_het_4X_reads.fa
+
+# Generate simulation long-reads from SV genome using NanoSim (8X, heterozygous SVs) 
+simulator.py linear -r hg19_ucsc_main.fa -o hg19_ref.ONT_reads.fasta -c ./training -n 2080000
+cat sim1_32k_homo_4X_reads.fa hg19_ref.ONT_reads.fasta > sim1_32k_het_8X_reads.fa
+cat sim1_10k_homo_4X_reads.fa hg19_ref.ONT_reads.fasta > sim1_10k_het_8X_reads.fa
+
+# Generate simulation long-reads from SV genome using NanoSim (12X, heterozygous SVs)
+simulator.py linear -r sim1_32k_genome.fa -o hg19_32SV.ONT_reads.fasta -c ./training -n 3120000
+simulator.py linear -r sim1_10k_genome.fa -o hg19_10SV.ONT_reads.fasta -c ./training -n 3120000
+simulator.py linear -r hg19_ucsc_main.fa -o hg19_ref.ONT_reads.fasta -c ./training -n 3120000
+cat hg19_32SV.ONT_reads.fasta hg19_ref.ONT_reads.fasta > sim1_32k_het_12X_reads.fa
+cat hg19_10SV.ONT_reads.fasta hg19_ref.ONT_reads.fasta > sim1_10k_het_12X_reads.fa
+
+
+
+
+## Generate simulation short-reads from SV genome using DWGSIM (53X, homozygous)
+dwgsim -d 307 -s 59 -C 53 -1 150 -2 150 -e 0.001-0.01 -E 0.001-0.01 -r 0.0 -F 0.0 -R 0.0 -y 0.0 -c 0 -S 2 -o 1 sim1_32k_genome.fa hg19_ucsc_main.DWGSIM
+
+## Generate simulation short-reads from SV genome using DWGSIM (53X, heterozygous)
+dwgsim -d 307 -s 59 -C 26 -1 150 -2 150 -e 0.001-0.01 -E 0.001-0.01 -r 0.0 -F 0.0 -R 0.0 -y 0.0 -c 0 -S 2 -o 1 sim1_32k_genome.fa hg19_ucsc_main_het.DWGSIM
+dwgsim -d 307 -s 59 -C 26 -1 150 -2 150 -e 0.001-0.01 -E 0.001-0.01 -r 0.0 -F 0.0 -R 0.0 -y 0.0 -c 0 -S 2 -o 1 hg19_ucsc_main.fa hg19_ucsc_main_ref.DWGSIM
+cat hg19_ucsc_main_ref.DWGSIM.bwa.read1.fastq.gz >> hg19_ucsc_main_het.DWGSIM.bwa.read1.fastq.gz
+cat hg19_ucsc_main_ref.DWGSIM.bwa.read2.fastq.gz >> hg19_ucsc_main_het.DWGSIM.bwa.read2.fastq.gz
+
+NOTE: "hg19_ucsc_main.fa" contains the GRCh37 reference genome with only main chromosomes extracted by the FASTA extraction Python script above.
+

@@ -1,0 +1,100 @@
+
+### Simulate SV genomes using RSVSim (https://bioconductor.org/packages/release/bioc/html/RSVSim.html)
+
+# Install hg19 genome and masked files
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg19.masked")
+
+library(RSVSim)
+
+
+## For 32k SV genome
+# Create 32,000 SVs genome with deletions, inversions, tandem duplications and transpositions (sim1_32k_genome.fa, seed 1)
+delSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="deletions", hist=FALSE)
+insSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="insertions", hist=FALSE)
+invSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="inversions", hist=FALSE)
+tandSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="tandemDuplications", hist=FALSE)
+sim = simulateSV(output="./seed1/", del=10000, ins=10000, invs=1000, dups=1000, sizeDels=delSizes, sizeIns=insSizes, sizeInvs=invSizes, sizeDups=tandSizes, maxDups=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, seed=1, verbose=TRUE, repeatBias=TRUE)
+
+# Create 32,000 SVs genome with deletions, inversions, tandem duplications and transpositions (sim2_32k_genome.fa, seed 2)
+delSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="deletions", hist=FALSE)
+insSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="insertions", hist=FALSE)
+invSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="inversions", hist=FALSE)
+tandSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="tandemDuplications", hist=FALSE)
+sim = simulateSV(output="./seed2/", del=10000, ins=10000, invs=1000, dups=1000, sizeDels=delSizes, sizeIns=insSizes, sizeInvs=invSizes, sizeDups=tandSizes, maxDups=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, seed=2, verbose=TRUE, repeatBias=TRUE)
+
+# Create 32,000 SVs genome with deletions, inversions, tandem duplications and transpositions (sim3_32k_genome.fa, seed 3)
+delSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="deletions", hist=FALSE)
+insSizes = estimateSVSizes(n=10000, minSize=50, maxSize=10000, default="insertions", hist=FALSE)
+invSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="inversions", hist=FALSE)
+tandSizes = estimateSVSizes(n=1000, minSize=50, maxSize=10000, default="tandemDuplications", hist=FALSE)
+sim = simulateSV(output="./seed3/", del=10000, ins=10000, invs=1000, dups=1000, sizeDels=delSizes, sizeIns=insSizes, sizeInvs=invSizes, sizeDups=tandSizes, maxDups=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, seed=3, verbose=TRUE, repeatBias=TRUE)
+
+# Process ground truth set (Shell commands)
+# Each BED entry is a SV breakend region with 400 bp error distance from the exact breakend.
+
+# Deletions 
+tail -n +2 deletions.csv | awk '{print $2"\t"$3-50"\t"$3+50"\t"$5"\t"$1"^1\n"$2"\t"$4-50"\t"$4+50"\t"$5"\t"$1"^2"}' | bedtools sort -i - > deletions.bed
+
+# Inversions
+tail -n +2 inversions.csv | awk '{print $2"\t"$3-50"\t"$3+50"\t"$5"\t"$1"^1\n"$2"\t"$4-50"\t"$4+50"\t"$5"\t"$1"^2"}' | bedtools sort -i - > inversions.bed
+
+# Tandem duplications
+tail -n +2 tandemDuplications.csv | awk '{print $2"\t"$3-50"\t"$3+50"\t"$5"\t"$1"^1\n"$2"\t"$4-50"\t"$4+50"\t"$5"\t"$1"^2"}' | bedtools sort -i - > tandemDuplications.bed
+
+# Transpositions
+tail -n +2 insertions.csv | awk '{if ($9=="FALSE") print $2"\t"$3-50"\t"$3+50"\t"$8"\t""DEL_"$1"^1\n"$2"\t"$4-50"\t"$4+50"\t"$8"\t""DEL_"$1"^2\n"$5"\t"$6-50"\t"$6+50"\t"$8"\t"$1;else print $5"\t"$6-50"\t"$6+50"\t"$8"\t"$1}' |  awk '{if ($2 < 0) print $1"\t0\t"$3"\t"$4"\t"$5; else print $0}' | bedtools sort -i - > transposition.bed
+
+# Total
+cat deletions.bed inversions.bed tandemDuplications.bed insertions.bed | bedtools sort -i - > total_sv_error50.bed
+
+# Make 400bp window
+awk '{print $1"\t"$2-350"\t"$3+350"\t"$5"-"$4}' total_sv.bed | awk '{if ($2 < 0) print $1"\t0\t"$3"\t"$4"\t"$5; else print $0}' | bedtools sort -i - > total_sv_error400.bed
+
+# Rename SV index names (only for 32k SV genomes)
+perl -pe 's/insertion_/TPO/g' total_sv_error400.bed | perl -pe 's/DEL/del/g' > sim1_32k_gtruth.bed
+
+# Remove sequence line wrapping in SV genome with fasta_formatter (http://hannonlab.cshl.edu/fastx_toolkit/commandline.html)
+fasta_formatter -i genome_rearranged.fasta -w 0 > sim1_32k_genome.fa
+
+
+
+
+## For 10k SV genome
+# Concatenate insertions.csv files from 32k genome Sim1,Sim2 and Sim3
+cat insertions_seed1.csv insertions_seed2.csv insertions_seed3.csv > insertions_seed1n2n3.csv
+# Used Python script "custom_ins_list_RSVSim.py" to generate randomnized .csv files for manual viral insertions in RSVSim
+python3 custom_ins_list_RSVSim.py total_viral_genome.fa insertions_seed1n2n3.csv 1 10000 3 ./
+
+# Concatenate hg19 genome with viral.fa (output from script)
+cat hg19_ucsc_main.fa viral_ins_fasta1.fa > hg19/hg19_ucsc_main_viral1.fa
+cat hg19_ucsc_main.fa viral_ins_fasta2.fa > hg19/hg19_ucsc_main_viral2.fa
+cat hg19_ucsc_main.fa viral_ins_fasta3.fa > hg19/hg19_ucsc_main_viral3.fa
+
+library(RSVSim)
+# Create 10,000 SVs genome with only viral insertions (sim1_10k_genome.fa, seed 1)
+vgenome = readDNAStringSet("hg19_ucsc_main_viral1.fa", format="fasta")
+insrange = read.table("viral_ins_regions1.csv")
+knownInsertion = GRanges(IRanges(insrange$V2,insrange$V3), seqnames=insrange$V1, chrB=insrange$V5, startB=insrange$V6)
+sim = simulateSV(output="./seed1/", genome=vgenome, regionsIns=knownInsertion, percCopiedIns=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, random=FALSE, verbose=TRUE)
+
+# Create 10,000 SVs genome with only viral insertions (sim2_10k_genome.fa, seed 2)
+vgenome = readDNAStringSet("hg19_ucsc_main_viral2.fa", format="fasta")
+insrange = read.table("viral_ins_regions2.csv")
+knownInsertion = GRanges(IRanges(insrange$V2,insrange$V3), seqnames=insrange$V1, chrB=insrange$V5, startB=insrange$V6)
+sim = simulateSV(output="./seed2/", genome=vgenome, regionsIns=knownInsertion, percCopiedIns=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, random=FALSE, verbose=TRUE)
+
+# Create 10,000 SVs genome with only viral insertions (sim3_10k_genome.fa, seed 3)
+vgenome = readDNAStringSet("hg19_ucsc_main_viral3.fa", format="fasta")
+insrange = read.table("viral_ins_regions3.csv")
+knownInsertion = GRanges(IRanges(insrange$V2,insrange$V3), seqnames=insrange$V1, chrB=insrange$V5, startB=insrange$V6)
+sim = simulateSV(output="./seed3/", genome=vgenome, regionsIns=knownInsertion, percCopiedIns=1, bpFlankSize=20, percSNPs=0.25, indelProb=0.5, maxIndelSize=5, bpSeqSize=2000, random=FALSE, verbose=TRUE)
+
+# Make 400bp window
+tail -n +2 insertions.csv | cut -f 1,5-8 | awk -F'\t' '{print $2"\t"$3-400"\t"$3+400"\tins"$1"-"$5}' | bedtools sort -i - > sim1_10k_gtruth.bed
+
+# Remove sequence line wrapping in SV genome with fasta_formatter (http://hannonlab.cshl.edu/fastx_toolkit/commandline.html) and remove viral sequences
+fasta_formatter -i genome_rearranged.fasta -w 0 | perl -pe 's/(\.\d)\n/$1/g' | grep -v '>NC' > sim1_10k_genome.fa

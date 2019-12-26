@@ -1,0 +1,83 @@
+
+# NA12878 recall benchmark analysis
+# Download FASTQ
+wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20131209_na12878_pacbio/si/NA12878.pacbio.sanger.fq.gz
+# Download benchmark deletion BED
+wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/technical/svclassify_Manuscript/Supplementary_Information/Personalis_1000_Genomes_deduplicated_deletions.bed
+# Download benchmark insertion BED
+wget ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/technical/svclassify_Manuscript/Supplementary_Information/Spiral_Genetics_insertions.bed
+
+# Down-sample FASTQ to achieve 4X and 8X sequencing depth and convert to FASTA
+~/myprograms/seqtk/seqtk sample -s1 NA12878.pacbio.sanger.fq 6300000 > NA12878-6.3mil.fq
+~/myprograms/seqtk/seqtk sample -s1 NA12878.pacbio.sanger.fq 12530000 > NA12878-12.5mil.fq
+~/myprograms/seqtk/seqtk seq -a NA12878-6.3mil.fq > NA12878-6.3mil.fa
+~/myprograms/seqtk/seqtk seq -a NA12878-12.5mil.fq > NA12878-12.5mil.fa
+
+# Prepare truth set SV BED (400 bp error around breakend)
+grep '^Chr' -v Personalis_1000_Genomes_deduplicated_deletions.bed | perl -pe 's/^/chr/g' | sort | uniq |awk -F'\t' '{print $1"\t"$2-400"\t"$2+400"\t"NR"\n"$1"\t"$3-400"\t"$3+400"\t"NR"-"}' | bedtools sort -i - > truth_del.bed
+grep '^Chr' -v Spiral_Genetics_insertions.bed | perl -pe 's/^/chr/g' | sort | uniq |awk -F'\t' '{print $1"\t"$2-400"\t"$3+400"\t"NR}' | bedtools sort -i - > truth_ins.bed
+
+
+## Recall analysis
+(Refer to SV_tool_evaluation.txt to convert VCF to BED for each tool)
+# NanoVar VCF to BED with score threshold at 1.0 
+awk -F'\t' '{if ($6>=1.0) print $0}' hg19_SV.output.total.bed > hg19_SV.output.total1.0.bed 
+
+# Extract only deletions for each tool
+awk -F'\t' '{if ($5=="<DEL>") print $0}' hg19_SV.output.total1.0.bed > hg19_SV.output.total1.0_del.bed
+
+# Extract only insertions for each tool
+awk -F'\t' '{if ($5=="<INS>") print $0}' hg19_SV.output.total1.0.bed > hg19_SV.output.total1.0_ins.bed
+
+# Recall of DEL (5346 breakends) accounting for SV class
+# NanoVar 4x
+bedtools intersect -wa -wb -a truth_del.bed -b 4x/nanovar/hg19_SV.output.total1.0_del.bed | cut -f 4 | sort | uniq | wc -l # 3816
+# NanoVar 8x
+bedtools intersect -wa -wb -a truth_del.bed -b 8x/nanovar/hg19_SV.output.total1.0_del.bed | cut -f 4 | sort | uniq | wc -l # 4536
+
+# Sniffles 4x
+bedtools intersect -wa -wb -a truth_del.bed -b 4x/sniffles/hg19_SV.ONT.hg19_ucsc-ngmlr.sniffles_del.bed | cut -f 4 | sort | uniq | wc -l # 3078
+# Sniffles 8x
+bedtools intersect -wa -wb -a truth_del.bed -b 8x/sniffles/hg19_SV.ONT.hg19_ucsc-ngmlr.sniffles_del.bed | cut -f 4 | sort | uniq | wc -l # 4205
+
+# SVIM 4x
+bedtools intersect -wa -wb -a truth_del.bed -b 4x/svim/final_results_del.bed | cut -f 4 | sort | uniq | wc -l # 4246
+# SVIM 8x
+bedtools intersect -wa -wb -a truth_del.bed -b 8x/svim/final_results_del.bed | cut -f 4 | sort | uniq | wc -l # 4916
+
+# NanoSV 4x
+bedtools intersect -wa -wb -a truth_del.bed -b 4x/nanoSV/hg19_SV-nanosv_del.bed | cut -f 4 | sort | uniq | wc -l # 133
+# NanoSV 8x
+bedtools intersect -wa -wb -a truth_del.bed -b 8x/nanoSV/hg19_SV-nanosv_del.bed | cut -f 4 | sort | uniq | wc -l # 449
+
+# Picky 4x
+bedtools intersect -wa -wb -a truth_del.bed -b 4x/picky/hg19_SV.ONT_reads.allsv_del.bed | cut -f 4 | sort | uniq | wc -l # 2886
+# Picky 8x
+bedtools intersect -wa -wb -a truth_del.bed -b 8x/picky/hg19_SV.ONT_reads.allsv_del.bed | cut -f 4 | sort | uniq | wc -l # 4134
+
+
+# Recall of INS (68 breakends) accounting for SV class
+# NanoVar 4x
+bedtools intersect -wa -wb -a truth_ins.bed -b 4x/nanovar/hg19_SV.output.total1.0_ins.bed | cut -f 4 | sort | uniq | wc -l # 45
+# NanoVar 8x
+bedtools intersect -wa -wb -a truth_ins.bed -b 8x/nanovar/hg19_SV.output.total1.0_ins.bed | cut -f 4 | sort | uniq | wc -l # 56
+
+# Sniffles 4x
+bedtools intersect -wa -wb -a truth_ins.bed -b 4x/sniffles/hg19_SV.ONT.hg19_ucsc-ngmlr.sniffles_ins.bed | cut -f 4 | sort | uniq | wc -l # 19
+# Sniffles 8x
+bedtools intersect -wa -wb -a truth_ins.bed -b 8x/sniffles/hg19_SV.ONT.hg19_ucsc-ngmlr.sniffles_ins.bed | cut -f 4 | sort | uniq | wc -l # 37
+
+# SVIM 4x
+bedtools intersect -wa -wb -a truth_ins.bed -b 4x/svim/final_results_ins.bed | cut -f 4 | sort | uniq | wc -l # 42
+# SVIM 8x
+bedtools intersect -wa -wb -a truth_ins.bed -b 8x/svim/final_results.bed | cut -f 4 | sort | uniq | wc -l # 56
+
+# NanoSV 4x
+bedtools intersect -wa -wb -a truth_ins.bed -b 4x/nanoSV/hg19_SV-nanosv_ins.bed | cut -f 4 | sort | uniq | wc -l # 1
+# NanoSV 8x
+bedtools intersect -wa -wb -a truth_ins.bed -b 8x/nanoSV/hg19_SV-nanosv_ins.bed | cut -f 4 | sort | uniq | wc -l # 9
+
+# Picky 4x
+bedtools intersect -wa -wb -a truth_ins.bed -b 4x/picky/hg19_SV.ONT_reads.allsv_ins.bed | cut -f 4 | sort | uniq | wc -l # 15
+# Picky 8x
+bedtools intersect -wa -wb -a truth_ins.bed -b 8x/picky/hg19_SV.ONT_reads.allsv_ins.bed | cut -f 4 | sort | uniq | wc -l # 36
