@@ -117,7 +117,7 @@ https://www.biorxiv.org/content/10.1101/662940v1
 This project is licensed under GNU General Public License - see [LICENSE.txt](https://github.com/cytham/nanovar/blob/master/LICENSE.txt) for details.
 
 ## Simulation datasets and scripts used in the manuscript
-SV-simulated datasets used for evaluating SV calling accuracy can be downloaded [here](https://doi.org/10.5281/zenodo.2599376). Scripts used to generate the simulated datasets as well programs for tools' comparisons are available [here](https://github.com/benoukraflab/nanovar/tree/master/scripts).
+SV simulation datasets used in the manuscript can be downloaded [here](https://doi.org/10.5281/zenodo.3569479). Scripts used for simulation dataset generation and tool performance comparison are available [here](https://github.com/benoukraflab/nanovar/tree/master/scripts).
 
 Although NanoVar is provided with a universal model and threshold score, instructions and scripts required for building a custom neural-network model is available [here](https://github.com/benoukraflab/nanovar/blob/master/scripts/NNtrain_tutorial.md).
 
