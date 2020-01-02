@@ -9,7 +9,7 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
 [![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
-[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](./releases)
+[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](../../releases)
 [![PyPI license](https://img.shields.io/pypi/l/nanovar)](./LICENSE.txt)
   
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
