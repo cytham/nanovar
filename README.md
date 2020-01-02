@@ -97,7 +97,7 @@ nanovar [Options] -t 24 -f hg38 read.fa ref.fa working_dir
 
 
 ## Documentation
-See [Wiki](../../wiki) for more information.
+See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
 
 ## Versioning
