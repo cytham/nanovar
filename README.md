@@ -9,8 +9,8 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
 [![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
-[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](https://github.com/cytham/nanovar/releases)
-[![PyPI license](https://img.shields.io/pypi/l/nanovar)](https://github.com/cytham/nanovar/blob/master/LICENSE.txt)
+[![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](./releases)
+[![PyPI license](https://img.shields.io/pypi/l/nanovar)](./LICENSE.txt)
   
 NanoVar is a neural-network-based genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
  Oxford Nanopore Technologies (ONT). It characterizes SVs with high accuracy and speed using only 4x depth
@@ -97,11 +97,11 @@ nanovar [Options] -t 24 -f hg38 read.fa ref.fa working_dir
 
 
 ## Documentation
-See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
+See [Wiki](../../wiki) for more information.
 
 
 ## Versioning
-See [CHANGELOG](https://github.com/cytham/nanovar/blob/master/CHANGELOG.txt)
+See [CHANGELOG](./CHANGELOG.txt)
 
 ## Citation
 NanoVar: Accurate Characterization of Patients’ Genomic Structural Variants Using Low-Depth Nanopore Sequencing (Tham. et al, 2019)
@@ -114,7 +114,7 @@ https://www.biorxiv.org/content/10.1101/662940v1
 
 ## License
 
-This project is licensed under GNU General Public License - see [LICENSE.txt](https://github.com/cytham/nanovar/blob/master/LICENSE.txt) for details.
+This project is licensed under GNU General Public License - see [LICENSE.txt](./LICENSE.txt) for details.
 
 ## Simulation datasets and scripts used in the manuscript
 SV simulation datasets used in the manuscript can be downloaded [here](https://doi.org/10.5281/zenodo.3569479). Scripts used for simulation dataset generation and tool performance comparison are available [here](./scripts).
