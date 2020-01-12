@@ -62,8 +62,8 @@ low-depth long-read sequencing data.""",
                              own BED file. [None]")
 
     parser.add_argument("-c", "--mincov", type=int,
-                        default=1,
-                        help="minimum number of reads required to call a breakend [1]")
+                        default=2,
+                        help="minimum number of reads required to call a breakend [2]")
 
     parser.add_argument("-l", "--minlen", type=int,
                         default=25,
