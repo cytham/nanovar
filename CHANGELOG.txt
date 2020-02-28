@@ -4,7 +4,7 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.3a0 - Feb 28, 2020
+Version 1.3.0 - Feb 28, 2020
     * Tool requirement changes:
         * Added SAMTools
         * Added Minimap2
