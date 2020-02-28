@@ -27,8 +27,8 @@ from nanovar import __version__
 
 # Parse input
 def input_parser(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description="""NanoVar is a neural-network-based structural variant (SV) caller that utilizes 
-low-depth long-read sequencing data.""",
+    parser = argparse.ArgumentParser(description="""NanoVar is a neural network enhanced structural variant (SV) caller that 
+    utilizes low-depth long-read sequencing data.""",
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
 
     def restrict_float(f):
@@ -37,11 +37,11 @@ low-depth long-read sequencing data.""",
             raise argparse.ArgumentTypeError("%r not in range [0.05, 0.50]" % (f,))
         return f
 
-    parser.add_argument("reads", type=str,
-                        metavar="[long_reads]",
-                        help="Path to long reads. \
-                             Formats: fasta/fa/fa.gzip/fa.gz \
-                             fastq/fq/fq.gzip/fq.gz")
+    parser.add_argument("input", type=str,
+                        metavar="[FASTQ/FASTA/BAM]",
+                        help="Path to long reads or mapped BAM file. \
+                             Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or \
+                             BAM")
 
     parser.add_argument("ref", type=str,
                         metavar="[reference_genome]",
@@ -54,46 +54,59 @@ low-depth long-read sequencing data.""",
                         help="Path to working directory. \
                              Directory will be created if it does not exist")
 
-    parser.add_argument("-f", "--filter_bed", type=str,
+    parser.add_argument("-x", "--data_type", type=str, metavar="ont/pacbio",
+                        default='ont',
+                        help="Type of long-read data - Oxford Nanopore (ont) \
+                             or Pacfic Biosciences (pacbio). [ont]")
+
+    parser.add_argument("-f", "--filter_bed", type=str, metavar="file",
                         help="BED file with genomic regions to be excluded. \
                              (e.g. telomeres and centromeres). \
                              Either specify name of in-built reference genome filter \
                              (i.e. hg38, hg19, mm10) or provide FULL path to \
                              own BED file. [None]")
 
-    parser.add_argument("-c", "--mincov", type=int,
-                        default=1,
-                        help="minimum number of reads required to call a breakend [1]")
+    parser.add_argument("-c", "--mincov", type=int, metavar="int",
+                        default=2,
+                        help="minimum number of reads required to call a breakend [2]")
 
-    parser.add_argument("-l", "--minlen", type=int,
+    parser.add_argument("-l", "--minlen", type=int, metavar="int",
                         default=25,
                         help="minimum length of SV to be detected. [25]")
 
-    parser.add_argument("-p", "--splitpct", type=restrict_float,
+    parser.add_argument("-p", "--splitpct", type=restrict_float, metavar="float",
                         default=0.05,
                         help="minimum percentage of unmapped bases within a long read \
                              to be considered as a split-read. 0.05<=p<=0.50 [0.05]")
 
-    parser.add_argument("-a", "--minalign", type=int,
+    parser.add_argument("-a", "--minalign", type=int, metavar="int",
                         default=200,
                         help="minimum alignment length for single alignment reads. [200]")
 
-    parser.add_argument("-b", "--buffer", type=int,
+    parser.add_argument("-b", "--buffer", type=int, metavar="int",
                         default=50,
                         help="nucleotide length buffer for SV breakend clustering. [50]")
 
-    parser.add_argument("-s", "--score", type=float,
+    parser.add_argument("-s", "--score", type=float, metavar="float",
                         default=1.0,
                         help="score threshold for defining PASS/FAIL SVs in VCF. \
                              Default score 1.0 was estimated from simulated analysis. [1.0]")
 
-    parser.add_argument("--homo", type=float,
+    parser.add_argument("--homo", type=float, metavar="float",
                         default=0.75,
-                        help="Lower limit of a breakend read ratio to classify a homozygous state [0.75]")
+                        help="Lower limit of a breakend read ratio to classify a homozygous state \
+                            i.e. Any breakend with homo<=ratio<=1.00 is classified as homozygous [0.75]")
 
-    parser.add_argument("--hetero", type=float,
+    parser.add_argument("--hetero", type=float, metavar="float",
                         default=0.35,
-                        help="Lower limit of a breakend read ratio to classify a heterozygous state [0.35]")
+                        help="Lower limit of a breakend read ratio to classify a heterozygous state [0.35] \
+                             i.e. Any breakend with hetero<=ratio<homo is classified as heterozygous")
+
+    parser.add_argument("--debug", action='store_true',
+                        help="run in debug mode")
+
+    parser.add_argument("--force", action='store_true',
+                        help="run full pipeline, do not skip any redundant steps (e.g. index generation)")
 
     parser.add_argument("-v", "--version", action='version',
                         version=__version__,
@@ -102,21 +115,27 @@ low-depth long-read sequencing data.""",
     parser.add_argument("-q", "--quiet", action='store_true',
                         help="hide verbose")
 
-    parser.add_argument("-t", "--threads", type=int, choices=range(1, 55), metavar="[1-54]",
-                        default=2,
-                        help="number of available threads for use, max=54 [2]")
+    parser.add_argument("-t", "--threads", type=int, metavar="int",
+                        default=1,
+                        help="number of available threads for use [1]")
 
-    parser.add_argument("--force", action='store_true',
-                        help="run full pipeline, do not skip any redundant steps (e.g. index generation)")
+    parser.add_argument("--model", type=str, metavar="path",
+                        help="specify path to custom-built model")
 
-    parser.add_argument("--mdb", type=str,
-                        help="Specify path to 'makeblastdb' executable")
+    parser.add_argument("--mm", type=str, metavar="path",
+                        help="specify path to 'minimap2' executable")
 
-    parser.add_argument("--wmk", type=str,
-                        help="Specify path to 'windowmasker' executable")
+    parser.add_argument("--st", type=str, metavar="path",
+                        help="specify path to 'samtools' executable")
 
-    parser.add_argument("--hsb", type=str,
-                        help="Specify path to 'hs-blastn' executable")
+    parser.add_argument("--mdb", type=str, metavar="path",
+                        help="specify path to 'makeblastdb' executable")
+
+    parser.add_argument("--wmk", type=str, metavar="path",
+                        help="specify path to 'windowmasker' executable")
+
+    parser.add_argument("--hsb", type=str, metavar="path",
+                        help="specify path to 'hs-blastn' executable")
 
     args = parser.parse_args(args)
     return args

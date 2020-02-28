@@ -5,7 +5,8 @@ from sys import argv
 import random
 
 if len(argv) != 7:
-    sys.exit("Usage: python custom_ins_list_RSVSim.py viral.fa insertions.csv seed_no no_of_viral_ins_per_set no_of_sets output_path")
+    sys.exit("Usage: python custom_ins_list_RSVSim.py viral.fa insertions.csv seed no_of_viral_ins_per_set no_of_sets "
+             "output_path")
 
 # Define paths
 viral = argv[1]

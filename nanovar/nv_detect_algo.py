@@ -23,7 +23,7 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 def sv_detect(subdata, splitpct, minalign, gapdict):
     c = len(subdata)  # Number of entries
     if c == 0:
-        pass
+        out1, out2 = '', ''
     else:
         if c == 1:
             sv_status = single_alignment_check(subdata, splitpct, minalign)
@@ -161,9 +161,11 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                         # First breakpoint detected
                                         # Detecting second breakpoint
                                         for u in range(i + 2, c):
+                                            size = query[u][0] - query[i][1]
                                             if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                                     tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                                    any(subject[i][1] < y < subject[i + 1][0] for y in subject[u]):
+                                                    any(subject[i][1] < y < min(subject[i+1][0], subject[i][1]+size+1000) for y
+                                                        in subject[u]):
                                                 # Second breakpoint detected, insertion event
                                                 sbp = 1
                                                 g = int(u)
@@ -197,9 +199,11 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                 elif subjgap <= -100000:
                                     # Detecting second breakpoint
                                     for u in range(i + 2, c):
+                                        size = query[u][0] - query[i][1]
                                         if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                                 tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                                all(subject[i][1] < y for y in subject[u]):  # May still contain large deletion
+                                                any(subject[i][1] < y < subject[i][1]+size+1000 for y in subject[u]):  # May
+                                            # still contain large deletion
                                             sbp = 1
                                             g = int(u)
                                             break
@@ -244,9 +248,11 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                         # First breakpoint detected
                                         # Detecting second breakpoint
                                         for u in range(i + 2, c):
+                                            size = query[u][0] - query[i][1]
                                             if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                                     tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                                    any(subject[i + 1][0] < y < subject[i][1] for y in subject[u]):
+                                                    any(max(subject[i + 1][0], subject[i][1]-size-1000) < y < subject[i][1] for
+                                                        y in subject[u]):
                                                 # Second breakpoint detected, insertion event
                                                 sbp = 1
                                                 g = int(u)
@@ -279,9 +285,10 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                 elif subjgap <= -100000:
                                     # Detecting second breakpoint
                                     for u in range(i + 2, c):
+                                        size = query[u][0] - query[i][1]
                                         if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                                 tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                                all(subject[i + 1][0] > y for y in subject[u]):
+                                                any(subject[i][1]-size-1000 < y < subject[i][1] for y in subject[u]):
                                             # May still contain large deletion
                                             sbp = 1
                                             g = int(u)
@@ -321,9 +328,10 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                         elif tmpread[i].split('\t')[7] == '+' and tmpread[i + 1].split('\t')[7] == '-':  # Inversion
                             if i != int(g - 1):
                                 for u in range(i + 2, c):
+                                    size = query[u][0] - query[i][1]
                                     if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                             tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                            any(subject[i][1] < y for y in subject[u]):
+                                            any(subject[i][1] < y < subject[i][1]+size+1000 for y in subject[u]):
                                         # Second breakpoint detected, paired inversion event
                                         sbp = 1
                                         g = int(u)
@@ -352,9 +360,10 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                         elif tmpread[i].split('\t')[7] == '-' and tmpread[i + 1].split('\t')[7] == '+':  # Inversion
                             if i != int(g - 1):
                                 for u in range(i + 2, c):
+                                    size = query[u][0] - query[i][1]
                                     if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                             tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                            any(y < subject[i][1] for y in subject[u]):
+                                            any(subject[i][1]-size-1000 < y < subject[i][1] for y in subject[u]):
                                         # Second breakpoint detected, paired inversion event
                                         sbp = 1
                                         g = int(u)
@@ -385,9 +394,11 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                         if tmpread[i].split('\t')[7] == '+':
                             if i != int(gtx - 1):
                                 for u in range(i + 2, c):
+                                    size = query[u][0] - query[i][1]
                                     if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                             tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                            any(subject[i][1] < y for y in subject[u]):  # Detecting second breakpoint
+                                            any(subject[i][1] < y < subject[i][1]+size+1000 for y in subject[u]):  # Detecting
+                                        # second breakpoint
                                         # Second breakpoint detected, insertion event
                                         sbp = 1
                                         gtx = int(u)
@@ -417,9 +428,11 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                         if tmpread[i].split('\t')[7] == '-':
                             if i != int(gtx - 1):
                                 for u in range(i + 2, c):
+                                    size = query[u][0] - query[i][1]
                                     if tmpread[i].split('\t')[0] == tmpread[u].split('\t')[0] and \
                                             tmpread[i].split('\t')[7] == tmpread[u].split('\t')[7] and \
-                                            any(y < subject[i][1] for y in subject[u]):  # Detecting second breakpoint
+                                            any(subject[i][1]-size-1000 < y < subject[i][1] for y in subject[u]):  # Detecting
+                                        # second breakpoint
                                         # Second breakpoint detected, insertion event
                                         sbp = 1
                                         gtx = int(u)
@@ -465,29 +478,18 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                 for i in j:
                     fullquerypercent.append('(' + '%.1f' % float(querypercent[i]) + '%)')
                     fullquerypercent.append('%.1f' % float(qurygappercent[i]) + '%')
-                # out1 = str(tmpread[0].split('\t')[4].strip()) + '\t' + str(readlength) + '\t' + str(chromocollect) + '\t' + \
-                #     str(actual_no_maps) + ' maps' + '\t' + ','.join(fullquerypercent) + '\t' + ','.join(evalue_total) + '\t' + \
-                #     ','.join(bitscore_ratio_total) + '\t' + ','.join(del_size) + ' ' + ','.join(del_range) + '\t' + \
-                #     ','.join(iso_ins_size) + ' ' + ','.join(iso_ins_range) + '\t' + ','.join(ins_size) + ' ' + \
-                #     ','.join(ins_range) + '\t' + ','.join(complex_ins_size) + '\t' + ','.join(tdup) + ' ' + \
-                #     ','.join(tdup_range) + '\t' + ','.join(inv) + ' ' + ','.join(inv_range) + '\t' + ','.join(intra_ins) + ' ' + \
-                #     ','.join(intra_ins_range) + '\t' + ','.join(inter_ins) + ' ' + ','.join(inter_ins_range) + '\t' + \
-                #     ','.join(intertx) + ' ' + ','.join(intertx_break) + '\t' + ','.join(strand_total) + '\t' + \
-                #     str(short) + '\t' + sat + '\t' + ','.join(complex_sv) + '\t' + ", ".join(total_sv_complex.split()) + '\t' + \
-                #     ','.join(sv_range) + '\t' + str(chromorder) + '\t' + ''.join(str(subject)) + '\t' + str(query) + '\t' + \
-                #     ','.join(piden_total) + '\t' + ','.join(mismatch_ratio_total) + '\t' + ','.join(gap_ratio_total)
                 out1 = ''
                 out2 = str(tmpread[0].split('\t')[4].strip()) + '\t' + str(chromocollect) + '\t' + \
-                       str(actual_no_maps) + ' maps' + '\t' + ','.join(fullquerypercent) + '\t' + \
-                       ','.join(evalue_total) + '\t' + ','.join(bitscore_ratio_total) + '\t' + ','.join(del_size) + ' ' + \
-                       ','.join(del_range) + '\t' + ','.join(iso_ins_size) + ' ' + ','.join(iso_ins_range) + '\t' + \
-                       ','.join(ins_size) + ' ' + ','.join(ins_range) + '\t' + ','.join(complex_ins_size) + '\t' + \
-                       ','.join(tdup) + ' ' + ','.join(tdup_range) + '\t' + ','.join(inv) + ' ' + ','.join(inv_range) + '\t' + \
-                       ','.join(intra_ins) + ' ' + ','.join(intra_ins_range) + '\t' + ','.join(inter_ins) + ' ' + \
-                       ','.join(inter_ins_range) + '\t' + ','.join(intertx) + ' ' + ','.join(intertx_break) + '\t' + \
-                       ','.join(strand_total) + '\t' + str(short) + '\t' + ','.join(complex_sv) + '\t' + \
-                       ', '.join(total_sv_complex.split()) + '\t' + ','.join(sv_range) + '\t' + str(query) + '\t' + \
-                       ','.join(piden_total) + '\t' + ','.join(mismatch_ratio_total) + '\t' + ','.join(gap_ratio_total)
+                    str(actual_no_maps) + ' maps' + '\t' + ','.join(fullquerypercent) + '\t' + \
+                    ','.join(evalue_total) + '\t' + ','.join(bitscore_ratio_total) + '\t' + ','.join(del_size) + ' ' + \
+                    ','.join(del_range) + '\t' + ','.join(iso_ins_size) + ' ' + ','.join(iso_ins_range) + '\t' + \
+                    ','.join(ins_size) + ' ' + ','.join(ins_range) + '\t' + ','.join(complex_ins_size) + '\t' + \
+                    ','.join(tdup) + ' ' + ','.join(tdup_range) + '\t' + ','.join(inv) + ' ' + ','.join(inv_range) + '\t' + \
+                    ','.join(intra_ins) + ' ' + ','.join(intra_ins_range) + '\t' + ','.join(inter_ins) + ' ' + \
+                    ','.join(inter_ins_range) + '\t' + ','.join(intertx) + ' ' + ','.join(intertx_break) + '\t' + \
+                    ','.join(strand_total) + '\t' + str(short) + '\t' + ','.join(complex_sv) + '\t' + \
+                    ', '.join(total_sv_complex.split()) + '\t' + ','.join(sv_range) + '\t' + str(query) + '\t' + \
+                    ','.join(piden_total) + '\t' + ','.join(mismatch_ratio_total) + '\t' + ','.join(gap_ratio_total)
             else:
                 out1, out2 = '', ''
         else:
@@ -500,6 +502,17 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
 # 15=inter_insertion, 16=inter_tx, 17=strandness, 18=short_frag_perc, 19=satellite_perc, 20=complex_SV, 21=Total_SV_complex,
 # 22=sv_range, 23=chromosome_order, 24=subject_string, 25=query_string, 26=%identity, 27=mismatch, 28=gap_ratio
 
+# out1 = str(tmpread[0].split('\t')[4].strip()) + '\t' + str(readlength) + '\t' + str(chromocollect) + '\t' + \
+#     str(actual_no_maps) + ' maps' + '\t' + ','.join(fullquerypercent) + '\t' + ','.join(evalue_total) + '\t' + \
+#     ','.join(bitscore_ratio_total) + '\t' + ','.join(del_size) + ' ' + ','.join(del_range) + '\t' + \
+#     ','.join(iso_ins_size) + ' ' + ','.join(iso_ins_range) + '\t' + ','.join(ins_size) + ' ' + \
+#     ','.join(ins_range) + '\t' + ','.join(complex_ins_size) + '\t' + ','.join(tdup) + ' ' + \
+#     ','.join(tdup_range) + '\t' + ','.join(inv) + ' ' + ','.join(inv_range) + '\t' + ','.join(intra_ins) + ' ' + \
+#     ','.join(intra_ins_range) + '\t' + ','.join(inter_ins) + ' ' + ','.join(inter_ins_range) + '\t' + \
+#     ','.join(intertx) + ' ' + ','.join(intertx_break) + '\t' + ','.join(strand_total) + '\t' + \
+#     str(short) + '\t' + sat + '\t' + ','.join(complex_sv) + '\t' + ", ".join(total_sv_complex.split()) + '\t' + \
+#     ','.join(sv_range) + '\t' + str(chromorder) + '\t' + ''.join(str(subject)) + '\t' + str(query) + '\t' + \
+#     ','.join(piden_total) + '\t' + ','.join(mismatch_ratio_total) + '\t' + ','.join(gap_ratio_total)
 
 # Out2: 0=readname, 1=total_chromosome(s), 2=No._of_maps, 3=query_signature, 4=evalue, 5=bitscore, 6=deletion,
 # 7=Isolated_insertion, 8=Insertion, 9=complex_insertion, 10=tandemDupl, 11=inversion, 12=intra_insertion, 13=inter_insertion,

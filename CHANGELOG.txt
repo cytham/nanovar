@@ -4,6 +4,32 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3a0 - Feb 28, 2020
+    * Tool requirement changes:
+        * Added SAMTools
+        * Added Minimap2
+
+    * Algorithm and pipeline changes:
+        * NanoVar now uses both minimap2 and hs-blastn for increased sensitivity
+        * Upgraded model (v5)
+        * Improved time complexity for clustering algorithm
+        * Minor tuning of SV confidence scores by normal read coverage and number of alignments
+        * Default SV read support -c changed from 1 to 2
+        * Added progress information command-line feed during the run.
+
+    * Input/Ouput changes:
+        * NanoVar can now take a BAM file (tested BAM from minimap2) as input instead of FASTQ/FASTA reads
+        * Added ONT/PacBio option (For future use, currently both tech uses same model)
+        * Added custom model option
+        * Added --debug option
+        * Added Minimap2 executable path option
+        * Added SAMTools executable path option
+
+    * VCF format changes:
+        * "END" coordinate for BND SVs will now show POS+1 coordinate instead of "." to be usable for IGV (Thanks to Scott)
+
+
+
 Version 1.2.7 - Dec 15, 2019
     * Upgraded model (v4)
     * Changed default score threshold to 1.0

@@ -74,10 +74,17 @@ def make_gsize(contig_len_dict, wk_dir):
     data = open(path, 'w')
     tmp = []
     for contig in contig_len_dict:
+        checkcontigname(contig)
         tmp.append(contig + '\t' + str(contig_len_dict[contig]))
     data.write('\n'.join(tmp))
     data.close()
     return path
+
+
+# Check contig name
+def checkcontigname(contig):
+    if "~" in contig or ":" in contig or "-" in contig:
+        raise Exception("Contig name %s contains invalid symbols [ ~ : - ]" % contig)
 
 
 # Generate number of genomic points

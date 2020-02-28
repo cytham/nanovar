@@ -34,14 +34,14 @@ from nanovar import __version__
 
 
 # Create HTML report
-def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict, read_name, ref_name, num_limit, ratio_limit):
-    # matplotlib.use('Agg')
+def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict, read_name, num_limit, ratio_limit):
     timenow = datetime.datetime.now()
     fwd = os.path.join(os.getcwd(), wk_dir, 'fig')
     fwd_fig = './fig'
     threshold = thres
     num_header = len(contig_len_dict) + 24
-    vcf_path = os.path.join(wk_dir, '%s-%s.total.nanovar.vcf' % (read_name, ref_name))
+    vcf_path = os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name)
+    vcf_path_pass = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name)
     vcf_data = open(vcf_path, 'r').read().splitlines()
     vcf = sorted(vcf_data[num_header:], key=lambda x: float(x.split('\t')[5]), reverse=True)
     # Creating variables
@@ -118,7 +118,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     # Resize data for table
     data2 = data[0:num_limit]
     # Write HTML
-    create_html(data2, fwd_fig, wk_dir, vcf_path, timenow, read_name, ref_name, read_path, ref_path, threshold, n, totalsv)
+    create_html(data2, fwd_fig, wk_dir, vcf_path_pass, timenow, read_name, read_path, ref_path, threshold, n, totalsv)
     # Copy css and js directories
     css = os.path.join(os.path.dirname(nanovar.__file__), 'css')
     js = os.path.join(os.path.dirname(nanovar.__file__), 'js')
@@ -203,12 +203,6 @@ def sv_type_dist(svdict, fwd):
         if svdict[key] > 0:
             label.append(str(svdict[key]) + svnamedict[key])
             data.append(svdict[key])
-    # label = [str(svdict['DEL']) + " Deletions",
-    #          str(svdict['INS']) + " Insertions",
-    #          str(svdict['INV']) + " Inversions",
-    #          str(svdict['DUP']) + " TandemDups",
-    #          str(svdict['BND']) + " Breakends (TLO/TPO)"]
-    # data = [svdict['DEL'], svdict['INS'], svdict['INV'], svdict['DUP'], svdict['BND']]
 
     def func(pct, allvals):
         absolute = int(pct/100.*np.sum(allvals))
@@ -272,9 +266,8 @@ def measureqlen(rlen_dict):
 
 
 # Create html
-def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, ref_name, read_path, ref_path, threshold, n, totalsv):
-    # vcf_name = open(vcf_path, 'r').name
-    html = open(os.path.join(wk_dir, '%s-%s.pass.nanovar.report.html' % (read_name, ref_name)), 'w')
+def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_path, threshold, n, totalsv):
+    html = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
     begin = """<!DOCTYPE html>
     <html lang="en">
     <head>

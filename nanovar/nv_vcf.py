@@ -27,8 +27,7 @@ from natsort import natsorted
 from nanovar import __version__
 
 
-def create_vcf(wk_dir, thres, nn_out, ref_path, ref_name, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t):
-    u = 0
+def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t):
     rdata = nn_out
     # Calculating number of entries
     t = len(rdata)
@@ -36,140 +35,150 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, ref_name, read_path, read_name, 
     k = range(t)
     # Create last line dummy
     rdata.append('dum\tdum\tdum\tdum\tdum\tdum\tdum\tdum\tdum')
-    vcf_total = open(os.path.join(wk_dir, '%s-%s.total.nanovar.vcf' % (read_name, ref_name)), 'w')
-    vcf_pass = open(os.path.join(wk_dir, '%s-%s.pass.nanovar.vcf' % (read_name, ref_name)), 'w')
+    vcf_total = open(os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name), 'w')
+    vcf_pass = open(os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name), 'w')
     add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres)
     add_header(vcf_pass, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres)
     tmpread = []
     out = []
     for i in k:
-        # Sensing consecutive SV breakpoint unique identifier
-        if rdata[i].split('\t')[8] == rdata[i + 1].split('\t')[8]:
-            tmpread.append(rdata[i])
-        else:
-            tmpread.append(rdata[i])
-            u += 1
-            covl = int(tmpread[0].split('\t')[10])
-            normcov = int(float(tmpread[0].split('\t')[12]))
-            dnnscore = float(tmpread[0].split('\t')[13])
-            dnn = str(round(float(dnnscore), 3))
-            phred = str(round(float(phredc(dnnscore)), 1))
-            sv_id = 'nv_SV' + str(u) + '-' + tmpread[0].split('\t')[6].split('~')[0]
-            bp_name = tmpread[0].split('\t')[3].split(' ')[0]
-            chrm1 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
-            filt = filterer(float(phred), thres)
-            dp = str(covl + normcov)
-            ratio = round(float(covl) / int(dp), 3)
-            geno = genotyper(ratio, homo_t, het_t)
-            if bp_name == 'Nov_Ins':
-                sv = '<INS>'
-                sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
-                    covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'E-Nov_Ins_bp' or bp_name == 'S-Nov_Ins_bp':
-                sv = '<INS>'
-                sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
-                    covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Del':
-                sv = '<DEL>'
-                sv_len = '-' + str(tmpread[0].split('\t')[3].split(' ')[1]).split('~')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=DEL;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Inv':
-                sv = '<INV>'
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                sv_len = coord2 - coord1
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Inv(1)' or bp_name == 'Inv(2)':
-                sv = '<INV>'
-                sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'TDupl':
-                sv = '<DUP>'
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                sv_len = coord2 - coord1
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                           str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Intra-Ins':
-                sv_len = '.'
-                strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
-                chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-                out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Intra-Ins(1)' or bp_name == 'Intra-Ins(2)':
-                sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
-                strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
-                chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-                out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'Inter-Ins(1)' or bp_name == 'Inter-Ins(2)':
-                sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
-                strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
-                chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
-                a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-                out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            elif bp_name == 'InterTx':
-                sv_len = '.'
-                strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
-                chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
-                coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
-                coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
-                a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-                out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-                out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                           filt + '\t' + 'SVTYPE=BND;END=.;SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' + str(dnn) +
-                           ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        tmpread.append(rdata[i])
+        covl = int(tmpread[0].split('\t')[10])
+        normcov = int(float(tmpread[0].split('\t')[12]))
+        dnnscore = float(tmpread[0].split('\t')[13])
+        dnn = str(round(float(dnnscore), 3))
+        phred = str(abs(round(float(phredc(dnnscore)), 1)))
+        sv_id = tmpread[0].split('\t')[6].split('~')[0]
+        bp_name = tmpread[0].split('\t')[3].split(' ')[0]
+        chrm1 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
+        filt = filterer(float(phred), thres)
+        dp = str(covl + normcov)
+        ratio = round(float(covl) / int(dp), 3)
+        geno = genotyper(ratio, homo_t, het_t)
+        if bp_name == 'Nov_Ins':
+            sv = '<INS>'
+            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
+                covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'E-Nov_Ins_bp' or bp_name == 'S-Nov_Ins_bp':
+            pass
+            sv = '<INS>'
+            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=>' + str(sv_len) + ';SR=' + str(
+                covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Del':
+            sv = '<DEL>'
+            sv_len = int(tmpread[0].split('\t')[3].split(' ')[1].split('~')[0])
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            if coord2 - coord1 == 1:
+                coord1 = coord1 - int(round(sv_len/2, 0))
+                coord2 = coord2 + int(round(sv_len/2, 0)) - 1
+                sv_len = '-' + str(sv_len)
             else:
-                raise Exception("Error: Unrecognised breakpoint name")
-            tmpread = []
+                sv_len = '-' + str(coord2 - coord1)
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=DEL;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Inv':
+            sv = '<INV>'
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            if coord2 - coord1 == 1:
+                coord1 = coord1 - 25
+                coord2 = coord2 + 24
+            sv_len = coord2 - coord1
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Inv(1)' or bp_name == 'Inv(2)':
+            sv = '<INV>'
+            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'TDupl':
+            sv = '<DUP>'
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            if coord2 - coord1 == 1:
+                coord1 = coord1 - 25
+                coord2 = coord2 + 24
+            sv_len = coord2 - coord1
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Intra-Ins':
+            sv_len = '.'
+            strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
+            chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Intra-Ins(1)' or bp_name == 'Intra-Ins(2)':
+            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
+            chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'Inter-Ins(1)' or bp_name == 'Inter-Ins(2)':
+            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
+            chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
+            a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        elif bp_name == 'InterTx':
+            sv_len = '.'
+            strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
+            chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
+            coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
+            coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
+            a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+        else:
+            raise Exception("Error: Unrecognised breakpoint name")
+        tmpread = []
     out_sort1 = natsorted(out, key=lambda x: x.split('\t')[1])  # sort by POS
     total_vcf = natsorted(out_sort1, key=lambda x: x.split('\t')[0])  # sort by CHROM
     for e in total_vcf:
         vcf_total.write(e + '\n')
         if e.split('\t')[6] == 'PASS':
             vcf_pass.write(e + '\n')
+    vcf_total.close()
+    vcf_pass.close()
 
 
 # Write VCF header
@@ -181,7 +190,7 @@ def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_d
     vcf_file.write('##source=NanoVar-%s\n' % __version__)
     vcf_file.write('##source_reads=%s\n' % read_path)
     vcf_file.write('##reference=%s\n' % ref_path)
-    vcf_file.write('##mapping=HS-BLAST=%s\n' % blast_cmd)
+    vcf_file.write('##mapping=%s\n' % blast_cmd)
     vcf_file.write('##phasing=none\n')
     for key in contig_len_dict:
         vcf_file.write('##contig=<ID=%s,length=%s>\n' % (key, str(contig_len_dict[key])))

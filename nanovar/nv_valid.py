@@ -29,7 +29,7 @@ def fastx_valid(reads, ext):
     lineskip = 0
     totalc = 0
     corrupted = 0
-    rlen_dict = {}
+    # rlen_dict = {}
     if ext == "gz":
         with gzip.open(reads, 'rt') as f:
             line1n2 = [next(f) for x in range(2)]
@@ -40,8 +40,8 @@ def fastx_valid(reads, ext):
             if "line3n4" in locals():
                 if line1n2[0][0] == ">" and line3n4[0][0] == ">":
                     xformat = "fasta"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
-                    rlen_dict[line3n4[0].split()[0][1:].strip()] = len(line3n4[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line3n4[0].split()[0][1:].strip()] = len(line3n4[1].strip())
                     for line in f:
                         c += 1
                         if lineskip == 0:
@@ -51,14 +51,14 @@ def fastx_valid(reads, ext):
                             rname = line.split()[0][1:].strip()
                             lineskip = 1
                         else:
-                            rlen_dict[rname] = len(line.strip())
+                            # rlen_dict[rname] = len(line.strip())
                             lineskip = 0
                             if c == 100000:
                                 totalc = totalc + c
                                 c = 0
                 elif line1n2[0][0] == "@" and line3n4[0][0] == "+":
                     xformat = "fastq"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
                     for line in f:
                         c += 1
                         if lineskip == 0:
@@ -68,7 +68,7 @@ def fastx_valid(reads, ext):
                             rname = line.split()[0][1:].strip()
                             lineskip = 1
                         elif lineskip == 1:
-                            rlen_dict[rname] = len(line.strip())
+                            # rlen_dict[rname] = len(line.strip())
                             lineskip = 2
                         elif lineskip == 2:
                             if line[0] != "+":
@@ -88,7 +88,7 @@ def fastx_valid(reads, ext):
             else:
                 if line1n2[0][0] == ">":
                     xformat = "fasta"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
                     c = 0
                 else:
                     c = 1
@@ -103,8 +103,8 @@ def fastx_valid(reads, ext):
             if "line3n4" in locals():
                 if line1n2[0][0] == ">" and line3n4[0][0] == ">":
                     xformat = "fasta"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
-                    rlen_dict[line3n4[0].split()[0][1:].strip()] = len(line3n4[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line3n4[0].split()[0][1:].strip()] = len(line3n4[1].strip())
                     for line in f:
                         c += 1
                         if lineskip == 0:
@@ -114,14 +114,14 @@ def fastx_valid(reads, ext):
                             rname = line.split()[0][1:].strip()
                             lineskip = 1
                         else:
-                            rlen_dict[rname] = len(line.strip())
+                            # rlen_dict[rname] = len(line.strip())
                             lineskip = 0
                             if c == 100000:
                                 totalc = totalc + c
                                 c = 0
                 elif line1n2[0][0] == "@" and line3n4[0][0] == "+":
                     xformat = "fastq"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
                     for line in f:
                         c += 1
                         if lineskip == 0:
@@ -131,7 +131,7 @@ def fastx_valid(reads, ext):
                             rname = line.split()[0][1:].strip()
                             lineskip = 1
                         elif lineskip == 1:
-                            rlen_dict[rname] = len(line.strip())
+                            # rlen_dict[rname] = len(line.strip())
                             lineskip = 2
                         elif lineskip == 2:
                             if line[0] != "+":
@@ -151,7 +151,7 @@ def fastx_valid(reads, ext):
             else:
                 if line1n2[0][0] == ">":
                     xformat = "fasta"
-                    rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
+                    # rlen_dict[line1n2[0].split()[0][1:].strip()] = len(line1n2[1].strip())
                     c = 0
                 else:
                     c = 1
@@ -160,18 +160,18 @@ def fastx_valid(reads, ext):
     if corrupted == 0:
         if xformat == 'fasta':
             if c == 0:
-                return ["Pass", int(((totalc + c) / 2) + 1)], rlen_dict  # [Status, read count]
+                return ["Pass", int(((totalc + c) / 2) + 1)]  # [Status, read count]
             elif c % 2 == 0:
-                return ["Pass", int(((totalc + c) / 2) + 2)], rlen_dict  # [Status, read count]
+                return ["Pass", int(((totalc + c) / 2) + 2)]  # [Status, read count]
             else:
-                return ["Fail", int(totalc + c) + 2], rlen_dict  # [Status, line error]
+                return ["Fail", int(totalc + c) + 2]  # [Status, line error]
         elif xformat == 'fastq':
             if c % 4 == 0:
-                return ["Pass", int(((totalc + c) / 4) + 1)], rlen_dict  # [Status, read count]
+                return ["Pass", int(((totalc + c) / 4) + 1)]  # [Status, read count]
             else:
-                return ["Fail", int(totalc + c) + 4], rlen_dict  # [Status, line error]
+                return ["Fail", int(totalc + c) + 4]  # [Status, line error]
     elif corrupted == 1:
-        return ["Fail", int(totalc + c) + 4], rlen_dict  # [Status, line error]
+        return ["Fail", int(totalc + c) + 4]  # [Status, line error]
 
 
 def bed_valid(filter_path, contig_len_dict):

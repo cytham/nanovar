@@ -24,25 +24,11 @@ from collections import OrderedDict
 from pybedtools import BedTool
 
 
-def sv_cluster(subdata, parse, buf, maxovl, mincov):
-    rangedict, svsizedictsort, infodict, bed_str1, bed_str2 = rangecollect(parse, buf)
-    bed1 = BedTool(bed_str1, from_string=True)
-    bed1 = bed1.sort()
-    bed2 = BedTool(bed_str2, from_string=True)
-    bed2 = bed2.sort()
-    insect = bed1.intersect(bed2, wa=True, wb=True)
-    intersect = []
-    for line in insect:
-        line = list(line)
-        if line[3] != line[8]:
-            intersect.append('\t'.join(line))
-    connectdict, classdict = intersection(intersect, bed1)
-    tier1, tier2, tier3 = classranker(classdict, svsizedictsort)
-    readdicta, readdictb = connector(connectdict, tier1, tier2, tier3, classdict)
-    readdictc = classupdate(readdictb)
-    newdict = bestread(readdicta, classdict, readdictc)
+# SV clustering
+def sv_cluster(subdata, parse, buf, maxovl, mincov, ins_switch):
+    readteam, infodict, classdict, mainclass, svsizedict = rangecollect(parse, buf, ins_switch)
     bed_str3 = normalbed(subdata)
-    bed_str4 = svbed(newdict, infodict)
+    bed_str4 = svbed(readteam, mainclass)
     bed3 = BedTool(bed_str3, from_string=True)
     bed3 = bed3.sort()
     bed4 = BedTool(bed_str4, from_string=True)
@@ -51,11 +37,10 @@ def sv_cluster(subdata, parse, buf, maxovl, mincov):
     intersect2 = []
     for line in insect2:
         line = list(line)
-        if line[3] != line[7]:
-            intersect2.append('\t'.join(line))
-    newdictnouniq = remove_uniq(newdict)  # Remove unique identifier from read name
-    svnormalcov = intersection2(intersect2, newdict, newdictnouniq, infodict, classdict)
-    output = arrange(newdict, infodict, svnormalcov, maxovl, mincov)
+        intersect2.append('\t'.join(line))
+    newdictnouniq = remove_uniq(readteam)  # Remove unique identifier from read name
+    svnormalcov = intersection2(intersect2, readteam, newdictnouniq, mainclass)
+    output = arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict)
     return output
 
 
@@ -67,72 +52,164 @@ def alpha(n):
         return int(0)
 
 
-# Function to convert . to zero
-def dotter(dot):
-    if dot == '.':
-        return float(0)
-    else:
-        return float(dot)
-
-
-# Function to set minimum value to 0
-def mz(value):
-    if value < 0:
-        return 0
-    else:
-        return value
-
-
-# Function to collect information of each breakpoint entry (e.g. chromosome, range, SV size, SV type)
-def rangecollect(x, buf):
-    namerepeat = OrderedDict()
-    rangedict = OrderedDict()
+# Function to collect information of each breakpoint entry and cluster breakpoints
+def rangecollect(x, buf, ins_switch):
+    classdict = OrderedDict()
     svsizedict = OrderedDict()
     infodict = OrderedDict()
-    bed1 = []
-    bed2 = []
+    classclust = OrderedDict()
     for i in x:
-        try:
-            infodict[i.split('\t')[8]].append('\t'.join(i.split('\t')[0:10]))
-        except KeyError:
-            infodict[i.split('\t')[8]] = []
-            infodict[i.split('\t')[8]].append('\t'.join(i.split('\t')[0:10]))
-        try:
-            namerepeat[i.split('\t')[8]] == 1
-        except KeyError:
-            namerepeat[i.split('\t')[8]] = 1
-            rnameidx = i.split('\t')[8]
-            svtype = str(svtypecorrector(i.split('\t')[3].split(' ')[0]))
-            if len(i.split('\t')[6].split('~')) == 2:  # Not Inter translocation
-                if len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 1:
-                    chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
-                    le = int(i.split('\t')[6].split('~')[1].split(':')[1])
-                    svsizedict[rnameidx] = alpha(i.split('\t')[3].split(' ')[-1])
-                    bed1.append(chm1 + '\t' + str(le) + '\t' + str(le+1) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                    bed2.append(chm1 + '\t' + str(mz(le-buf)) + '\t' + str(le+buf) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                elif len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 2:
-                    chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
-                    le = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
-                    r = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                    svsizedict[rnameidx] = alpha(i.split('\t')[3].split(' ')[-1])
-                    bed1.append(chm1 + '\t' + str(le) + '\t' + str(le+1) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                    bed1.append(chm1 + '\t' + str(r) + '\t' + str(r+1) + '\t' + rnameidx + '-r' + '\t' + svtype)
-                    bed2.append(chm1 + '\t' + str(mz(le-buf)) + '\t' + str(le+buf) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                    bed2.append(chm1 + '\t' + str(mz(r-buf)) + '\t' + str(r+buf) + '\t' + rnameidx + '-r' + '\t' + svtype)
-            elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
+        rnameidx = i.split('\t')[8]
+        infodict[rnameidx] = '\t'.join(i.split('\t')[0:10])
+        svtype = str(svtypecorrector(i.split('\t')[3].split(' ')[0]))
+        classdict[rnameidx] = svtype
+        svsizedict[rnameidx] = alpha(i.split('\t')[3].split(' ')[1].split('~')[0])
+        # if svtype != 'bp_Nov_Ins':
+        if len(i.split('\t')[6].split('~')) == 2:  # Not Inter translocation
+            if len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 1:
                 chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
-                chm2 = i.split('\t')[6].split('~')[2].split(':')[0]
                 le = int(i.split('\t')[6].split('~')[1].split(':')[1])
-                r = int(i.split('\t')[6].split('~')[2].split(':')[1])
-                svsizedict[rnameidx] = alpha(i.split('\t')[3].split(' ')[-1])
-                bed1.append(chm1 + '\t' + str(le) + '\t' + str(le+1) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                bed1.append(chm2 + '\t' + str(r) + '\t' + str(r+1) + '\t' + rnameidx + '-r' + '\t' + svtype)
-                bed2.append(chm1 + '\t' + str(mz(le-buf)) + '\t' + str(le+buf) + '\t' + rnameidx + '-l' + '\t' + svtype)
-                bed2.append(chm2 + '\t' + str(mz(r-buf)) + '\t' + str(r+buf) + '\t' + rnameidx + '-r' + '\t' + svtype)
-    svsizedictsort = [key for (key, value) in sorted(svsizedict.items(), key=lambda y: y[1], reverse=True)]
-    bed_str1 = '\n'.join(bed1)
-    bed_str2 = '\n'.join(bed2)
-    return rangedict, svsizedictsort, infodict, bed_str1, bed_str2
+                if chm1 not in classclust:
+                    classclust[chm1] = OrderedDict()
+                classclust[chm1][rnameidx + '-l'] = le
+            elif len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 2:
+                chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
+                le = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+                r = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+                if chm1 not in classclust:
+                    classclust[chm1] = OrderedDict()
+                classclust[chm1][rnameidx + '-l'] = le
+                classclust[chm1][rnameidx + '-r'] = r
+        elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
+            chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
+            chm2 = i.split('\t')[6].split('~')[2].split(':')[0]
+            le = int(i.split('\t')[6].split('~')[1].split(':')[1])
+            r = int(i.split('\t')[6].split('~')[2].split(':')[1])
+            if chm1 not in classclust:
+                classclust[chm1] = OrderedDict()
+            classclust[chm1][rnameidx + '-l'] = le
+            if chm2 not in classclust:
+                classclust[chm2] = OrderedDict()
+            classclust[chm2][rnameidx + '-r'] = r
+    chrnamelist = OrderedDict()
+    chrcoorlist = OrderedDict()
+    for chrm in classclust:
+        classclust[chrm] = OrderedDict(sorted(classclust[chrm].items(), key=lambda y: y[1]))
+        chrnamelist[chrm] = []
+        chrcoorlist[chrm] = []
+        for key in classclust[chrm]:
+            chrnamelist[chrm].append(key[:-2])
+            chrcoorlist[chrm].append(classclust[chrm][key])
+    readteam, mainclass = cluster(chrnamelist, chrcoorlist, buf, svsizedict, classdict, ins_switch)
+    return readteam, infodict, classdict, mainclass, svsizedict
+
+
+# Cluster coordinates
+def cluster(chrnamelist, chrcoorlist, buf, svsizedict, classdict, ins_switch):
+    cluster2read = OrderedDict()
+    read2cluster = OrderedDict()
+    for chrm in chrnamelist:
+        n = len(chrnamelist[chrm])
+        last = None
+        group = []
+        groupnames = []
+        for i in range(n):
+            if last is None or chrcoorlist[chrm][i] - last <= buf:
+                group.append(chrcoorlist[chrm][i])
+                groupnames.append(chrnamelist[chrm][i])
+            else:
+                avgcoord = int(round(sum(group) / len(group), 0))
+                cluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+                for read in sorted(set(groupnames)):
+                    if read not in read2cluster:
+                        read2cluster[read] = []
+                    read2cluster[read].append(chrm + ':' + str(avgcoord))
+                group = [chrcoorlist[chrm][i]]
+                groupnames = [chrnamelist[chrm][i]]
+            last = chrcoorlist[chrm][i]
+        if group:
+            avgcoord = int(round(sum(group) / len(group), 0))
+            cluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+            for read in sorted(set(groupnames)):
+                if read not in read2cluster:
+                    read2cluster[read] = []
+                read2cluster[read].append(chrm + ':' + str(avgcoord))
+    clusterlink = OrderedDict()
+    coordlist2 = []
+    for read in read2cluster:
+        if read2cluster[read][0] not in clusterlink:  # priming
+            clusterlink[read2cluster[read][0]] = []
+        if len(read2cluster[read]) == 1:
+            pass
+        elif len(read2cluster[read]) == 2:
+            clusterlink[read2cluster[read][0]].append(read2cluster[read][1])
+            coordlist2.append(read2cluster[read][1])
+        else:
+            raise Exception("Read %s has none or more than 2 clusters" % read)
+    for clusters in coordlist2:  # for clusters that have been right paired
+        try:
+            if not clusterlink[clusters]:  # if that cluster has no right paired/is single cluster
+                del clusterlink[clusters]  # delete the cluster
+        except KeyError:
+            pass
+    for clusters in clusterlink:
+        clusterlink[clusters] = sorted(set(clusterlink[clusters]))
+    readteam = OrderedDict()
+    mainclass = OrderedDict()
+    pastbps = {}
+    for coord in cluster2read:  # For each clusters
+        if coord in clusterlink:  # If cluster is either unpaired or paired (left)
+            if not clusterlink[coord]:  # If cluster is unpaired, svclass concordance matters here
+                leaders, teams, svclasses = svclass_sep(cluster2read[coord], classdict, svsizedict)
+                # lead, main = leadread(cluster2read[coord], svsizedict, classdict, ins_switch)
+                no = len(leaders)
+                for i in range(no):
+                    if svclasses[i] in ['Nov_Ins', 'bp_Nov_Ins']:
+                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = [leaders[i]]
+                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])].extend(sorted(set(
+                            teams[i]).difference([leaders[i]])))
+                        mainclass[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = svclasses[i]
+                    else:
+                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
+                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])] = [leaders[i]]
+                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
+                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])].extend(
+                            sorted(set(teams[i]).difference([leaders[i]])))
+                        mainclass[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
+                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])] = svclasses[i]
+            else:  # If cluster is paired (left)
+                for coord2 in clusterlink[coord]:
+                    readlist = []
+                    readlist.extend(sorted(set(cluster2read[coord]).intersection(cluster2read[coord2])))
+                    for read in sorted(set(cluster2read[coord]).difference(cluster2read[coord2])):
+                        if classdict[read] == 'bp_Nov_Ins':
+                            if read not in pastbps:
+                                readlist.append(read)
+                                pastbps[read] = 1
+                    lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, ins_switch)
+                    readteam[coord + '-' + coord2] = [lead]
+                    readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))
+                    mainclass[coord + '-' + coord2] = main
+    return readteam, mainclass
+
+
+def leadread(reads, svsizedict, classdict, ins_switch):
+    if ins_switch:
+        mainsvclass = mainclasssv_ins(reads, classdict)
+    else:
+        mainsvclass = mainclasssv(reads, classdict)
+    sizedict = OrderedDict()
+    leader = ''
+    for read in reads:
+        sizedict[read] = svsizedict[read]
+    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    for read in sizedictsort:
+        if classdict[read] == mainsvclass:
+            leader = read
+            break
+    if leader == '':
+        raise Exception("Error: Main SV class not found")
+    return leader, mainsvclass
 
 
 # Function to standardize names of SV types
@@ -159,199 +236,129 @@ def svtypecorrector(svtype):
         return svtype
 
 
-def svgroup(svclass):
-    if svclass == 'bp_Nov_Ins':
-        return ['bp_Nov_Ins', 'Nov_Ins', 'Inter-Ins', 'Inter', 'Inv2', 'Inv', 'Intra-Ins2', 'Intra-Ins', 'Del', 'TDupl']
-    elif svclass == 'Nov_Ins':
-        return ['bp_Nov_Ins', 'Nov_Ins']
-    elif svclass == 'Inter-Ins':
-        return ['bp_Nov_Ins', 'Inter-Ins', 'Inter']
-    elif svclass == 'Inter':
-        return ['bp_Nov_Ins', 'Inter-Ins', 'Inter']
-    elif svclass == 'Inv2':
-        return ['bp_Nov_Ins', 'Inv2', 'Inv']
-    elif svclass == 'Inv':
-        return ['bp_Nov_Ins', 'Inv2', 'Inv']
-    elif svclass == 'Intra-Ins2':
-        return ['bp_Nov_Ins', 'Intra-Ins2', 'Intra-Ins']
-    elif svclass == 'Intra-Ins':
-        return ['bp_Nov_Ins', 'Intra-Ins2', 'Intra-Ins']
-    elif svclass == 'Del':
-        return ['bp_Nov_Ins', 'Del']
-    elif svclass == 'TDupl':
-        return ['bp_Nov_Ins', 'TDupl']
-
-
-# Function to connect overlaping overlaping breakpoint entries
-def intersection(intersect, bed1):
-    connectdict = OrderedDict()
-    classdict = OrderedDict()
-    for i in bed1:
-        i = list(i)
-        connectdict[i[3]] = []
-        classdict[i[3][0:-2]] = i[4]
-    for i in intersect:
-        if i.split('\t')[4] in svgroup(i.split('\t')[9]):
-            connectdict[i.split('\t')[8]].append(i.split('\t')[3][0:-2])
-    return connectdict, classdict
-
-
 # Remove unique identifier from read name
-def remove_uniq(x):
+def remove_uniq(readteam):
     newdictnouniq = OrderedDict()
-    for i in x:
-        newdictnouniq[i] = []
-        for j in x[i]:
-            newdictnouniq[i].append(j[:-8])
+    for clusters in readteam:
+        newdictnouniq[clusters] = []
+        for read in readteam[clusters]:
+            newdictnouniq[clusters].append(read[:-6])
     return newdictnouniq
 
 
-def intersection2(intersect2, x, newdictnouniq, infodict, classdict):
-    svnormalconnect = OrderedDict()
-    svnormalcov = OrderedDict()
-    for key in x:
-        svnormalconnect[key] = []
-    for i in intersect2:
-        if i.split('\t')[3] not in newdictnouniq[i.split('\t')[7]]:
-            if classdict[i.split('\t')[7]] == 'TDupl':  # If Dup, make sure normal read covers both breakpoints of Dup
-                # for n in infodict[i.split('\t')[7]]:  # Redundant as each novel adjacency on read can have max 2 breakpoints
-                if int(i.split('\t')[1]) <= int(infodict[i.split('\t')[7]][0].split('\t')[5]) <= int(i.split('\t')[2]) and \
-                        int(i.split('\t')[1]) <= int(infodict[i.split('\t')[7]][1].split('\t')[5]) <= int(i.split('\t')[2]):
-                    svnormalconnect[i.split('\t')[7]].append(i.split('\t')[3])
-            else:
-                svnormalconnect[i.split('\t')[7]].append(i.split('\t')[3])
-    for key in svnormalconnect:
-        svnormalcov[key] = float(len(set(svnormalconnect[key])))  # set() removes duplicates
-    return svnormalcov
-
-
-# Ordering classes
-def classranker(x, svsizedictsort):
-    tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
-    tier2sv = ['Inv', 'Del', 'TDupl', 'Nov_Ins', 'Intra-Ins', 'Inter']
-    tier1sv = ['bp_Nov_Ins']
-    tier1 = []
-    tier2 = []
-    tier3 = []
-    for keys in svsizedictsort:
-        if x[keys] in tier1sv:
-            tier1.append(keys)
-        elif x[keys] in tier2sv:
-            tier2.append(keys)
-        elif x[keys] in tier3sv:
-            tier3.append(keys)
-        else:
-            raise Exception("Error: SV class error")
-    return tier1, tier2, tier3
-
-
-def connector(x, tier1, tier2, tier3, classdict):
-    namerepeat = OrderedDict()
-    readdicta = OrderedDict()
-    readdictb = OrderedDict()
-    alltier = tier3 + tier2 + tier1
-    for keys in alltier:
-        if keys not in namerepeat:
-            namerepeat[keys] = 1
-            readdicta[keys] = []
-            readdictb[keys] = []
-            readdictb[keys].append(classdict[keys])
-            for i in x[keys + '-l']:
-                if i not in namerepeat:
-                    if keys + '-r' in x:
-                        if i in x[keys + '-r']:
-                            namerepeat[i] = 1
-                            readdicta[keys].append(i)
-                            readdictb[keys].append(classdict[i])
-                        else:
-                            if i in tier1:  # Only for single-bp-end reads
-                                namerepeat[i] = 1
-                                readdicta[keys].append(i)
-                                readdictb[keys].append(classdict[i])
-                    else:
-                        namerepeat[i] = 1
-                        readdicta[keys].append(i)
-                        readdictb[keys].append(classdict[i])
-            if keys + '-r' in x:
-                for i in x[keys + '-r']:
-                    if i not in namerepeat:
-                        if i in tier1:  # Only for single-bp-end reads
-                            namerepeat[i] = 1
-                            readdicta[keys].append(i)
-                            readdictb[keys].append(classdict[i])
-            for i in readdicta[keys]:
-                for k in x[i + '-l']:
-                    if k not in namerepeat:
-                        if i + '-r' in x:
-                            if k in x[i + '-r']:
-                                namerepeat[k] = 1
-                                readdicta[keys].append(k)
-                                readdictb[keys].append(classdict[k])
-                        else:
-                            pass  # Ignoring fellows from single-bp-end reads
-    return readdicta, readdictb
-
-
 # Function to rank and filter best sv type
-def classupdate(readdictb):
-    readdictc = OrderedDict()
-    d = OrderedDict()
+def mainclasssv(reads, classdict):
     tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
     tier2sv = ['Inv', 'Del', 'TDupl', 'Nov_Ins', 'Intra-Ins', 'Inter']
     tier1sv = ['bp_Nov_Ins']
-    for keys in readdictb:
-        for i in readdictb[keys]:
-            if i not in d:
-                d[i] = 1
-            else:
-                d[i] += 1
-        if any(y in tier3sv for y in d):
-            for s in tier2sv:
-                try:
-                    del d[s]
-                except KeyError:
-                    pass
+    tmpdict = OrderedDict()
+    for read in reads:
+        svclass = classdict[read]
+        if svclass not in tmpdict:
+            tmpdict[svclass] = 1
+        else:
+            tmpdict[svclass] += 1
+    if any(y in tier3sv for y in tmpdict):
+        for s in tier2sv:
             try:
-                del d["bp_Nov_Ins"]
+                del tmpdict[s]
             except KeyError:
                 pass
-        elif any(y in tier2sv for y in d):
-            try:
-                del d["bp_Nov_Ins"]
-            except KeyError:
-                pass
-        elif any(y in tier1sv for y in d):
+        try:
+            del tmpdict["bp_Nov_Ins"]
+        except KeyError:
             pass
-        else:
-            raise Exception("Error: Unknown SV class")
-        mainsv = [key for (key, value) in sorted(d.items(), key=lambda x:x[1], reverse=True)][0]
-        readdictc[keys] = mainsv
-        d = OrderedDict()
-    return readdictc
+    elif any(y in tier2sv for y in tmpdict):
+        try:
+            del tmpdict["bp_Nov_Ins"]
+        except KeyError:
+            pass
+    elif any(y in tier1sv for y in tmpdict):
+        pass
+    else:
+        raise Exception("Error: Unknown SV class")
+    mainsvclass = [key for (key, value) in sorted(tmpdict.items(), key=lambda x: x[1], reverse=True)][0]
+    return mainsvclass
 
 
-# Function to find the lead breakpoint entry based on main sv type first come across
-def bestread(x, classdict, readdictc):
-    newdict = OrderedDict()
-    for keys in x:
-        main = ''
-        mainsv = readdictc[keys]
-        if classdict[keys] == mainsv:
-            main = keys
-            newdict[main] = []
-            for k in x[main]:
-                newdict[main].append(k)
+# Function to rank and filter SV type after INS re-analysis
+def mainclasssv_ins(reads, classdict):
+    tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2', 'TDupl']
+    tier2sv = ['Inv', 'Del', 'Nov_Ins', 'Intra-Ins', 'Inter']
+    tier1sv = ['bp_Nov_Ins']
+    tmpdict = OrderedDict()
+    for read in reads:
+        svclass = classdict[read]
+        if svclass not in tmpdict:
+            tmpdict[svclass] = 1
         else:
-            for k in x[keys]:
-                if classdict[k] == mainsv:
-                    main = k
+            tmpdict[svclass] += 1
+    if any(y in tier3sv for y in tmpdict):
+        for s in tier2sv:
+            try:
+                del tmpdict[s]
+            except KeyError:
+                pass
+        try:
+            del tmpdict["bp_Nov_Ins"]
+        except KeyError:
+            pass
+    elif any(y in tier2sv for y in tmpdict):
+        try:
+            del tmpdict["bp_Nov_Ins"]
+        except KeyError:
+            pass
+    elif any(y in tier1sv for y in tmpdict):
+        pass
+    else:
+        raise Exception("Error: Unknown SV class")
+    mainsvclass = [key for (key, value) in sorted(tmpdict.items(), key=lambda x: x[1], reverse=True)][0]
+    return mainsvclass
+
+
+# Segregate an unpaired cluster by different sv classes
+def svclass_sep(reads, classdict, svsizedict):
+    svreadteam = OrderedDict()
+    for read in reads:
+        svclass = classdict[read]
+        if svclass == 'bp_Nov_Ins':  # Bundle bp_Nov_Ins and Nov_Ins together
+            svclass = 'Nov_Ins'
+        try:
+            svreadteam[svclass].append(read)
+        except KeyError:
+            svreadteam[svclass] = [read]
+    leaders = []
+    teams = []
+    svclasses = []
+    for svtype in svreadteam:
+        sizedict = OrderedDict()
+        leader = ''
+        for read in svreadteam[svtype]:
+            sizedict[read] = svsizedict[read]
+        sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+        for read in sizedictsort:
+            if classdict[read] == svtype:
+                leader = read
+                break
+        if leader == '':
+            for read in sizedictsort:
+                if classdict[read] == 'bp_Nov_Ins':
+                    leader = read
                     break
-            newdict[main] = []
-            newdict[main].append(keys)
-            for r in x[keys]:
-                if r != main:
-                    newdict[main].append(r)
-    return newdict
+            if leader == '':
+                raise Exception("Error: Main SV seg class not found")
+        leaders.append(leader)
+        teams.append(svreadteam[svtype])
+        svclasses.append(classdict[leader])
+    return leaders, teams, svclasses
+
+
+# Convert single element list to .
+def dotter(readlist):
+    if len(readlist) == 1:
+        return '.'
+    else:
+        return readlist[1:]
 
 
 # Function to generate bed file from hsblast subdata
@@ -369,83 +376,113 @@ def normalbed(subdata):
     return bed_str3
 
 
-def svbed(x, infodict):
+# Function to generate bed file for SV breakpoints
+def svbed(readteam, mainclass):
     totalsvbed = []
-    for key in x:
-        for n in infodict[key]:
-            totalsvbed.append('\t'.join(n.split('\t')[4:6]) + '\t' + str(int(n.split('\t')[5]) + 1) + '\t' + key)
+    for clusters in readteam:
+        svtype = mainclass[clusters]
+        clusterlist = clusters.split('-')
+        for n in clusterlist:
+            totalsvbed.append(n.split(':')[0] + '\t' + n.split(':')[1] + '\t' + str(int(n.split(':')[1]) + 1) + '\t' +
+                              clusters + '\t' + svtype)
     bed_str4 = '\n'.join(totalsvbed)
     return bed_str4
 
 
-def svbed_test(x, infodict):
-    totalsvbed = []
-    for key in x:
-        for i in infodict[key]:
-            if len(i.split('\t')[6].split('~')) == 2:  # Not Inter translocation
-                totalsvbed.append('\t'.join(i.split('\t')[4:6]) + '\t' + str(int(i.split('\t')[5]) + 1) + '\t' + key)
-            elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
-                totalsvbed.append('\t'.join(i.split('\t')[4:6]) + '\t' + str(int(i.split('\t')[5]) + 1) + '\t' + key)
-    bed_str4 = '\n'.join(totalsvbed)
-    return bed_str4
-
-# Use maxovl for normalcov
-# DEL, INV average normalcov
-# Dup remain same calculation
-# for BND calculate normal cov based on 1 breakend according to bitscore
+# Parse BED intersection output
+def intersection2(intersect2, readteam, newdictnouniq, mainclass):
+    svnormalconnect = OrderedDict()
+    svnormalcov = OrderedDict()
+    for clusters in readteam:
+        svtype = mainclass[clusters]
+        if svtype in ['Intra-Ins2', 'Intra-Ins', 'Inter', 'Inter-Ins']:
+            svnormalconnect[clusters] = [[], []]
+        else:
+            svnormalconnect[clusters] = []
+    for line in intersect2:
+        clusters = line.split('\t')[7]
+        svtype = line.split('\t')[8]
+        # hybrid = clusters + '~' + svtype
+        read = line.split('\t')[3]
+        coord1 = int(line.split('\t')[1])
+        coord2 = int(line.split('\t')[2])
+        if read not in newdictnouniq[clusters]:
+            if svtype == 'TDupl':  # If Dup, make sure normal read covers both breakpoints of Dup
+                if coord1 <= int(clusters.split('-')[0].split(':')[1]) <= coord2 and \
+                        coord1 <= int(clusters.split('-')[1].split(':')[1]) <= coord2:
+                    svnormalconnect[clusters].append(read)
+            elif svtype in ['Intra-Ins2', 'Intra-Ins', 'Inter', 'Inter-Ins']:
+                if line.split('\t')[5] == clusters.split('-')[0].split(':')[1]:  # Figuring which breakend (left)
+                    svnormalconnect[clusters][0].append(read)
+                elif line.split('\t')[5] == clusters.split('-')[1].split(':')[1]:  # Figuring which breakend (right)
+                    svnormalconnect[clusters][1].append(read)
+                else:
+                    raise Exception('Error: BND coordinate not in records')
+            else:
+                svnormalconnect[clusters].append(read)
+    for clusters in svnormalconnect:
+        svtype = mainclass[clusters]
+        if svtype in ['Del', 'Inv']:
+            svnormalcov[clusters] = int(round(len(svnormalconnect[clusters])/2, 0))
+        elif svtype in ['Intra-Ins2', 'Intra-Ins', 'Inter', 'Inter-Ins']:
+            svnormalcov[clusters] = min(len(set(svnormalconnect[clusters][0])), len(set(svnormalconnect[clusters][1])))
+        else:
+            svnormalcov[clusters] = int(len(set(svnormalconnect[clusters])))  # set() removes duplicates
+    return svnormalcov
 
 
 # Function to count total number of unique reads in an overlaping breakpoint entry
-def countcov(key, x):
-    readdict = OrderedDict()
-    readdict[key[:-6]] = 1
-    for i in x[key]:
-        readdict[i[:-6]] = 1
-    return len(readdict)
+def countcov(readlist):
+    newlist = []
+    for read in readlist:
+        newlist.append(read[:-6])
+    return len(set(newlist))
 
 
-# Function to parse lead overlaping breakpoint entry and long read coverage into output
-def arrange(x, infodict, svnormalcov, maxovl, mincov):
+# Parse info into output
+def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict):
     output = []
-    for key in x:
-        lcov = countcov(key, x)
-        if lcov >= mincov:
-            if lcov == 1:
-                for n in infodict[key]:
-                    output.append(n + '\t' + str(lcov) + '\t.\t' + str(svnormalcov[key]))
-            elif 1 < lcov < maxovl:
-                for n in infodict[key]:
-                    output.append(n + '\t' + str(lcov) + '\t' + ','.join(x[key]) + '\t' + str(svnormalcov[key]))
+    n = 1
+    for clusters in readteam:
+        svtype = mainclass[clusters]
+        lcov = countcov(readteam[clusters])
+        bestread = readteam[clusters][0]
+        if mincov <= lcov <= maxovl and svnormalcov[clusters] <= maxovl:
+            if svtype in ['Inter', 'Inter-Ins']:
+                output.append(
+                    '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                    infodict[bestread].split('\t')[6].split('~')[0] +
+                    '~' + clusters.split('-')[0] + '~' + clusters.split('-')[1] + '\t' +
+                    '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                    ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                )
+            elif svtype in ['Nov_Ins', 'Del'] and svsizedict[bestread] <= 200 and lcov < max(mincov, 2):
+                continue
+            elif svtype == 'bp_Nov_Ins' and lcov < max(mincov, 2):
+                continue
+            else:
+                if len(clusters.split('-')) == 1:
+                    output.append(
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' + clusters + '-' +
+                        str(int(clusters.split(':')[1]) + 1) + '\t' +
+                        '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                    )
+                elif len(clusters.split('-')) == 2:
+                    output.append(
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                        clusters.split('-')[0] + '-' + clusters.split('-')[1].split(':')[1] + '\t' +
+                        '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                    )
+                else:
+                    raise Exception('Error: Cluster name error')
+            n += 1
     return output
-
-
-# Function to parse lead overlaping breakpoint entry, long read coverage and average DNN score into output (Not in use)
-def arrangednn(x, infodict, svnormalcov, dnndict):
-    output = []
-    for key in x:
-        dnn = avgdnn(key, x[key], dnndict)
-        lcov = countcov(key, x)
-        if lcov == 1:
-            for n in infodict[key]:
-                output.append(n + '\t' + str(lcov) + '\t.\t' + str(svnormalcov[key]) + '\t' + str(dnn) + '\n')
-        elif lcov > 1:
-            for n in infodict[key]:
-                output.append(n + '\t' + str(lcov) + '\t' + ','.join(x[key]) + '\t' + str(svnormalcov[key]) + '\t' + str(dnn) +
-                              '\n')
-    return output
-
-
-# Function to calculate the average short read coverage of an overlaping breakpoint entry (Not in use)
-def avgdnn(key, value, dnndict):
-    dnn = 0
-    num = len(value) + 1
-    dnn = dnn + dnndict[key]
-    for k in value:
-        dnn = dnn + dnndict[k]
-    avg = float(dnn)/num
-    return avg
 
 
 # Note: Some bps seen in parse_file would be missing
-# in overlap_file because they are overlapped by another
+# in cluster_file because they are overlapped by another
 # bp within the same read
