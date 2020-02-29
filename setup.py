@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 from nanovar.version import __version__
 import os
 
@@ -15,6 +15,7 @@ setup(
                   'nanovar.css': ['*.css'],
                   'nanovar.js': ['*.js']},
     include_package_data=True,
+    ext_modules=[Extension('nanovar.nv_bam_parser', ['nanovar/nv_bam_parser.pyx'])],
     scripts=['nanovar/nanovar'],
     url='https://github.com/cytham/nanovar',
     download_url='https://github.com/cytham/nanovar/releases',

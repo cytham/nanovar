@@ -1,5 +1,5 @@
 include *.txt
-include README.md
+include nanovar/*.c
 recursive-include nanovar/gaps *.bed
 recursive-include nanovar/model *.h5
 recursive-include nanovar/css *.css
