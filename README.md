@@ -29,6 +29,22 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 
 ## Getting Started
 
+### Quick run
+
+```
+nanovar [Options] -t 24 -f hg38 read.fq/read.bam ref.fa working_dir 
+```
+
+| Parameter | Argument | Comment |
+| :--- | :--- | :--- |
+| `-t` | num_threads | Indicate number of CPU threads to use |
+| `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
+| - | read.fq/read.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
+| - | ref.fa | Input reference genome in FASTA format |
+| - | working_dir | Specify working directory |
+
+For more information, see [wiki](https://github.com/cytham/nanovar/wiki).
+
 ### Operating system: 
 * Linux (x86_64 architecture, tested in Ubuntu 14.04, 16.04, 18.04)  
 
@@ -89,31 +105,18 @@ make
 # Copy hs-blastn binary to path (e.g. ~/bin)
 cp hs-blastn ~/bin
 ```
-### Quick run
-
-```
-nanovar [Options] -t 24 -f hg38 read.fa ref.fa working_dir 
-```
-
-| Parameter | Argument | Comment |
-| :--- | :--- | :--- |
-| `-t` | num_threads | Indicate number of CPU threads to use |
-| `-f` | gap_file | Choose built-in gap BED file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10 (Optional)|
-| - | read.fa | Input long-read FASTA/FASTQ file or mapped BAM file |
-| - | ref.fa | Input reference genome in FASTA format |
-| - | working_dir | Specify working directory |
-
 
 ## Documentation
 See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
-
 
 ## Versioning
 See [CHANGELOG](./CHANGELOG.txt)
 
 ## Citation
-NanoVar: Accurate Characterization of Patients’ Genomic Structural Variants Using Low-Depth Nanopore Sequencing (Tham. et al, 2019)
-https://www.biorxiv.org/content/10.1101/662940v1
+If you use NanoVar, please cite:
+
+Tham, C., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
+
 
 ## Authors
 

@@ -25,8 +25,8 @@ from pybedtools import BedTool
 
 
 # SV clustering
-def sv_cluster(subdata, parse, buf, maxovl, mincov, ins_switch):
-    readteam, infodict, classdict, mainclass, svsizedict = rangecollect(parse, buf, ins_switch)
+def sv_cluster(subdata, parse, buf, maxovl, mincov, contigs, ins_switch):
+    readteam, infodict, classdict, mainclass, svsizedict = rangecollect(parse, buf, contigs, ins_switch)
     bed_str3 = normalbed(subdata)
     bed_str4 = svbed(readteam, mainclass)
     bed3 = BedTool(bed_str3, from_string=True)
@@ -53,83 +53,126 @@ def alpha(n):
 
 
 # Function to collect information of each breakpoint entry and cluster breakpoints
-def rangecollect(x, buf, ins_switch):
+def rangecollect(x, buf, contigs, ins_switch):
     classdict = OrderedDict()
     svsizedict = OrderedDict()
     infodict = OrderedDict()
-    classclust = OrderedDict()
+    leftclust = OrderedDict()
+    rightclust = OrderedDict()
+    for c in contigs:
+        leftclust[c] = OrderedDict()
+        rightclust[c] = OrderedDict()
     for i in x:
         rnameidx = i.split('\t')[8]
         infodict[rnameidx] = '\t'.join(i.split('\t')[0:10])
         svtype = str(svtypecorrector(i.split('\t')[3].split(' ')[0]))
         classdict[rnameidx] = svtype
         svsizedict[rnameidx] = alpha(i.split('\t')[3].split(' ')[1].split('~')[0])
-        # if svtype != 'bp_Nov_Ins':
         if len(i.split('\t')[6].split('~')) == 2:  # Not Inter translocation
-            if len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 1:
+            if len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 1:  # if single breakend
                 chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
                 le = int(i.split('\t')[6].split('~')[1].split(':')[1])
-                if chm1 not in classclust:
-                    classclust[chm1] = OrderedDict()
-                classclust[chm1][rnameidx + '-l'] = le
-            elif len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 2:
+                col4 = i.split('\t')[3]
+                if col4.split(' ')[0][0] == 'S':  # head novel sequence
+                    if col4.split(' ')[1].split('~')[1] == '+':
+                        rightclust[chm1][rnameidx] = le
+                    elif col4.split(' ')[1].split('~')[1] == '-':
+                        leftclust[chm1][rnameidx] = le
+                elif col4.split(' ')[0][0] == 'E':  # tail novel sequence
+                    if col4.split(' ')[1].split('~')[1] == '+':
+                        leftclust[chm1][rnameidx] = le
+                    elif col4.split(' ')[1].split('~')[1] == '-':
+                        rightclust[chm1][rnameidx] = le
+                else:
+                    raise Exception('SVType error, single breakend SV unknown naming')
+            elif len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 2:  # If double breakends
                 chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
                 le = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
                 r = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-                if chm1 not in classclust:
-                    classclust[chm1] = OrderedDict()
-                classclust[chm1][rnameidx + '-l'] = le
-                classclust[chm1][rnameidx + '-r'] = r
+                leftclust[chm1][rnameidx] = le
+                rightclust[chm1][rnameidx] = r
         elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
             chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
             chm2 = i.split('\t')[6].split('~')[2].split(':')[0]
             le = int(i.split('\t')[6].split('~')[1].split(':')[1])
             r = int(i.split('\t')[6].split('~')[2].split(':')[1])
-            if chm1 not in classclust:
-                classclust[chm1] = OrderedDict()
-            classclust[chm1][rnameidx + '-l'] = le
-            if chm2 not in classclust:
-                classclust[chm2] = OrderedDict()
-            classclust[chm2][rnameidx + '-r'] = r
-    chrnamelist = OrderedDict()
-    chrcoorlist = OrderedDict()
-    for chrm in classclust:
-        classclust[chrm] = OrderedDict(sorted(classclust[chrm].items(), key=lambda y: y[1]))
-        chrnamelist[chrm] = []
-        chrcoorlist[chrm] = []
-        for key in classclust[chrm]:
-            chrnamelist[chrm].append(key[:-2])
-            chrcoorlist[chrm].append(classclust[chrm][key])
-    readteam, mainclass = cluster(chrnamelist, chrcoorlist, buf, svsizedict, classdict, ins_switch)
+            leftclust[chm1][rnameidx] = le
+            rightclust[chm2][rnameidx] = r
+    leftchrnamelist = OrderedDict()
+    leftchrcoorlist = OrderedDict()
+    rightchrnamelist = OrderedDict()
+    rightchrcoorlist = OrderedDict()
+    for chrm in contigs:
+        leftclust[chrm] = OrderedDict(sorted(leftclust[chrm].items(), key=lambda y: y[1]))
+        rightclust[chrm] = OrderedDict(sorted(rightclust[chrm].items(), key=lambda y: y[1]))
+        leftchrnamelist[chrm] = []
+        leftchrcoorlist[chrm] = []
+        rightchrnamelist[chrm] = []
+        rightchrcoorlist[chrm] = []
+        for key in leftclust[chrm]:
+            leftchrnamelist[chrm].append(key)
+            leftchrcoorlist[chrm].append(leftclust[chrm][key])
+        for key in rightclust[chrm]:
+            rightchrnamelist[chrm].append(key)
+            rightchrcoorlist[chrm].append(rightclust[chrm][key])
+    readteam, mainclass = cluster(leftchrnamelist, leftchrcoorlist, rightchrnamelist, rightchrcoorlist, buf, svsizedict,
+                                  classdict, ins_switch)
     return readteam, infodict, classdict, mainclass, svsizedict
 
 
 # Cluster coordinates
-def cluster(chrnamelist, chrcoorlist, buf, svsizedict, classdict, ins_switch):
-    cluster2read = OrderedDict()
+def cluster(leftchrnamelist, leftchrcoorlist, rightchrnamelist, rightchrcoorlist, buf, svsizedict, classdict, ins_switch):
+    leftcluster2read = OrderedDict()
+    rightcluster2read = OrderedDict()
     read2cluster = OrderedDict()
-    for chrm in chrnamelist:
-        n = len(chrnamelist[chrm])
+    for chrm in leftchrnamelist:
+        n = len(leftchrnamelist[chrm])
         last = None
         group = []
         groupnames = []
         for i in range(n):
-            if last is None or chrcoorlist[chrm][i] - last <= buf:
-                group.append(chrcoorlist[chrm][i])
-                groupnames.append(chrnamelist[chrm][i])
+            if last is None or leftchrcoorlist[chrm][i] - last <= buf:
+                group.append(leftchrcoorlist[chrm][i])
+                groupnames.append(leftchrnamelist[chrm][i])
             else:
                 avgcoord = int(round(sum(group) / len(group), 0))
-                cluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+                leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
                 for read in sorted(set(groupnames)):
                     if read not in read2cluster:
                         read2cluster[read] = []
                     read2cluster[read].append(chrm + ':' + str(avgcoord))
-                group = [chrcoorlist[chrm][i]]
-                groupnames = [chrnamelist[chrm][i]]
-            last = chrcoorlist[chrm][i]
+                group = [leftchrcoorlist[chrm][i]]
+                groupnames = [leftchrnamelist[chrm][i]]
+            last = leftchrcoorlist[chrm][i]
         if group:
             avgcoord = int(round(sum(group) / len(group), 0))
-            cluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+            leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+            for read in sorted(set(groupnames)):
+                if read not in read2cluster:
+                    read2cluster[read] = []
+                read2cluster[read].append(chrm + ':' + str(avgcoord))
+    for chrm in rightchrnamelist:
+        n = len(rightchrnamelist[chrm])
+        last = None
+        group = []
+        groupnames = []
+        for i in range(n):
+            if last is None or rightchrcoorlist[chrm][i] - last <= buf:
+                group.append(rightchrcoorlist[chrm][i])
+                groupnames.append(rightchrnamelist[chrm][i])
+            else:
+                avgcoord = int(round(sum(group) / len(group), 0))
+                rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+                for read in sorted(set(groupnames)):
+                    if read not in read2cluster:
+                        read2cluster[read] = []
+                    read2cluster[read].append(chrm + ':' + str(avgcoord))
+                group = [rightchrcoorlist[chrm][i]]
+                groupnames = [rightchrnamelist[chrm][i]]
+            last = rightchrcoorlist[chrm][i]
+        if group:
+            avgcoord = int(round(sum(group) / len(group), 0))
+            rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
             for read in sorted(set(groupnames)):
                 if read not in read2cluster:
                     read2cluster[read] = []
@@ -157,39 +200,43 @@ def cluster(chrnamelist, chrcoorlist, buf, svsizedict, classdict, ins_switch):
     readteam = OrderedDict()
     mainclass = OrderedDict()
     pastbps = {}
-    for coord in cluster2read:  # For each clusters
-        if coord in clusterlink:  # If cluster is either unpaired or paired (left)
-            if not clusterlink[coord]:  # If cluster is unpaired, svclass concordance matters here
-                leaders, teams, svclasses = svclass_sep(cluster2read[coord], classdict, svsizedict)
-                # lead, main = leadread(cluster2read[coord], svsizedict, classdict, ins_switch)
-                no = len(leaders)
-                for i in range(no):
-                    if svclasses[i] in ['Nov_Ins', 'bp_Nov_Ins']:
-                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = [leaders[i]]
-                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])].extend(sorted(set(
-                            teams[i]).difference([leaders[i]])))
-                        mainclass[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = svclasses[i]
-                    else:
-                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
-                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])] = [leaders[i]]
-                        readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
-                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])].extend(
-                            sorted(set(teams[i]).difference([leaders[i]])))
-                        mainclass[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)]) + '-' + ':'.join([
-                            coord.split(':')[0], str(int(coord.split(':')[1])+1+i)])] = svclasses[i]
-            else:  # If cluster is paired (left)
-                for coord2 in clusterlink[coord]:
-                    readlist = []
-                    readlist.extend(sorted(set(cluster2read[coord]).intersection(cluster2read[coord2])))
-                    for read in sorted(set(cluster2read[coord]).difference(cluster2read[coord2])):
-                        if classdict[read] == 'bp_Nov_Ins':
-                            if read not in pastbps:
-                                readlist.append(read)
-                                pastbps[read] = 1
-                    lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, ins_switch)
-                    readteam[coord + '-' + coord2] = [lead]
-                    readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))
-                    mainclass[coord + '-' + coord2] = main
+    for coord in clusterlink:  # For clusters that are either unpaired or paired (left)
+        if not clusterlink[coord]:  # If cluster is unpaired, which means single breakend SVs
+            # leaders, teams, svclasses = svclass_sep(cluster2read[coord], classdict, svsizedict)  # svclass concordance matters
+            # here
+            # lead, main = leadread(cluster2read[coord], svsizedict, classdict, ins_switch)
+            # no = len(leaders)
+            # for i in range(no):
+            #     if svclasses[i] == 'bp_Nov_Ins':
+            #         readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = [leaders[i]]
+            #         readteam[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])].extend(sorted(set(
+            #             teams[i]).difference([leaders[i]])))
+            #         mainclass[':'.join([coord.split(':')[0], str(int(coord.split(':')[1])+i)])] = svclasses[i]
+            #     else:
+            #         raise Exception('Single breakend but not bp_Nov_Ins sv class')
+            try:
+                lead, main = leadread_bp(leftcluster2read[coord], svsizedict, classdict)
+                readteam[coord] = [lead]
+                readteam[coord].extend(sorted(set(leftcluster2read[coord]).difference([lead])))
+            except KeyError:
+                lead, main = leadread_bp(rightcluster2read[coord], svsizedict, classdict)
+                readteam[coord] = [lead]
+                readteam[coord].extend(sorted(set(rightcluster2read[coord]).difference([lead])))
+            mainclass[coord] = main
+        else:  # If cluster is paired (left)
+            for coord2 in clusterlink[coord]:
+                readlist = []
+                readlist.extend(sorted(set(leftcluster2read[coord]).intersection(rightcluster2read[coord2])))
+                for read in sorted(set(leftcluster2read[coord]).difference(rightcluster2read[coord2])) + sorted(set(
+                        rightcluster2read[coord2]).difference(leftcluster2read[coord])):
+                    if classdict[read] == 'bp_Nov_Ins':
+                        if read not in pastbps:
+                            readlist.append(read)
+                            pastbps[read] = 1
+                lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, ins_switch)
+                readteam[coord + '-' + coord2] = [lead]
+                readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))
+                mainclass[coord + '-' + coord2] = main
     return readteam, mainclass
 
 
@@ -198,6 +245,22 @@ def leadread(reads, svsizedict, classdict, ins_switch):
         mainsvclass = mainclasssv_ins(reads, classdict)
     else:
         mainsvclass = mainclasssv(reads, classdict)
+    sizedict = OrderedDict()
+    leader = ''
+    for read in reads:
+        sizedict[read] = svsizedict[read]
+    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    for read in sizedictsort:
+        if classdict[read] == mainsvclass:
+            leader = read
+            break
+    if leader == '':
+        raise Exception("Error: Main SV class not found")
+    return leader, mainsvclass
+
+
+def leadread_bp(reads, svsizedict, classdict):
+    mainsvclass = 'bp_Nov_Ins'
     sizedict = OrderedDict()
     leader = ''
     for read in reads:

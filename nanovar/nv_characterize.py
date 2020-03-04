@@ -88,12 +88,12 @@ class VariantDetect:
 
     def cluster_extract(self):
         logging.info("Clustering SV breakends")
-        cluster_out = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov, False)
+        cluster_out = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov, self.contig, False)
         logging.info("Filtering INS and INV SVs")
         total_qnames = []
         for line in cluster_out:
             svtype = line.split('\t')[3].split(' ')[0]
-            cov = int(line.split('\t')[10])
+            # cov = int(line.split('\t')[10])
             if svtype in ['S-Nov_Ins_bp', 'E-Nov_Ins_bp', 'Nov_Ins']:  # Some INS are actually DUP
                 qnames = [line.split('\t')[0]]
                 self.ins_out.append(self.parse_dict[line.split('\t')[8]])
@@ -117,7 +117,7 @@ class VariantDetect:
         logging.info("Re-clustering INS/INV SVs and merging")
         # Merge old ins with new from hsblastn
         sub_out = self.ins_out + add_out
-        cluster_out_ins = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, True)
+        cluster_out_ins = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, self.contig, True)
         new_cluster_out = self.out_rest + cluster_out_ins
         logging.info("Neural network inference")
         new_total_out = self.total_out + add_out

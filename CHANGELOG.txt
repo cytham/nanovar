@@ -4,8 +4,14 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.2 - Mar 4, 2020
+    * Fixed VCF header unclosed quotes (Thanks to Scott, https://github.com/cytham/nanovar/issues/5#issuecomment-592961341)
+    * Improved clustering algorithm (Clustering left and right breakends of each SV separately)
+    * Updated README.md
+
+
 Version 1.3.1 - Feb 29, 2020
-    * Fixed cython compilation bug (Thanks to Scott)
+    * Fixed cython compilation bug (Thanks to Scott, https://github.com/cytham/nanovar/issues/5#issuecomment-592766203)
     * Updated requirements.txt
 
 
@@ -31,7 +37,8 @@ Version 1.3.0 - Feb 28, 2020
         * Added SAMTools executable path option
 
     * VCF format changes:
-        * "END" coordinate for BND SVs will now show POS+1 coordinate instead of "." to be usable for IGV (Thanks to Scott)
+        * "END" coordinate for BND SVs will now show POS+1 coordinate instead of "." to be usable for IGV (Thanks to Scott,
+        https://github.com/cytham/nanovar/issues/5#issue-559151039)
 
 
 
@@ -40,7 +47,7 @@ Version 1.2.7 - Dec 15, 2019
     * Changed default score threshold to 1.0
     * Added --mincov argument
     * Added genotype prediction thresholds --homo --hetero
-    * Fixed make_interp_spline bug (Thanks to Asma)
+    * Fixed make_interp_spline bug (Thanks to Asma, https://github.com/cytham/nanovar/issues/1#issue-536971382)
     * Fixed logging oversize
     * Fixed HTML figures and file path link
     * Disabled sorting by bitscore
