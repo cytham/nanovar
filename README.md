@@ -107,7 +107,7 @@ cp hs-blastn ~/bin
 ```
 
 ## Documentation
-See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
+See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
 ## Versioning
 See [CHANGELOG](./CHANGELOG.txt)
@@ -115,7 +115,7 @@ See [CHANGELOG](./CHANGELOG.txt)
 ## Citation
 If you use NanoVar, please cite:
 
-Tham, C., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
+Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
 
 
 ## Authors
