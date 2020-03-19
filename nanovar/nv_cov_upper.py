@@ -61,10 +61,7 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     medad = mad(data2)
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
     depth = round(float(basecov)/total_gsize, 2)
-    if depth < 1:
-        maxovl = 10
-    else:
-        maxovl = round((medad * 4) + med, 1)
+    maxovl = max(round((medad * 4) + med, 1), 10)  # minimum overlap threshold is set at 10
     return maxovl, depth
 
 
@@ -74,17 +71,11 @@ def make_gsize(contig_len_dict, wk_dir):
     data = open(path, 'w')
     tmp = []
     for contig in contig_len_dict:
-        checkcontigname(contig)
+        # checkcontigname(contig)
         tmp.append(contig + '\t' + str(contig_len_dict[contig]))
     data.write('\n'.join(tmp))
     data.close()
     return path
-
-
-# Check contig name
-def checkcontigname(contig):
-    if "~" in contig or ":" in contig or "-" in contig:
-        raise Exception("Contig name %s contains invalid symbols [ ~ : - ]" % contig)
 
 
 # Generate number of genomic points

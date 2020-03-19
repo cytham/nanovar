@@ -4,6 +4,15 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.3 - Mar 19, 2020
+    * Upgraded model (ONT (Guppy) - v1, pacbio (CLR or CSS) - v1)
+    * Modified normal read breakpoint buffer from 400 to 100 to include shorter alignments as breakend-opposing reads
+    * Survey invalid symbols in contig ids and ignore reads mapping to these contigs (Thanks to Simone, https://github.com/cytham/nanovar/issues/6#issuecomment-595851018)
+    * Added a new debug file 'detect.tsv'
+    * Removed blast table intermediate file when not debugging
+    * Added limitation section in README.md
+
+
 Version 1.3.2 - Mar 4, 2020
     * Fixed VCF header unclosed quotes (Thanks to Scott, https://github.com/cytham/nanovar/issues/5#issuecomment-592961341)
     * Improved clustering algorithm (Clustering left and right breakends of each SV separately)

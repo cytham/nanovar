@@ -36,12 +36,14 @@ from nanovar.nv_report import create_report
 class VariantDetect:
 
     def __init__(self, wk_dir, bam, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
-                 contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug):
+                 contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug,
+                 contig_omit):
         self.dir = wk_dir
         self.bam = bam
         self.splitpct = splitpct
         self.minalign = minalign
         self.filter = filter_path
+        self.contig_omit = contig_omit
         self.minlen = minlen
         self.buff = buff
         self.model = model_path
@@ -58,7 +60,7 @@ class VariantDetect:
         self.het_t = het_t
         self.debug = debug
         self.basecov, self.maxovl, self.depth = 0, 0, 0
-        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest = [], [], [], [], []
+        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out = [], [], [], [], [], []
         self.rlendict, self.parse_dict = {}, {}
         # HTML SV table entry limit
         self.num_limit = 1000
@@ -68,12 +70,8 @@ class VariantDetect:
 
     def bam_parse_detect(self):
         random.seed(1)
-        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps = bam_parse(self.bam,
-                                                                                                                self.minlen,
-                                                                                                                self.splitpct,
-                                                                                                                self.minalign,
-                                                                                                                self.dir,
-                                                                                                                self.filter)
+        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out = bam_parse(
+            self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
 
     def coverage_stats(self):
         # Obtaining upper cov limit and depth of coverage
@@ -110,8 +108,8 @@ class VariantDetect:
                 total_qnames.extend(qnames)
             elif svtype not in ['S-Nov_Ins_bp', 'E-Nov_Ins_bp', 'Nov_Ins', 'Inv', 'Inv(1)', 'Inv(2)']:
                 self.out_rest.append(line)
-        total_qnames = set(total_qnames)
-        self.fasta_extract(total_qnames)
+        qnames_dict = {x: 1 for x in set(total_qnames)}
+        self.fasta_extract(qnames_dict)
 
     def cluster_nn(self, add_out):
         logging.info("Re-clustering INS/INV SVs and merging")
@@ -131,7 +129,7 @@ class VariantDetect:
     def parse_detect_hsb(self):
         random.seed(1)
         # Make gap dictionary
-        gapdict = makegapdict(self.filter)
+        gapdict = makegapdict(self.filter, self.contig_omit)
         temp1 = []
         chromocollect = []
         ovlt = 0.9
@@ -166,6 +164,8 @@ class VariantDetect:
                     self.total_out.extend(final)
                 temp1 = []
                 chromocollect = []
+        if not self.debug:  # Remove blast table if not debug mode
+            os.remove(self.bam)
 
     def vcf_report(self):
         logging.info("Creating VCF")
@@ -178,6 +178,7 @@ class VariantDetect:
     # Write intermediate data to file if debug mode
     def write2file(self, add_out):
         writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
+        writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
         writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)
         writer(os.path.join(self.dir, 'parse2.tsv'), add_out, self.debug)
         writer(os.path.join(self.dir, 'cluster.tsv'), self.out_nn, self.debug)
@@ -209,11 +210,12 @@ class VariantDetect:
         out = open(os.path.join(self.dir, 'temp2.fa'), 'a')
         with open(fasta) as f:
             for line in f:
-                if line.strip('\n') in qnames:
-                    line1 = line
-                    line2 = next(f)
-                    out.write('>' + line1 + line2)
-                else:
+                try:
+                    if qnames[line.strip('\n')]:
+                        line1 = line
+                        line2 = next(f)
+                        out.write('>' + line1 + line2)
+                except KeyError:
                     line2 = next(f)
             out.close()
         os.remove(fasta)
@@ -228,15 +230,21 @@ def writer(file_path, data_list, switch):
 
 
 # Create genome gap dictionary
-def makegapdict(gap_path):
+def makegapdict(gap_path, contig_omit):
     gapdict = {}
     if gap_path is not None:
         rgapdata = open(gap_path, 'r').read().splitlines()
-        n = len(rgapdata)
-        for i in range(n):  # Define gap dict list
-            gapdict[rgapdata[i].split('\t')[0]] = []
-        for i in range(n):  # Making gap dictionary
-            gapdict[rgapdata[i].split('\t')[0]].append([int(rgapdata[i].split('\t')[1]), int(rgapdata[i].split('\t')[2])])
+        for line in rgapdata:
+            try:
+                gapdict[line.split('\t')[0]].append([int(line.split('\t')[1]), int(line.split('\t')[2])])
+            except KeyError:
+                gapdict[line.split('\t')[0]] = [[int(line.split('\t')[1]), int(line.split('\t')[2])]]
+    for contig in contig_omit:
+        try:
+            gapdict[contig].append(contig_omit[contig])
+        except KeyError:
+            gapdict[contig] = [contig_omit[contig]]
+    if gapdict:  # Gap file is used or reference genome contigs contain invalid symbols
         logging.info('Gap dictionary successfully loaded')
         return gapdict
     else:

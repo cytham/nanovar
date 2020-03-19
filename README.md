@@ -107,7 +107,7 @@ cp hs-blastn ~/bin
 ```
 
 ## Documentation
-See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
+See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
 ## Versioning
 See [CHANGELOG](./CHANGELOG.txt)
@@ -115,7 +115,7 @@ See [CHANGELOG](./CHANGELOG.txt)
 ## Citation
 If you use NanoVar, please cite:
 
-Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
+Tham, C., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
 
 
 ## Authors
@@ -132,3 +132,7 @@ This project is licensed under GNU General Public License - see [LICENSE.txt](./
 SV simulation datasets used in the manuscript can be downloaded [here](https://doi.org/10.5281/zenodo.3569479 ). Scripts used for simulation dataset generation and tool performance comparison are available [here](./scripts).
 
 Although NanoVar is provided with a universal model and threshold score, instructions required for building a custom neural-network model is available [here](https://github.com/cytham/nanovar/wiki/Model-training).
+
+## Limitations
+* The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as Guppy to minimize this possibility.
+ 

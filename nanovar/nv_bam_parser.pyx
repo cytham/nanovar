@@ -26,7 +26,7 @@ from nv_detect_algo import sv_detect
 from nv_parser import entry_parser, breakpoint_parser
 
 
-def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file):
+def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
     cdef:
         unsigned int readlen, rstart, rend, flag, qlen, nm, seed
         unsigned long long basecov
@@ -34,7 +34,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         int total_score
         str qname
         str rname
-        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index
+        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out
         bint adv
         object seg
         object sam = pysam.AlignmentFile(bam, "rb")
@@ -82,9 +82,9 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             ins_list))
     fasta.close()
     fasta2.close()
-    total_subdata, total_lines, contig_collect, total_out = [], [], [], []
+    total_subdata, total_lines, contig_collect, total_out, detect_out = [], [], [], [], []
     # Make gap dictionary
-    gapdict = makegapdict(filter_file)
+    gapdict = makegapdict(filter_file, contig_omit)
     for qname in main_dict:
         if len(main_dict[qname]) == 1:  # Single alignment read
             if not main_dict[qname][0][0]:  # if no sub-segments and not clipped read
@@ -125,6 +125,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 if out2 == '':
                     pass
                 else:
+                    # Save for debug
+                    detect_out.append(out2)
                     # Parse breakpoints
                     final = breakpoint_parser(out2, minlen, sig_index, seed)
                     total_out.extend(final)
@@ -164,12 +166,14 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             if out2 == '':
                 pass
             else:
+                # Save for debug
+                detect_out.append(out2)
                 # Parse breakpoints
                 final = breakpoint_parser(out2, minlen, sig_index, seed)
                 total_out.extend(final)
                 for i in final:
                     parse_dict[i.split('\t')[8]] = i
-    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict)
+    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out
 
 
 # Analyze CIGAR for Indels in segment and return read advancement call
@@ -303,15 +307,21 @@ def align_priority(flag):
 
 
 # Create genome gap dictionary
-def makegapdict(gap_path):
+def makegapdict(gap_path, contig_omit):
     gapdict = {}
     if gap_path is not None:
         rgapdata = open(gap_path, 'r').read().splitlines()
-        n = len(rgapdata)
-        for i in range(n):  # Define gap dict list
-            gapdict[rgapdata[i].split('\t')[0]] = []
-        for i in range(n):  # Making gap dictionary
-            gapdict[rgapdata[i].split('\t')[0]].append([int(rgapdata[i].split('\t')[1]), int(rgapdata[i].split('\t')[2])])
+        for line in rgapdata:
+            try:
+                gapdict[line.split('\t')[0]].append([int(line.split('\t')[1]), int(line.split('\t')[2])])
+            except KeyError:
+                gapdict[line.split('\t')[0]] = [[int(line.split('\t')[1]), int(line.split('\t')[2])]]
+    for contig in contig_omit:
+        try:
+            gapdict[contig].append(contig_omit[contig])
+        except KeyError:
+            gapdict[contig] = [contig_omit[contig]]
+    if gapdict:  # Gap file is used or reference genome contigs contain invalid symbols
         logging.info('Gap dictionary successfully loaded')
         return gapdict
     else:

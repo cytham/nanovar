@@ -427,7 +427,7 @@ def dotter(readlist):
 # Function to generate bed file from hsblast subdata
 def normalbed(subdata):
     totalbed = []
-    len_buf = 400  # Arbituary length deduction buffer for normal reads, increases stringency
+    len_buf = 100  # Arbituary length deduction buffer for normal reads, increases stringency
     for line in subdata:
         coord1 = int(line.split('\t')[1]) + len_buf
         coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2]) - len_buf
