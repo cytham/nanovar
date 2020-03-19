@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.4 - Mar 19, 2020
+    * Fixed missing nanovar script
+
+
 Version 1.3.3 - Mar 19, 2020
     * Upgraded model (ONT (Guppy) - v1, pacbio (CLR or CSS) - v1)
     * Modified normal read breakpoint buffer from 400 to 100 to include shorter alignments as breakend-opposing reads
