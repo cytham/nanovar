@@ -27,7 +27,7 @@ from natsort import natsorted
 from nanovar import __version__
 
 
-def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t):
+def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen):
     rdata = nn_out
     # Calculating number of entries
     t = len(rdata)
@@ -35,6 +35,8 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
     k = range(t)
     # Create last line dummy
     rdata.append('dum\tdum\tdum\tdum\tdum\tdum\tdum\tdum\tdum')
+    ref_path = os.path.abspath(ref_path)
+    read_path = os.path.abspath(read_path)
     vcf_total = open(os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name), 'w')
     vcf_pass = open(os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name), 'w')
     add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres)
@@ -77,9 +79,10 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             sv_len = int(tmpread[0].split('\t')[3].split(' ')[1].split('~')[0])
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-            if coord2 - coord1 == 1:
-                coord1 = coord1 - int(round(sv_len/2, 0))
-                coord2 = coord2 + int(round(sv_len/2, 0)) - 1
+            if coord2 - coord1 < minlen:
+                mid = (coord2 + coord1)/2
+                coord1 = int(mid - round(sv_len/2, 0))
+                coord2 = int(mid + round(sv_len/2, 0) - 1)
                 sv_len = '-' + str(sv_len)
             else:
                 sv_len = '-' + str(coord2 - coord1)

@@ -170,7 +170,7 @@ class VariantDetect:
     def vcf_report(self):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t)
+                   self.homo_t, self.het_t, self.minlen)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)
@@ -216,7 +216,7 @@ class VariantDetect:
                         line2 = next(f)
                         out.write('>' + line1 + line2)
                 except KeyError:
-                    line2 = next(f)
+                    _ = next(f)
             out.close()
         os.remove(fasta)
 

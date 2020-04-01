@@ -56,7 +56,7 @@ if it does not exist.""")
                         default='ont',
                         help="""type of long-read data [ont]
 ont - Oxford Nanopore Technologies
-pacbio-clr - Pacfic Biosciences CLR
+pacbio-clr - Pacific Biosciences CLR
 pacbio-ccs - Pacific Biosciences CCS""")
 
     parser.add_argument("-f", "--filter_bed", type=str, metavar="file",

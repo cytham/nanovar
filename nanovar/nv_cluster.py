@@ -94,10 +94,17 @@ def rangecollect(x, buf, contigs, ins_switch):
         elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
             chm1 = i.split('\t')[6].split('~')[1].split(':')[0]
             chm2 = i.split('\t')[6].split('~')[2].split(':')[0]
+            col4 = i.split('\t')[3].split(' ')[1].split('~')[1]
             le = int(i.split('\t')[6].split('~')[1].split(':')[1])
             r = int(i.split('\t')[6].split('~')[2].split(':')[1])
-            leftclust[chm1][rnameidx] = le
-            rightclust[chm2][rnameidx] = r
+            if col4.split(',')[0] == '+':
+                leftclust[chm1][rnameidx] = le
+            elif col4.split(',')[0] == '-':
+                rightclust[chm1][rnameidx] = le
+            if col4.split(',')[1] == '+':
+                rightclust[chm2][rnameidx] = r
+            elif col4.split(',')[1] == '-':
+                leftclust[chm2][rnameidx] = r
     leftchrnamelist = OrderedDict()
     leftchrcoorlist = OrderedDict()
     rightchrnamelist = OrderedDict()
@@ -226,13 +233,39 @@ def cluster(leftchrnamelist, leftchrcoorlist, rightchrnamelist, rightchrcoorlist
         else:  # If cluster is paired (left)
             for coord2 in clusterlink[coord]:
                 readlist = []
-                readlist.extend(sorted(set(leftcluster2read[coord]).intersection(rightcluster2read[coord2])))
-                for read in sorted(set(leftcluster2read[coord]).difference(rightcluster2read[coord2])) + sorted(set(
-                        rightcluster2read[coord2]).difference(leftcluster2read[coord])):
+                try:
+                    reads1 = leftcluster2read[coord]
+                    try:
+                        reads2 = rightcluster2read[coord2]
+                        if len(set(reads1).intersection(reads2)) < 1:
+                            raise ValueError
+                    except (KeyError, ValueError):
+                        reads2 = leftcluster2read[coord2]
+                        if len(set(reads1).intersection(reads2)) < 1:
+                            raise ValueError
+                except (KeyError, ValueError):
+                    reads1 = rightcluster2read[coord]
+                    try:
+                        reads2 = rightcluster2read[coord2]
+                        if len(set(reads1).intersection(reads2)) < 1:
+                            raise ValueError
+                    except (KeyError, ValueError):
+                        reads2 = leftcluster2read[coord2]
+                        if len(set(reads1).intersection(reads2)) < 1:
+                            raise Exception('Error: Please raise this issue on GitHub, Thanks.')
+                readlist.extend(sorted(set(reads1).intersection(reads2)))
+                for read in sorted(set(reads1).difference(reads2)) + sorted(set(reads2).difference(reads1)):
                     if classdict[read] == 'bp_Nov_Ins':
                         if read not in pastbps:
                             readlist.append(read)
                             pastbps[read] = 1
+                # readlist.extend(sorted(set(leftcluster2read[coord]).intersection(rightcluster2read[coord2])))
+                # for read in sorted(set(leftcluster2read[coord]).difference(rightcluster2read[coord2])) + sorted(set(
+                #         rightcluster2read[coord2]).difference(leftcluster2read[coord])):
+                #     if classdict[read] == 'bp_Nov_Ins':
+                #         if read not in pastbps:
+                #             readlist.append(read)
+                #             pastbps[read] = 1
                 lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, ins_switch)
                 readteam[coord + '-' + coord2] = [lead]
                 readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))
@@ -339,7 +372,8 @@ def mainclasssv(reads, classdict):
     elif any(y in tier1sv for y in tmpdict):
         pass
     else:
-        raise Exception("Error: Unknown SV class")
+        a = ','.join([y for y in tmpdict])
+        raise Exception("Error: Unknown SV class %s, %s" % (a, ','.join(reads)))
     mainsvclass = [key for (key, value) in sorted(tmpdict.items(), key=lambda x: x[1], reverse=True)][0]
     return mainsvclass
 
@@ -533,13 +567,23 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                         ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
                     )
                 elif len(clusters.split('-')) == 2:
+                    chrm = clusters.split('-')[0].split(':')[0]
+                    coord1 = str(min(int(clusters.split('-')[0].split(':')[1]), int(clusters.split('-')[1].split(':')[1])))
+                    coord2 = str(max(int(clusters.split('-')[0].split(':')[1]), int(clusters.split('-')[1].split(':')[1])))
                     output.append(
                         '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
                         infodict[bestread].split('\t')[6].split('~')[0] + '~' +
-                        clusters.split('-')[0] + '-' + clusters.split('-')[1].split(':')[1] + '\t' +
+                        chrm + ':' + coord1 + '-' + coord2 + '\t' +
                         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
                         ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
                     )
+                    # output.append(
+                    #     '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                    #     infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                    #     clusters.split('-')[0] + '-' + clusters.split('-')[1].split(':')[1] + '\t' +
+                    #     '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                    #     ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                    # )
                 else:
                     raise Exception('Error: Cluster name error')
             n += 1

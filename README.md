@@ -32,14 +32,14 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 ### Quick run
 
 ```
-nanovar [Options] -t 24 -f hg38 read.fq/read.bam ref.fa working_dir 
+nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir 
 ```
 
 | Parameter | Argument | Comment |
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
 | `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
-| - | read.fq/read.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
+| - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
 
@@ -107,7 +107,7 @@ cp hs-blastn ~/bin
 ```
 
 ## Documentation
-See [Wiki](https://github.com/cytham/nanovar/wiki) for more information.
+See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
 ## Versioning
 See [CHANGELOG](./CHANGELOG.txt)
@@ -115,7 +115,7 @@ See [CHANGELOG](./CHANGELOG.txt)
 ## Citation
 If you use NanoVar, please cite:
 
-Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
+Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterization of patients’ genomic structural variants using low-depth nanopore sequencing. Genome Biol. 21, 56 (2020). https://doi.org/10.1186/s13059-020-01968-7
 
 
 ## Authors

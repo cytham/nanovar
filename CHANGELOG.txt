@@ -4,6 +4,14 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.5 - Apr 1, 2020
+    * Fixed deletion sv length threshold and double negative bug in nv_vcf.py
+    * Changed relative input paths to full paths in nv_vcf.py
+    * Fixed left and right coord allocations in nv_cluster.py
+    * Corrected nv_input.py typo
+    * Corrected README.md typo
+
+
 Version 1.3.4 - Mar 19, 2020
     * Fixed missing nanovar script
 
