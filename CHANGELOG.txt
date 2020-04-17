@@ -4,6 +4,18 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.6 - Apr 18, 2020
+    * Fixed Exception bug in nv_cluster.py (Thanks to jiadong324, https://github.com/cytham/nanovar/issues/9#issuecomment-609146494)
+    * Added mincov filter early in nv_cluster.py for faster computation
+    * Re-ordered writing of debug files in nv_characterize.py
+    * Fixed novel insertion length bug in nv_cluster.py
+    * Fixed duplication coord directional issue in nv_cluster.py
+    * Size correction for INV and DUP SVs in nv_vcf.py
+    * Add 400 bp buffer to in-built gap files (0-based)
+    * Fixed bug in breakend record in nv_vcf.py
+    * Added output table in README.md
+
+
 Version 1.3.5 - Apr 1, 2020
     * Fixed deletion sv length threshold and double negative bug in nv_vcf.py
     * Changed relative input paths to full paths in nv_vcf.py

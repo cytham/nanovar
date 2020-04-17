@@ -206,7 +206,7 @@ def main():
     # Validate filter BED file
     if genome_filter is not None:
         if genome_filter in ('hg38', 'hg19', 'mm10'):
-            filter_path = os.path.join(filter_bed_dir, genome_filter + '_filter.bed')
+            filter_path = os.path.join(filter_bed_dir, genome_filter + '_filter-B400.bed')
         else:
             filter_path = genome_filter
         if os.path.isfile(filter_path):
@@ -352,7 +352,7 @@ def main():
     else:
         print('Generating VCF files and report -')
 
-    # Write intermediate files
+    # Write parse2 and cluster intermediate files
     run.write2file(add_out=sub_run.total_out)
 
     # Generating VCF and HTML report

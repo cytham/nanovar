@@ -43,6 +43,12 @@ nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
 
+#### Output
+| Output file | Comment |
+| :--- | :--- |
+| ${sample}.nanovar.pass.vcf | Final VCF filtered output file (1-based) |
+| ${sample}.nanovar.pass.report.html | HTML report showing run summary and statistics |
+
 For more information, see [wiki](https://github.com/cytham/nanovar/wiki).
 
 ### Operating system: 

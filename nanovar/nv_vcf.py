@@ -93,10 +93,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             sv = '<INV>'
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-            if coord2 - coord1 == 1:
-                coord1 = coord1 - 25
-                coord2 = coord2 + 24
-            sv_len = coord2 - coord1
+            if coord2 - coord1 < minlen:
+                mid = (coord2 + coord1) / 2
+                coord1 = int(mid - round(minlen / 2, 0))
+                coord2 = int(mid + round(minlen / 2, 0) - 1)
+                sv_len = str(minlen)
+            else:
+                sv_len = str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -112,10 +115,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             sv = '<DUP>'
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
-            if coord2 - coord1 == 1:
-                coord1 = coord1 - 25
-                coord2 = coord2 + 24
-            sv_len = coord2 - coord1
+            if coord2 - coord1 < minlen:
+                mid = (coord2 + coord1) / 2
+                coord1 = int(mid - round(minlen / 2, 0))
+                coord2 = int(mid + round(minlen / 2, 0) - 1)
+                sv_len = str(minlen)
+            else:
+                sv_len = str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -250,10 +256,10 @@ def breakend_alt(strand_list, chrm1, coord1, chrm2, coord2):
         b = ']' + chrm1 + ':' + coord1 + ']N'
     elif strand_list == ['+', '-']:
         a = 'N]' + chrm2 + ':' + coord2 + ']'
-        b = '[' + chrm1 + ':' + coord1 + '[N'
+        b = 'N]' + chrm1 + ':' + coord1 + ']'
     elif strand_list == ['-', '+']:
         a = '[' + chrm2 + ':' + coord2 + '[N'
-        b = 'N]' + chrm1 + ':' + coord1 + ']'
+        b = '[' + chrm1 + ':' + coord1 + '[N'
     elif strand_list == ['-', '-']:
         a = ']' + chrm2 + ':' + coord2 + ']N'
         b = 'N[' + chrm1 + ':' + coord1 + '['

@@ -72,6 +72,9 @@ class VariantDetect:
         random.seed(1)
         self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out = bam_parse(
             self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
+        writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
+        writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
+        writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)
 
     def coverage_stats(self):
         # Obtaining upper cov limit and depth of coverage
@@ -177,9 +180,6 @@ class VariantDetect:
 
     # Write intermediate data to file if debug mode
     def write2file(self, add_out):
-        writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
-        writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
-        writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)
         writer(os.path.join(self.dir, 'parse2.tsv'), add_out, self.debug)
         writer(os.path.join(self.dir, 'cluster.tsv'), self.out_nn, self.debug)
 
