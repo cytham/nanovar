@@ -67,11 +67,13 @@ class VariantDetect:
         # HTML SV table SV ratio limit
         self.ratio_limit = 1
         self.maps = 0
+        self.seed = 0
+        self.seed2 = 1
 
     def bam_parse_detect(self):
         random.seed(1)
-        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out = bam_parse(
-            self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
+        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out, self.seed \
+            = bam_parse(self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
         writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
         writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
         writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)
@@ -89,12 +91,12 @@ class VariantDetect:
 
     def cluster_extract(self):
         logging.info("Clustering SV breakends")
-        cluster_out = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov, self.contig, False)
+        cluster_out, self.seed2 = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
+                                             self.contig, False, self.seed2)
         logging.info("Filtering INS and INV SVs")
         total_qnames = []
         for line in cluster_out:
             svtype = line.split('\t')[3].split(' ')[0]
-            # cov = int(line.split('\t')[10])
             if svtype in ['S-Nov_Ins_bp', 'E-Nov_Ins_bp', 'Nov_Ins']:  # Some INS are actually DUP
                 qnames = [line.split('\t')[0]]
                 self.ins_out.append(self.parse_dict[line.split('\t')[8]])
@@ -103,14 +105,14 @@ class VariantDetect:
                         qnames.append(mate[:-6])
                         self.ins_out.append(self.parse_dict[mate])
                 total_qnames.extend(qnames)
-            elif svtype in ['Inv', 'Inv(1)', 'Inv(2)']:  # For more precise INV bps
+            elif svtype == 'Del':
+                self.out_rest.append(line)
+            else:  # For more precise INV, DUP, Intra and Inter bps
                 qnames = [line.split('\t')[0]]
                 if line.split('\t')[11] != '.':
                     for mate in line.split('\t')[11].split(','):
                         qnames.append(mate[:-6])
                 total_qnames.extend(qnames)
-            elif svtype not in ['S-Nov_Ins_bp', 'E-Nov_Ins_bp', 'Nov_Ins', 'Inv', 'Inv(1)', 'Inv(2)']:
-                self.out_rest.append(line)
         qnames_dict = {x: 1 for x in set(total_qnames)}
         self.fasta_extract(qnames_dict)
 
@@ -118,7 +120,8 @@ class VariantDetect:
         logging.info("Re-clustering INS/INV SVs and merging")
         # Merge old ins with new from hsblastn
         sub_out = self.ins_out + add_out
-        cluster_out_ins = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, self.contig, True)
+        cluster_out_ins, _ = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, self.contig, True,
+                                        self.seed2)
         new_cluster_out = self.out_rest + cluster_out_ins
         logging.info("Neural network inference")
         new_total_out = self.total_out + add_out
@@ -140,7 +143,6 @@ class VariantDetect:
         data = open(self.bam, 'r').read().splitlines()
         data.append('null\tnull\tnull\tnull\tnull\tnull')
         nlines = len(data) - 1
-        co = 0
         for i in range(nlines):
             if data[i].split('\t')[0] == data[i + 1].split('\t')[0]:  # Grouping alignments by read name
                 temp1.append(align_info(data[i], self.rlendict))
@@ -150,7 +152,7 @@ class VariantDetect:
                 temp1.append(align_info(data[i], self.rlendict))
                 if data[i].split('\t')[1].strip() not in chromocollect:
                     chromocollect.append(data[i].split('\t')[1].strip())
-                co += 1
+                self.seed += 1
                 # Parse entries and correct overlap alignments
                 subdata = entry_parser(temp1, chromocollect, ovlt)
                 for entry in subdata:
@@ -163,7 +165,7 @@ class VariantDetect:
                     pass
                 else:
                     # Parse breakpoints
-                    final = breakpoint_parser(out2, self.minlen, sig_index, co)
+                    final = breakpoint_parser(out2, self.minlen, sig_index, self.seed)
                     self.total_out.extend(final)
                 temp1 = []
                 chromocollect = []
@@ -173,7 +175,7 @@ class VariantDetect:
     def vcf_report(self):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t, self.minlen)
+                   self.homo_t, self.het_t, self.minlen, self.depth)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)
@@ -182,27 +184,6 @@ class VariantDetect:
     def write2file(self, add_out):
         writer(os.path.join(self.dir, 'parse2.tsv'), add_out, self.debug)
         writer(os.path.join(self.dir, 'cluster.tsv'), self.out_nn, self.debug)
-
-    # Parse data and detect SVs
-    def parse_detect(self, total_lines, contig_collect, seed, gapdict, ovlt, sig_index):
-        lines_sort = sorted(sorted(total_lines, key=lambda x: x[1], reverse=True), key=lambda y: y[0])
-        temp1 = [tup[2] for tup in lines_sort]
-        # Parse entries and correct overlap alignments
-        subdata = entry_parser(temp1, contig_collect, ovlt)
-        for entry in subdata:
-            self.total_subdata.append('\t'.join(entry.split('\t')[0:5]))
-            # Add to base coverage
-            self.basecov += int(entry.split('\t')[2])
-        # SV detection
-        out1, out2 = sv_detect(subdata, self.splitpct, self.minalign, gapdict)
-        if out1 == '' and out2 == '':
-            pass
-        else:
-            # Parse breakpoints
-            final = breakpoint_parser(out2, self.minlen, sig_index, seed)
-            self.total_out.extend(final)
-            for i in final:
-                self.parse_dict[i.split('\t')[8]] = i
 
     # FASTA extractor
     def fasta_extract(self, qnames):

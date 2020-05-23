@@ -4,6 +4,16 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.3.7 - May 23, 2020
+    * Changed version import approach in setup.py
+    * All SV classes except deletions now undergo secondary analysis by hsblast alignment
+    * Allowed clustering of Nov_Ins to other SV classes
+    * Added depth of coverage information in VCF header
+    * Fixed SV index duplications
+    * Added BND limitation in README.md
+    * Removed "number_of_maps" from condfidence score equation in nv_nn.py to capture SVs consisting repetitive elements
+
+
 Version 1.3.6 - Apr 18, 2020
     * Fixed Exception bug in nv_cluster.py (Thanks to jiadong324, https://github.com/cytham/nanovar/issues/9#issuecomment-609146494)
     * Added mincov filter early in nv_cluster.py for faster computation

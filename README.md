@@ -141,4 +141,8 @@ Although NanoVar is provided with a universal model and threshold score, instruc
 
 ## Limitations
 * The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as Guppy to minimize this possibility.
- 
+* For BND SVs, NanoVar cannot calculate the actual number of SV-opposing reads (normal reads) at the novel adjacency as there
+ are two breakends from distant locations. Since it is not clear whether the novel adjacency is derived from both or either
+  breakends, it is not possible to know which breakend location(s) to consider for counting normal reads. Currently, NanoVar
+   approximates the normal read count by the minimum count from either breakend location. This would help to capture more true
+    BNDs but might also lower its precision.

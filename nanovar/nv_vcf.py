@@ -27,7 +27,7 @@ from natsort import natsorted
 from nanovar import __version__
 
 
-def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen):
+def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen, depth):
     rdata = nn_out
     # Calculating number of entries
     t = len(rdata)
@@ -39,8 +39,8 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
     read_path = os.path.abspath(read_path)
     vcf_total = open(os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name), 'w')
     vcf_pass = open(os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name), 'w')
-    add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres)
-    add_header(vcf_pass, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres)
+    add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth)
+    add_header(vcf_pass, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth)
     tmpread = []
     out = []
     for i in k:
@@ -191,7 +191,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
 
 
 # Write VCF header
-def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres):
+def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth):
     today = date.today()
     today_date = today.strftime("%d-%m-%Y")
     vcf_file.write('##fileformat=VCFv4.2\n')
@@ -201,6 +201,7 @@ def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_d
     vcf_file.write('##reference=%s\n' % ref_path)
     vcf_file.write('##mapping=%s\n' % blast_cmd)
     vcf_file.write('##phasing=none\n')
+    vcf_file.write('##depth_of_coverage=%sX\n' % str(depth))
     for key in contig_len_dict:
         vcf_file.write('##contig=<ID=%s,length=%s>\n' % (key, str(contig_len_dict[key])))
     vcf_file.write('##ALT=<ID=INS,Description="Insertion of novel sequence relative to the reference">\n')

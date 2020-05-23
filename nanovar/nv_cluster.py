@@ -30,7 +30,8 @@ def sv_cluster(
         maxovl,
         mincov,
         contigs,
-        ins_switch
+        ins_switch,
+        seed
 ):
     """Returns a list of clustered SV breakends in strings
 
@@ -72,8 +73,8 @@ Keyword arguments:
     svnormalcov = intersection3(intersect, readteam, newdictnouniq, mainclass)
 
     # Output all information into a list of strings
-    output = arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict)
-    return output
+    output, seed = arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict, seed)
+    return output, seed + 1
 
 
 # Function to collect information of each breakpoint entry and cluster breakpoints
@@ -162,7 +163,7 @@ def rangecollect(x, buf, contigs, ins_switch, mincov):
 
     # Carry out clustering
     readteam, mainclass = cluster(leftchrnamelist, leftchrcoorlist, rightchrnamelist, rightchrcoorlist, buf, svsizedict,
-                                  classdict, ins_switch, mincov)
+                                  classdict, ins_switch, mincov, infodict)
     """
     - readteam: Dictionary where keys are cluster coordinates (e.g. chr1:100-chr1-200 or chr1:100 for Ins SVs) and values are 
                 lists of reads with the respective cluster coordinates, with the first read in the list as the lead read.
@@ -184,7 +185,8 @@ def cluster(leftchrnamelist,
             svsizedict,
             classdict,
             ins_switch,
-            mincov):
+            mincov,
+            infodict):
 
     leftcluster2read, rightcluster2read, read2cluster = OrderedDict(), OrderedDict(), OrderedDict()
 
@@ -282,6 +284,7 @@ def cluster(leftchrnamelist,
 
     readteam, mainclass = OrderedDict(), OrderedDict()
     pastbps = {}
+    omit = []
 
     # Assign the lead read and gather read team of each paired or unpaired cluster
     for coord in clusterlink:  # For clusters that are either unpaired or paired (left)
@@ -321,32 +324,83 @@ def cluster(leftchrnamelist,
 
                 readlist = sorted(set(reads1).intersection(reads2))  # Get reads that intersect with both clusters
                 for read in sorted(set(reads1).difference(reads2)) + sorted(set(reads2).difference(reads1)):
-                    # If read only found in either clusters, include them only if they are bp_Nov_Ins
+                    # If read only found in either clusters, include them only if they are bp_Nov_Ins or Nov_Ins
                     if classdict[read] == 'bp_Nov_Ins':
                         if read not in pastbps:
                             readlist.append(read)
                             pastbps[read] = 1
+                    elif classdict[read] in ['Nov_Ins']:
+                        # Allow Nov_Ins to be clustered with other SV classes
+                        if read not in pastbps:
+                            readlist.append(read)
+                            pastbps[read] = 1
+                            omit.append(read)
+                        else:
+                            if pastbps[read] == 1:  # Allow the same Nov_Ins to be clustered one more time (For Inter/Intra-Ins)
+                                pastbps[read] = 2
+                                readlist.append(read)
+                # If blast re-analysis, remove minimap reads if blast reads present in read list
+                if ins_switch:
+                    remove_mm = False
+                    for r in readlist:
+                        if infodict[r].split('\t')[5] == '-':
+                            remove_mm = True
+                            break
+                    if remove_mm:
+                        for r in readlist:
+                            if infodict[r].split('\t')[5] == 'mm':
+                                readlist.remove(r)
 
                 # Gather lead read
                 lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, ins_switch)
-                # For Nov_Ins, get the average coord between the two
-                if main == 'Nov_Ins':
-                    avg_coord = coord.split(':')[0] + ':' + \
-                                str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
-                    readteam[avg_coord] = [lead]
-                    readteam[avg_coord].extend(sorted(set(readlist).difference([lead])))    # Append remaining reads
-                    mainclass[avg_coord] = main
-                else:  # Else include both coord into cluster label
-                    readteam[coord + '-' + coord2] = [lead]
-                    readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))    # Append remaining reads
-                    mainclass[coord + '-' + coord2] = main
+                if ins_switch:  # Only omit nov_ins as lead for blast re-analysis
+                    if lead not in omit:
+                        # For Nov_Ins, get the average coord between the two
+                        if main == 'Nov_Ins':
+                            avg_coord = coord.split(':')[0] + ':' + \
+                                        str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
+                            readteam[avg_coord] = [lead]
+                            readteam[avg_coord].extend(sorted(set(readlist).difference([lead])))  # Append remaining reads
+                            mainclass[avg_coord] = main
+                        else:  # Else include both coord into cluster label
+                            readteam[coord + '-' + coord2] = [lead]
+                            readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))
+                            mainclass[coord + '-' + coord2] = main
+                else:
+                    # For Nov_Ins, get the average coord between the two
+                    if main == 'Nov_Ins':
+                        avg_coord = coord.split(':')[0] + ':' + \
+                                    str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
+                        readteam[avg_coord] = [lead]
+                        readteam[avg_coord].extend(sorted(set(readlist).difference([lead])))  # Append remaining reads
+                        mainclass[avg_coord] = main
+                    else:  # Else include both coord into cluster label
+                        readteam[coord + '-' + coord2] = [lead]
+                        readteam[coord + '-' + coord2].extend(sorted(set(readlist).difference([lead])))  # Append remaining reads
+                        mainclass[coord + '-' + coord2] = main
 
     # Filter 2
-    # Delete cluster if it is supported by <mincov number of reads
+    # Delete cluster if it is supported by <mincov or 2 number of reads
     to_del = []
     for key, reads in readteam.items():
-        if len(reads) < mincov:
+        if len({x.split('~')[0] for x in reads}) < min(2, mincov):
             to_del.append(key)
+            # For BND SVs with repetitive elements, their 2 breakends might not cluster well due to multi-mapping,
+            # hence a chance to ignore that is given here if there is a related cluster group with cov >= 2.
+            for read in reads:
+                if classdict[read] in ['Inter-Ins', 'Intra-Ins2', 'Intra-Ins', 'Inter']:
+                    coord = key.split('-')[0]
+                    temp = {}
+                    for coord2 in clusterlink[coord]:
+                        if coord + '-' + coord2 in readteam:
+                            cov = len({x.split('~')[0] for x in readteam[coord + '-' + coord2]})
+                            if cov >= 2:
+                                temp[coord + '-' + coord2] = cov
+                    if temp:
+                        cluster_ = sorted(temp.items(), key=lambda item: item[1], reverse=True)[0][0]  # Get cluster with most cov
+                        readteam[cluster_].append(read)  # Add read to the cluster
+                        # classdict[read] = 'bp_Nov_Ins'  # Modify classdict to bp_Nov_Ins
+    # Delete all low cov clusters
     for key in to_del:
         del readteam[key]
 
@@ -354,10 +408,7 @@ def cluster(leftchrnamelist,
 
 
 def leadread(reads, svsizedict, classdict, ins_switch):
-    if ins_switch:
-        mainsvclass = mainclasssv_ins(reads, classdict)
-    else:
-        mainsvclass = mainclasssv(reads, classdict)
+    mainsvclass = mainclasssv(reads, classdict, ins_switch)
     sizedict = OrderedDict()
     leader = ''
     for read in reads:
@@ -389,10 +440,17 @@ def leadread_bp(reads, svsizedict, classdict):
 
 
 # Function to rank and filter best sv type
-def mainclasssv(reads, classdict):
-    tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
-    tier2sv = ['Inv', 'Del', 'TDupl', 'Nov_Ins', 'Intra-Ins', 'Inter']
-    tier1sv = ['bp_Nov_Ins']
+def mainclasssv(reads, classdict, ins_switch):
+    if ins_switch:
+        tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2', 'TDupl']
+        tierxsv = ['Intra-Ins', 'Inter']
+        tier2sv = ['Inv', 'Del', 'Nov_Ins']
+        tier1sv = ['bp_Nov_Ins']
+    else:
+        tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
+        tierxsv = ['Intra-Ins', 'Inter']
+        tier2sv = ['Inv', 'Del', 'TDupl', 'Nov_Ins']
+        tier1sv = ['bp_Nov_Ins']
     tmpdict = OrderedDict()
     for read in reads:
         svclass = classdict[read]
@@ -401,6 +459,21 @@ def mainclasssv(reads, classdict):
         else:
             tmpdict[svclass] += 1
     if any(y in tier3sv for y in tmpdict):
+        for s in tierxsv:
+            try:
+                del tmpdict[s]
+            except KeyError:
+                pass
+        for s in tier2sv:
+            try:
+                del tmpdict[s]
+            except KeyError:
+                pass
+        try:
+            del tmpdict["bp_Nov_Ins"]
+        except KeyError:
+            pass
+    elif any(y in tierxsv for y in tmpdict):
         for s in tier2sv:
             try:
                 del tmpdict[s]
@@ -420,41 +493,6 @@ def mainclasssv(reads, classdict):
     else:
         a = ','.join([y for y in tmpdict])
         raise Exception("Error: Unknown SV class %s, %s" % (a, ','.join(reads)))
-    mainsvclass = [key for (key, value) in sorted(tmpdict.items(), key=lambda x: x[1], reverse=True)][0]
-    return mainsvclass
-
-
-# Function to rank and filter SV type after INS re-analysis
-def mainclasssv_ins(reads, classdict):
-    tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2', 'TDupl']
-    tier2sv = ['Inv', 'Del', 'Nov_Ins', 'Intra-Ins', 'Inter']
-    tier1sv = ['bp_Nov_Ins']
-    tmpdict = OrderedDict()
-    for read in reads:
-        svclass = classdict[read]
-        if svclass not in tmpdict:
-            tmpdict[svclass] = 1
-        else:
-            tmpdict[svclass] += 1
-    if any(y in tier3sv for y in tmpdict):
-        for s in tier2sv:
-            try:
-                del tmpdict[s]
-            except KeyError:
-                pass
-        try:
-            del tmpdict["bp_Nov_Ins"]
-        except KeyError:
-            pass
-    elif any(y in tier2sv for y in tmpdict):
-        try:
-            del tmpdict["bp_Nov_Ins"]
-        except KeyError:
-            pass
-    elif any(y in tier1sv for y in tmpdict):
-        pass
-    else:
-        raise Exception("Error: Unknown SV class")
     mainsvclass = [key for (key, value) in sorted(tmpdict.items(), key=lambda x: x[1], reverse=True)][0]
     return mainsvclass
 
@@ -529,9 +567,9 @@ def remove_uniq(readteam):
 
 
 # Parse info into output
-def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict):
+def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict, seed):
     output = []
-    n = 1
+    n = seed
     for clusters in readteam:
         svtype = mainclass[clusters]
         lcov = countcov(readteam[clusters])
@@ -593,7 +631,7 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                 else:
                     raise Exception('Error: Cluster name error')
             n += 1
-    return output
+    return output, n
 
 
 # Function to convert non-digits to zero

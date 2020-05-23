@@ -295,13 +295,13 @@ def main():
         thread_spin.join()
         print('')
         task = TaskProgress()
-        msg = 'Clustering SV breakends and inferencing'
+        msg = 'Clustering SV breakends'
         spinner = Spinner(msg + ' - ')
         thread_spin = threading.Thread(target=task.run, args=(spinner,))
         thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Clustering SV breakends and inferencing -')
+        print('Clustering SV breakends -')
 
     # SV breakend clustering and extracting INS and INV SVs
     run.cluster_extract()
@@ -312,13 +312,13 @@ def main():
         thread_spin.join()
         print('')
         task = TaskProgress()
-        msg = 'Re-evaluating INS and INV SVs'
+        msg = 'Re-evaluating SVs with BLAST and inferencing'
         spinner = Spinner(msg + ' - ')
         thread_spin = threading.Thread(target=task.run, args=(spinner,))
         thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Re-evaluating INS and INV SVs -')
+        print('Re-evaluating SVs with BLAST and inferencing -')
 
     # Wait for indexing or make index
     if threads_index == 1:

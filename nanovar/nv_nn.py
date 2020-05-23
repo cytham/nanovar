@@ -47,7 +47,7 @@ def inference(cluster, parse, model):
     for i in cluster:
         finalp = finalprob(i.split('\t')[8], i.split('\t')[11], probdict)
         nn_out.append(i + '\t' + str(np.tanh(0.4 * float(odict[i.split('\t')[8]])) * finalp * readratiofilter(
-            normalcovratiodict[i.split('\t')[8]], normalcov[i.split('\t')[8]]) * nmapchrfilter(nmapdict[i.split('\t')[8]])))
+            normalcovratiodict[i.split('\t')[8]], normalcov[i.split('\t')[8]])))  # * nmapchrfilter(nmapdict[i.split('\t')[8]])))
         # tanh(0.4B)*P where B = no. of breakend supporting reads and P = average confidence probability of breakend
         # This function alters output probability based on number of breakend supporting reads.
         # Visualize on fooplot.com
@@ -69,7 +69,7 @@ def readratiofilter(ratio, ncov):
 
 # Additional multimapping and contig filter post NN inference
 def nmapchrfilter(nmap):
-    mapscore = max(-np.exp(0.3 * nmap - 5) + 1, 0)
+    mapscore = max(-np.exp(0.3 * nmap - 10) + 1, 0)  # nmap cap at
     return mapscore
 
 

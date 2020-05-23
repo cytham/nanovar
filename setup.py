@@ -1,10 +1,11 @@
 from setuptools import setup, find_packages, Extension
-from nanovar.version import __version__
 import os
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(current_dir, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+exec(open("nanovar/version.py").read())
 
 setup(
     name='nanovar',

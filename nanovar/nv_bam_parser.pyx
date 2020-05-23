@@ -131,7 +131,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                     final = breakpoint_parser(out2, minlen, sig_index, seed)
                     total_out.extend(final)
                     for i in final:
-                        parse_dict[i.split('\t')[8]] = i
+                        parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
         else:  # Multiple alignment read
             seed += 1
             total_lines = []
@@ -172,8 +172,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 final = breakpoint_parser(out2, minlen, sig_index, seed)
                 total_out.extend(final)
                 for i in final:
-                    parse_dict[i.split('\t')[8]] = i
-    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out
+                    parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
+    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed
 
 
 # Analyze CIGAR for Indels in segment and return read advancement call
