@@ -3,6 +3,10 @@ NanoVar Changelog
 
 Release Summary:
 
+Version 1.3.8 - May 24, 2020
+    * Fixed file type detection (Thanks to jiadong324, https://github.com/cytham/nanovar/issues/9#issuecomment-626579853)
+    * Fixed negative coordinates in VCF
+
 
 Version 1.3.7 - May 23, 2020
     * Changed version import approach in setup.py

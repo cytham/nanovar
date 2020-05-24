@@ -80,12 +80,10 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             if coord2 - coord1 < minlen:
-                mid = (coord2 + coord1)/2
-                coord1 = int(mid - round(sv_len/2, 0))
-                coord2 = int(mid + round(sv_len/2, 0) - 1)
-                sv_len = '-' + str(sv_len)
-            else:
-                sv_len = '-' + str(coord2 - coord1)
+                mid = (coord2 + coord1) / 2
+                coord1 = max(1, int(mid - round(sv_len/2, 0)))
+                coord2 = int(mid + round(sv_len/2, 0) + 1)
+            sv_len = '-' + str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DEL;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -95,11 +93,9 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             if coord2 - coord1 < minlen:
                 mid = (coord2 + coord1) / 2
-                coord1 = int(mid - round(minlen / 2, 0))
-                coord2 = int(mid + round(minlen / 2, 0) - 1)
-                sv_len = str(minlen)
-            else:
-                sv_len = str(coord2 - coord1)
+                coord1 = max(1, int(mid - round(minlen / 2, 0)))
+                coord2 = int(mid + round(minlen / 2, 0) + 1)
+            sv_len = str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -117,11 +113,9 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             if coord2 - coord1 < minlen:
                 mid = (coord2 + coord1) / 2
-                coord1 = int(mid - round(minlen / 2, 0))
-                coord2 = int(mid + round(minlen / 2, 0) - 1)
-                sv_len = str(minlen)
-            else:
-                sv_len = str(coord2 - coord1)
+                coord1 = max(1, int(mid - round(minlen / 2, 0)))
+                coord2 = int(mid + round(minlen / 2, 0) + 1)
+            sv_len = str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))

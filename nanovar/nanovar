@@ -137,7 +137,7 @@ def main():
     filename = os.path.basename(file_path)
     read_suffix = ['.fa', '.fq', '.fasta', '.fastq', '.fa.gzip', '.fq.gzip', '.fa.gz', '.fq.gz', '.fasta.gz', '.fastq.gz']
     bam_suffix = '.bam'
-    if any(s in filename.lower() for s in read_suffix):
+    if any(filename.lower().endswith(s) for s in read_suffix):
         input_name = os.path.basename(file_path).rsplit('.f', 1)[0]
         input_type = 'raw'
         # Test gzip compression and validates read file
@@ -152,7 +152,7 @@ def main():
             raise Exception("Error: Input FASTQ/FASTA file is corrupted around line %s +/- 4" % str(fastx_check[1]))
         else:
             logging.debug("Input FASTQ/FASTA file passed")
-    elif bam_suffix in filename.lower():
+    elif filename.lower().endswith(bam_suffix):
         sam = pysam.AlignmentFile(file_path, "rb")
         try:
             assert sam.is_bam, "Error: Input BAM file is not a BAM file."
