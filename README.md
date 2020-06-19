@@ -78,7 +78,7 @@ pip install .
 * samtools >=1.3.0
 * minimap2 >=2.17
 * makeblastdb and windowmasker
-* hs-blastn
+* hs-blastn ==0.0.5
 
 Please make sure each executable binary is in PATH.
 ##### 1. _bedtools_
@@ -103,10 +103,10 @@ cp ncbi-blast-2.3.0+/bin/makeblastdb ~/bin && cp ncbi-blast-2.3.0+/bin/windowmas
 ```
 ##### 5. _hs-blastn_
 ```
-# Download and compile
+# Download and compile the 0.0.5 version
 git clone https://github.com/chenying2016/queries.git
-cd queries/hs-blastn-src/
-make
+cd queries/hs-blastn-src/v0.0.5
+make  # if you encounter error during compilation relating to "isnan", refer to [this](https://github.com/cytham/nanovar/issues/7#issuecomment-644546378)
 
 # Copy hs-blastn binary to path (e.g. ~/bin)
 cp hs-blastn ~/bin
