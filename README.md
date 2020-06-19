@@ -106,11 +106,12 @@ cp ncbi-blast-2.3.0+/bin/makeblastdb ~/bin && cp ncbi-blast-2.3.0+/bin/windowmas
 # Download and compile the 0.0.5 version
 git clone https://github.com/chenying2016/queries.git
 cd queries/hs-blastn-src/v0.0.5
-make  # if you encounter error during compilation relating to "isnan", refer to [this](https://github.com/cytham/nanovar/issues/7#issuecomment-644546378)
+make
 
 # Copy hs-blastn binary to path (e.g. ~/bin)
 cp hs-blastn ~/bin
 ```
+If you encounter "isnan" error during compilation, please refer to [this](https://github.com/cytham/nanovar/issues/7#issuecomment-644546378).
 
 ## Documentation
 See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
