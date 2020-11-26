@@ -9,7 +9,7 @@ cffi==1.13.0
 chardet==3.0.4
 conda==4.7.12
 conda-package-handling==1.6.0
-cryptography==2.8
+cryptography==3.2
 cycler==0.10.0
 gast==0.2.2
 google-auth==1.11.2
