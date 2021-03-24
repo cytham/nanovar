@@ -25,6 +25,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from pybedtools import BedTool
 from scipy.interpolate import make_interp_spline, BSpline
 
@@ -62,7 +63,9 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
     depth = round(float(basecov)/total_gsize, 2)
     maxovl = max(round((medad * 4) + med, 1), 10)  # minimum overlap threshold is set at 10
-    return maxovl, depth
+    # me = np.mean(data2)
+    # std = np.std(data2)
+    return maxovl, depth  # , me, std, med, medad
 
 
 # Make genome size file
@@ -73,7 +76,7 @@ def make_gsize(contig_len_dict, wk_dir):
     for contig in contig_len_dict:
         # checkcontigname(contig)
         tmp.append(contig + '\t' + str(contig_len_dict[contig]))
-    data.write('\n'.join(tmp))
+    data.write('\n'.join(tmp) + '\n')
     data.close()
     return path
 
@@ -128,7 +131,8 @@ def curve(data, n, upper_limit, wk_dir):
     ax.set_facecolor('#ebebff')
     plt.text(int(upper_limit), y[-1], '>=' + str(int(upper_limit)))
     ax.grid(color='w', linestyle='-', linewidth=1)
-    vals = ax.get_yticks()
+    vals = ax.get_yticks().tolist()
+    ax.yaxis.set_major_locator(mticker.FixedLocator(vals))
     ax.set_yticklabels(['{:,.1%}'.format(x) for x in vals])
     plt.ylabel('Percentage')
     plt.xlabel('Depth of coverage')

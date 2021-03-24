@@ -28,8 +28,8 @@ from nanovar import __version__
 # Parse input
 def input_parser(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="NanoVar is a neural network enhanced structural variant (SV) caller that \
-utilizes low-depth long-read sequencing data.",
-                                     formatter_class=argparse.RawTextHelpFormatter)  # RawDescriptionHelpFormatter)
+handles low-depth long-read sequencing data.",
+                                     formatter_class=argparse.RawTextHelpFormatter, usage=msg())  # RawDescriptionHelpFormatter)
 
     def restrict_float(f):
         f = float(f)
@@ -48,8 +48,8 @@ Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or .bam""")
 will overwrite indexes created by other aligners such as bwa.""")
 
     parser.add_argument("dir", type=str,
-                        metavar="[working_directory]",
-                        help="""path to working directory. Directory will be created 
+                        metavar="[work_directory]",
+                        help="""path to work directory. Directory will be created 
 if it does not exist.""")
 
     parser.add_argument("-x", "--data_type", type=str, metavar="str",
@@ -145,3 +145,8 @@ def gzip_check(path):
     twobytes = b'\x1f\x8b'
     with open(path, 'rb') as f:
         return f.read(2) == twobytes
+
+
+# Custom usage message
+def msg():
+    return "nanovar [options] [FASTQ/FASTA/BAM] [REFERENCE_GENOME] [WORK_DIRECTORY]"

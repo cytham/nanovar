@@ -172,7 +172,7 @@ def align_mm(ref, read, wk_dir, read_name, ref_name, threads, mm, data_type, st)
 
 
 # HS-BLASTN alignment
-def align_hsb(ref, wk_dir, ref_name, threads, hsb):
+def align_hsb(ref, wk_dir, ref_name, threads, hsb, debug):
     obinary_path = os.path.join(wk_dir, str(ref_name) + '.counts.obinary')
     out_path = os.path.join(wk_dir, 'temp-%s-blast.tab' % ref_name)
     read_path = os.path.join(wk_dir, 'temp2.fa')
@@ -187,7 +187,8 @@ def align_hsb(ref, wk_dir, ref_name, threads, hsb):
     if exitcode != 0:
         logging.critical("Error: hs-blastn alignment failed")
         raise Exception("Error: hs-blastn alignment failed, see log")
-    os.remove(read_path)
+    if not debug:  # Remove temp2.fa
+        os.remove(read_path)
     return ["hs-blastn align -db " + ref + " -window_masker_db obinary_path -query " + read_path + " -out " + out_path +
             " -outfmt 6 -num_threads " + str(threads) + " -max_target_seqs 3 -gapopen 0 -gapextend 4 -penalty -3 -reward 2",
             out_path]

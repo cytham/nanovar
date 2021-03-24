@@ -91,7 +91,7 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                 if gapdict is not None:
                     try:
                         for v in gapdict[chrm]:
-                            if v[0] <= (subjstart or subjend) <= v[1]:
+                            if v[0] <= subjstart <= v[1] or v[0] <= subjend <= v[1]:
                                 a += 1
                     except KeyError:
                         pass
@@ -183,12 +183,18 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                                             ',' + 'Intra-Ins(2):' + str(query[g - 1][1]) + '-' +
                                                             str(query[g][0]))
                                         elif sbp == 0:
-                                            dele.append('Del')
-                                            del_size.append('Del' + str(subjgap-qurygap))
-                                            del_range.append(
-                                                str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' + str(
-                                                    subject[i + 1][0]))
-                                            sv_range.append('Del:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
+                                            if subjgap - qurygap <= 100000:
+                                                dele.append('Del')
+                                                del_size.append('Del' + str(subjgap-qurygap))
+                                                del_range.append(
+                                                    str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' + str(
+                                                        subject[i + 1][0]))
+                                                sv_range.append('Del:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
+                                            else:
+                                                intra_ins.append('Intra-Ins')
+                                                intra_ins_range.append(str(tmpread[i].split('\t')[0].strip()) + ':' +
+                                                                       str(subject[i][1]) + '-' + str(subject[i + 1][0]))
+                                                sv_range.append('Intra-Ins:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
                                 # If gap is negative and smaller than 100000 (Arbitrary tandemDup size gauge)
                                 elif -100000 < subjgap < -20:
                                     tdup.append('TDupl')
@@ -234,7 +240,7 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                 # If query gap more than cutoff and subject gap is negative
                                 elif qurygap > ncutoff and subjgap < 0:
                                     nov_ins.append('Nov-Ins')
-                                    ins_size.append('Nov-Ins' + str(qurygap-subjgap))
+                                    ins_size.append('Nov-Ins' + str(qurygap))
                                     ins_range.append(str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' +
                                                      str(int(subject[i][1]) + 1))
                                     sv_range.append('Nov_Ins:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
@@ -269,12 +275,18 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                             sv_range.append('Intra-Ins(1):' + str(query[i][1]) + '-' + str(query[i + 1][0]) +
                                                             ',' + 'Intra-Ins(2):' + str(query[g - 1][1]) + '-' + str(query[g][0]))
                                         elif sbp == 0:
-                                            dele.append('Del')
-                                            del_size.append('Del' + str(subjgap-qurygap))
-                                            del_range.append(
-                                                str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' + str(
-                                                    subject[i + 1][0]))
-                                            sv_range.append('Del:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
+                                            if subjgap - qurygap <= 100000:
+                                                dele.append('Del')
+                                                del_size.append('Del' + str(subjgap-qurygap))
+                                                del_range.append(
+                                                    str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' + str(
+                                                        subject[i + 1][0]))
+                                                sv_range.append('Del:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
+                                            else:
+                                                intra_ins.append('Intra-Ins')
+                                                intra_ins_range.append(str(tmpread[i].split('\t')[0].strip()) + ':' +
+                                                                       str(subject[i][1]) + '-' + str(subject[i + 1][0]))
+                                                sv_range.append('Intra-Ins:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
                                 # If gap is negative and smaller than 100000 (Arbitrary tandemDup size gauge)
                                 elif -100000 < subjgap < -20:
                                     tdup.append('TDupl')
@@ -320,7 +332,7 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                 # If query gap more than cutoff and subject gap is negative
                                 elif qurygap > ncutoff and subjgap < 0:
                                     nov_ins.append('Nov-Ins')
-                                    ins_size.append('Nov-Ins' + str(qurygap-subjgap))
+                                    ins_size.append('Nov-Ins' + str(qurygap))
                                     ins_range.append(str(tmpread[i].split('\t')[0].strip()) + ':' + str(subject[i][1]) + '-' +
                                                      str(int(subject[i][1]) + 1))
                                     sv_range.append('Nov_Ins:' + str(query[i][1]) + '-' + str(query[i + 1][0]))

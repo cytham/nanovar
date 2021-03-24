@@ -22,12 +22,12 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import numpy as np
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from tensorflow.keras.models import load_model
 
 
 # Neural network inferencing
 def inference(cluster, parse, model):
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     odict, normalcovratiodict, classdict, normalcov, nmapdict, nchrdict = getoverlap(cluster)
     newpdata = filterparse(parse, odict)
     nsigndict = scalefeature(newpdata, odict, normalcovratiodict, classdict)

@@ -3,6 +3,25 @@ NanoVar Changelog
 
 Release Summary:
 
+
+Version 1.3.9 - Mar 24, 2021
+    * Fixed nv_detect_algo insertion and deletion large size bug
+    * Added pysam >=0.15.4 into bioconda metal.yml as prerequisite
+    * Added pybedtools >=0.8.2 prerequisite to fixed RuntimeWarning buffering=1 error (Refer to https://github.com/daler/pybedtools/issues/322)
+    * Prevent repeated read-indexes by adjusting seed (Thanks to Geoffrey Woodland)
+    * Improve read cluster exception message (Thanks to Geoffrey Woodland)
+    * Unique ID of breakpoints identified by BLAST shortened to four characters to prevent mixing with minimap2 breakpoints
+    * Adjusted breakend filtering during mm clustering
+    * Improved breakpoint clustering algorithm to increase accuracy
+    * Added newline to last line of genome.sizes file
+    * Added genome check for BAM (Thanks to oneillkza, https://github.com/cytham/nanovar/issues/19#issuecomment-791599629)
+    * Modified argparse "usage" format
+    * Suppressed BAM index missing warning
+    * Supressed Tensorflow INFO and WARNING logs
+    * Migrated to tensorflow-cpu/tensorflow-mkl to prevent cuda_driver.cc error
+    * Fixed FixedLocator warning
+
+
 Version 1.3.8 - May 24, 2020
     * Fixed file type detection (Thanks to jiadong324, https://github.com/cytham/nanovar/issues/9#issuecomment-626579853)
     * Fixed negative coordinates in VCF

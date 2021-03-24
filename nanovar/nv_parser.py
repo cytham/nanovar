@@ -22,6 +22,7 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import random
 import re
 import ast
+import uuid
 
 
 # Parse alignment entries
@@ -129,12 +130,20 @@ def align_info(line, rlendict):
 
 
 # Parse SV breakpoints
-def breakpoint_parser(out, minlen, sig_index, seed):
+def breakpoint_parser(out, minlen, sig_index, seed, aligner):
+    rd = random.Random()
+    rd.seed(seed)
+    uname_repeat = {}
     final = []
-    ran = "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    ran_len = 5
+    if aligner == 'mm':
+        ran_len = 5
+    elif aligner == 'hsb':
+        ran_len = 4
+    else:
+        raise Exception('ERROR: Internal error - breakpoint_parser aligner parameter fault')
+    # ran = "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    # random.seed(seed)
     read_name = out.split('\t')[0]
-    random.seed(seed)
     if out.split('\t')[17] == '':
         complex_sv = 0
     else:
@@ -174,8 +183,14 @@ def breakpoint_parser(out, minlen, sig_index, seed):
         bp2 = int(bp_range.split('-')[1])
         signature, strands = getsignature(bp1, bp_name, querymap, sign, realnmaps, evaluelist, bitscorelist, bps_no,
                                           complex_sv, nchrom, short, piden, mismatch, gap_ratio, strandness, sig_index)
+        bp_uname = uuid.UUID(int=rd.getrandbits(128), version=4).hex[:ran_len].upper()
+        # bp_uname = ''.join(random.choices(ran, k=ran_len))
+        try:
+            while uname_repeat[bp_uname]:
+                bp_uname = uuid.UUID(int=rd.getrandbits(128), version=4).hex[:ran_len].upper()
+        except KeyError:
+            uname_repeat[bp_uname] = 1
         if bp_name == 'S-Nov_Ins':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[7].split(' ')[1].split(',')[int(iso_ins_count - iso_ins_counter)].split(':')[0]
             coord = out.split('\t')[7].split(' ')[1].split(',')[int(iso_ins_count - iso_ins_counter)].split(':')[1]
             s_nov_ins_size = out.split('\t')[7].split(' ')[0].split(',')[int(iso_ins_count - iso_ins_counter)].split('ns')[1]
@@ -190,7 +205,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             iso_ins_counter = iso_ins_counter - 1
         elif bp_name == 'E-Nov_Ins':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[7].split(' ')[1].split(',')[int(iso_ins_count - iso_ins_counter)].split(':')[0]
             coord = out.split('\t')[7].split(' ')[1].split(',')[int(iso_ins_count - iso_ins_counter)].split(':')[1]
             e_nov_ins_size = out.split('\t')[7].split(' ')[0].split(',')[int(iso_ins_count - iso_ins_counter)].split('ns')[1]
@@ -205,7 +219,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             iso_ins_counter = iso_ins_counter - 1
         elif bp_name == 'Del':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[6].split(' ')[1].split(',')[int(del_count - del_counter)].split(':')[0]
             coord1 = int(out.split('\t')[6].split(' ')[1].split(',')[int(del_count - del_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[6].split(' ')[1].split(',')[int(del_count - del_counter)].split(':')[1].split('-')[1])
@@ -221,7 +234,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             del_counter = del_counter - 1
         elif bp_name == 'Nov_Ins':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[8].split(' ')[1].split(',')[int(ins_count - ins_counter)].split(':')[0]
             coord1 = int(out.split('\t')[8].split(' ')[1].split(',')[int(ins_count - ins_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[8].split(' ')[1].split(',')[int(ins_count - ins_counter)].split(':')[1].split('-')[1])
@@ -236,7 +248,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             ins_counter = ins_counter - 1
         elif bp_name == 'TDupl':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[10].split(' ')[1].split(',')[int(tdup_count - tdup_counter)].split(':')[0]
             coord1 = int(out.split('\t')[10].split(' ')[1].split(',')[int(tdup_count - tdup_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[10].split(' ')[1].split(',')[int(tdup_count - tdup_counter)].split(':')[1].split('-')[1])
@@ -250,7 +261,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
             )
             tdup_counter = tdup_counter - 1
         elif bp_name == 'Inv':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[0]
             coord1 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
@@ -264,7 +274,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
             )
             inv_counter = inv_counter - 1
         elif bp_name == 'Inv(1)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[0]
             coord1 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
@@ -280,7 +289,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             inv_counter = inv_counter - 1
         elif bp_name == 'Inv(2)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[0]
             coord1 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
@@ -296,7 +304,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             inv_counter = inv_counter - 1
         elif bp_name == 'Intra-Ins':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count - intra_ins_counter)].split(':')[0]
             coord1 = int(out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count -
                                                                           intra_ins_counter)].split(':')[1].split('-')[0])
@@ -312,7 +319,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
             )
             intra_ins_counter = intra_ins_counter - 1
         elif bp_name == 'Intra-Ins(1)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count - intra_ins_counter)].split(':')[0]
             coord1 = int(out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count -
                                                                           intra_ins_counter)].split(':')[1].split('-')[0])
@@ -330,7 +336,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             intra_ins_counter = intra_ins_counter - 1
         elif bp_name == 'Intra-Ins(2)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom = out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count - intra_ins_counter)].split(':')[0]
             coord1 = int(out.split('\t')[12].split(' ')[1].split(',')[int(intra_ins_count -
                                                                           intra_ins_counter)].split(':')[1].split('-')[0])
@@ -348,7 +353,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             intra_ins_counter = intra_ins_counter - 1
         elif bp_name == 'Inter-Ins(1)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom1 = out.split('\t')[13].split(' ')[1].split(',')[int(inter_ins_count -
                                                                       inter_ins_counter)].split('~')[0].split(':')[0]
             coord1_1 = out.split('\t')[13].split(' ')[1].split(',')[int(inter_ins_count -
@@ -369,7 +373,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             inter_ins_counter = inter_ins_counter - 1
         elif bp_name == 'Inter-Ins(2)':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom1 = out.split('\t')[13].split(' ')[1].split(',')[int(inter_ins_count -
                                                                       inter_ins_counter)].split('~')[0].split(':')[0]
             coord1_1 = out.split('\t')[13].split(' ')[1].split(',')[int(inter_ins_count -
@@ -390,7 +393,6 @@ def breakpoint_parser(out, minlen, sig_index, seed):
                 )
             inter_ins_counter = inter_ins_counter - 1
         elif bp_name == 'InterTx':
-            bp_uname = "".join(random.sample(ran, ran_len))
             chrom1 = out.split('\t')[14].split(' ')[1].split(',')[int(inter_tx_count -
                                                                       inter_tx_counter)].split('~')[0].split(':')[0]
             coord1_1 = out.split('\t')[14].split(' ')[1].split(',')[int(inter_tx_count -

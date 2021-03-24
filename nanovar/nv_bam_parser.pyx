@@ -37,12 +37,14 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out
         bint adv
         object seg
+        int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
         object sam = pysam.AlignmentFile(bam, "rb")
         dict repeat_dict = {}
         dict rlendict = {}
         dict main_dict = {}
         dict parse_dict = {}
         dict gapdict = {}
+    pysam.set_verbosity(save)  # Revert verbosity level
     seed = 0
     basecov = 0
     ovlt = 0.9  # Set overlap tolerance
@@ -71,7 +73,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                     pass
             except KeyError:
                 repeat_dict[qname] = ''
-                fasta.write(qname + '\n' + seg.query_sequence + '\n')
+                fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
                 rlendict[qname] = readlen
         try:
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
@@ -128,7 +130,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                     # Save for debug
                     detect_out.append(out2)
                     # Parse breakpoints
-                    final = breakpoint_parser(out2, minlen, sig_index, seed)
+                    final = breakpoint_parser(out2, minlen, sig_index, seed, 'mm')
                     total_out.extend(final)
                     for i in final:
                         parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
@@ -169,7 +171,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 # Save for debug
                 detect_out.append(out2)
                 # Parse breakpoints
-                final = breakpoint_parser(out2, minlen, sig_index, seed)
+                final = breakpoint_parser(out2, minlen, sig_index, seed, 'mm')
                 total_out.extend(final)
                 for i in final:
                     parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])

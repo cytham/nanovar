@@ -80,7 +80,8 @@ class VariantDetect:
 
     def coverage_stats(self):
         # Obtaining upper cov limit and depth of coverage
-        self.maxovl, self.depth = ovl_upper(self.gsize, self.contig, self.basecov, self.total_subdata, self.dir)
+        self.maxovl, self.depth = ovl_upper(self.gsize, self.contig, self.basecov, self.total_subdata,
+                                            self.dir)
         # Report statistics of coverage
         logging.info("Genome size: %s bases" % str(self.gsize))
         logging.info("Mapped bases: %s bases" % str(self.basecov))
@@ -91,27 +92,24 @@ class VariantDetect:
 
     def cluster_extract(self):
         logging.info("Clustering SV breakends")
-        cluster_out, self.seed2 = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
-                                             self.contig, False, self.seed2)
+        cluster_parse = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
+                                   self.contig, False, self.seed2)
         logging.info("Filtering INS and INV SVs")
         total_qnames = []
-        for line in cluster_out:
-            svtype = line.split('\t')[3].split(' ')[0]
-            if svtype in ['S-Nov_Ins_bp', 'E-Nov_Ins_bp', 'Nov_Ins']:  # Some INS are actually DUP
-                qnames = [line.split('\t')[0]]
-                self.ins_out.append(self.parse_dict[line.split('\t')[8]])
-                if line.split('\t')[11] != '.':
-                    for mate in line.split('\t')[11].split(','):
-                        qnames.append(mate[:-6])
-                        self.ins_out.append(self.parse_dict[mate])
+        for line in cluster_parse:
+            svtype = line.split('~')[1]
+            qnames = []
+            if svtype in ['bp_Nov_Ins', 'Nov_Ins']:  # Some INS are actually DUP
+                for r in cluster_parse[line]:
+                    qnames.append(r.rsplit('~', 1)[0])
+                    self.ins_out.append(self.parse_dict[r])
                 total_qnames.extend(qnames)
             elif svtype == 'Del':
-                self.out_rest.append(line)
-            else:  # For more precise INV, DUP, Intra and Inter bps
-                qnames = [line.split('\t')[0]]
-                if line.split('\t')[11] != '.':
-                    for mate in line.split('\t')[11].split(','):
-                        qnames.append(mate[:-6])
+                for r in cluster_parse[line]:
+                    self.ins_out.append(self.parse_dict[r])
+            else:
+                for r in cluster_parse[line]:
+                    qnames.append(r.rsplit('~', 1)[0])
                 total_qnames.extend(qnames)
         qnames_dict = {x: 1 for x in set(total_qnames)}
         self.fasta_extract(qnames_dict)
@@ -133,7 +131,6 @@ class VariantDetect:
         svread_ovl(self.dir, self.out_nn)
 
     def parse_detect_hsb(self):
-        random.seed(1)
         # Make gap dictionary
         gapdict = makegapdict(self.filter, self.contig_omit)
         temp1 = []
@@ -155,17 +152,13 @@ class VariantDetect:
                 self.seed += 1
                 # Parse entries and correct overlap alignments
                 subdata = entry_parser(temp1, chromocollect, ovlt)
-                for entry in subdata:
-                    self.total_subdata.append('\t'.join(entry.split('\t')[0:5]))
-                    # Add to base coverage
-                    self.basecov += int(entry.split('\t')[2])
                 # SV detection
                 out1, out2 = sv_detect(subdata, self.splitpct, self.minalign, gapdict)
                 if out2 == '':
                     pass
                 else:
                     # Parse breakpoints
-                    final = breakpoint_parser(out2, self.minlen, sig_index, self.seed)
+                    final = breakpoint_parser(out2, self.minlen, sig_index, self.seed, 'hsb')
                     self.total_out.extend(final)
                 temp1 = []
                 chromocollect = []
@@ -192,10 +185,10 @@ class VariantDetect:
         with open(fasta) as f:
             for line in f:
                 try:
-                    if qnames[line.strip('\n')]:
+                    if qnames[line[1:].strip('\n')]:
                         line1 = line
                         line2 = next(f)
-                        out.write('>' + line1 + line2)
+                        out.write(line1 + line2)
                 except KeyError:
                     _ = next(f)
             out.close()
