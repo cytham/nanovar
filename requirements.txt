@@ -11,6 +11,7 @@ conda==4.7.12
 conda-package-handling==1.6.0
 cryptography==3.3.2
 cycler==0.10.0
+cytocad==1.0.0
 gast==0.2.2
 google-auth==1.11.2
 google-auth-oauthlib==0.4.1

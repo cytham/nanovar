@@ -1,7 +1,7 @@
 """
 Parses BAM file and analyse CIGARS
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -56,6 +56,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         qname = seg.query_name
         if flag == 4:
             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
+            fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
             rlendict[qname] = len(seg.query_sequence)
             continue
         rname = seg.reference_name
@@ -202,7 +203,7 @@ cdef read_cigar(list cigar_tup, float minlen, float splitpct, unsigned int rstar
     for t, move in cigar_tup:
         if t in (4, 5):  # S or H
             qlast += move
-        elif t == 0:  # M
+        elif t in (0, 7, 8):  # M or = or X
             qlast += move
             slast += move
         elif t == 2:  # D

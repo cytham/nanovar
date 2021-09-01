@@ -1,7 +1,7 @@
 """
 SV detection algorithm.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -21,10 +21,14 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 
 
 def sv_detect(subdata, splitpct, minalign, gapdict):
+    tempname = ''
     c = len(subdata)  # Number of entries
     if c == 0:
         out1, out2 = '', ''
     else:
+        if subdata[0].split('\t')[4].strip() == 'bf1ad2a0-6a8f-418a-9507-1dd795e598f6':
+            tempname = 'bf1ad2a0-6a8f-418a-9507-1dd795e598f6'
+            print(subdata)
         if c == 1:
             sv_status = single_alignment_check(subdata, splitpct, minalign)
         else:
@@ -245,7 +249,7 @@ def sv_detect(subdata, splitpct, minalign, gapdict):
                                                      str(int(subject[i][1]) + 1))
                                     sv_range.append('Nov_Ins:' + str(query[i][1]) + '-' + str(query[i + 1][0]))
                         # Same strandness (2)
-                        if tmpread[i].split('\t')[7] == '-' and tmpread[i + 1].split('\t')[7] == '-':
+                        elif tmpread[i].split('\t')[7] == '-' and tmpread[i + 1].split('\t')[7] == '-':
                             if i != int(g - 1):  # Prevent duplicate record
                                 # Gapstudy
                                 subjgap = subject[i][1] - subject[i + 1][0]

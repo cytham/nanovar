@@ -4,3 +4,4 @@ recursive-include nanovar/gaps *.bed
 recursive-include nanovar/model *.h5
 recursive-include nanovar/css *.css
 recursive-include nanovar/js *.js
+recursive-include nanovar/ref *L1*

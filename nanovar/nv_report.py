@@ -1,7 +1,7 @@
 """
 Functions to create HTML report.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -104,7 +104,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                         bndlen.append(svlencap(int(sv_len)))
                     except ValueError:
                         bndnolen += 1
-    totalsvlen = [dellen, inslen, invlen, bndlen, duplen]
+    totalsvlen = np.array([dellen, inslen, invlen, bndlen, duplen], dtype=object)
     tab = [[len(dellen), len(inslen), len(invlen), len(bndlen), len(duplen)], [delnolen, insnolen, invnolen, bndnolen, dupnolen]]
     # Setting global figure parameters
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10,

@@ -43,6 +43,8 @@ nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
 
+See [wiki](https://github.com/cytham/nanovar/wiki) for entire list of options.
+
 #### Output
 | Output file | Comment |
 | :--- | :--- |
@@ -61,7 +63,7 @@ There are three ways to install NanoVar:
 # Installing from bioconda automatically installs all dependencies 
 conda install -c bioconda nanovar
 ```
-#### Option 2: Pip (See dependencies below)
+#### Option 2: PyPI (See dependencies below)
 ```
 # Installing from PyPI requires own installation of dependencies, see below
 pip install nanovar
@@ -145,6 +147,6 @@ Although NanoVar is provided with a universal model and threshold score, instruc
 
 * For BND SVs, NanoVar is unable to calculate the actual number of SV-opposing reads (normal reads) at the novel adjacency as
  there are two breakends from distant locations. It is not clear whether the novel adjacency is derived from both or either
-  breakends, in cases of balanced and unbalanced variants, and therefore its not possible to know which breakend location(s) to
+  breakends, in cases of balanced and unbalanced variants, and therefore it is not possible to know which breakend location(s) to
    consider for counting normal reads. Currently, NanoVar approximates the normal read count by the minimum count from either 
    breakend location. Although this helps in capturing unbalanced BNDs, it might lead to some false positives.

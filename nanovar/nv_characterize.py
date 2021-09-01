@@ -1,7 +1,7 @@
 """
 Method for SV characterization
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -31,13 +31,15 @@ from nanovar.nv_nn import inference, svread_ovl
 from nanovar.nv_cov_upper import ovl_upper
 from nanovar.nv_vcf import create_vcf
 from nanovar.nv_report import create_report
+from cytocad.change_detection import cad
+from cytocad.ideogram import tagore_wrapper
 
 
 class VariantDetect:
 
     def __init__(self, wk_dir, bam, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
                  contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug,
-                 contig_omit):
+                 contig_omit, cnv):
         self.dir = wk_dir
         self.bam = bam
         self.splitpct = splitpct
@@ -59,7 +61,8 @@ class VariantDetect:
         self.homo_t = homo_t
         self.het_t = het_t
         self.debug = debug
-        self.basecov, self.maxovl, self.depth = 0, 0, 0
+        self.cnv = cnv
+        self.basecov, self.maxovl, self.depth, self.maxovl3 = 0, 0, 0, 0
         self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out = [], [], [], [], [], []
         self.rlendict, self.parse_dict = {}, {}
         # HTML SV table entry limit
@@ -80,8 +83,17 @@ class VariantDetect:
 
     def coverage_stats(self):
         # Obtaining upper cov limit and depth of coverage
-        self.maxovl, self.depth = ovl_upper(self.gsize, self.contig, self.basecov, self.total_subdata,
-                                            self.dir)
+        self.maxovl, self.depth, self.maxovl3 = ovl_upper(self.gsize, self.contig, self.basecov, self.total_subdata, self.dir)
+        # CNV detection using cytocad
+        if self.cnv:
+            cnv_out, tag = cad(self.total_subdata, self.depth, self.maxovl3, self.rname, ref_build=self.cnv, cov_plots=True,
+                               wk_dir=self.dir)
+            tagore_wrapper(tag, self.rname, self.dir, self.cnv, 'png')
+            cnv_out_path = os.path.join(self.dir, self.rname + ".CNV.bed")
+            outwrite = open(cnv_out_path, 'w')
+            _ = outwrite.write('\n'.join(cnv_out))
+            outwrite.close()
+            logging.info("CNV analysis completed.")
         # Report statistics of coverage
         logging.info("Genome size: %s bases" % str(self.gsize))
         logging.info("Mapped bases: %s bases" % str(self.basecov))
@@ -165,10 +177,10 @@ class VariantDetect:
         if not self.debug:  # Remove blast table if not debug mode
             os.remove(self.bam)
 
-    def vcf_report(self):
+    def vcf_report(self, index2te):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t, self.minlen, self.depth)
+                   self.homo_t, self.het_t, self.minlen, self.depth, index2te)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)
@@ -192,7 +204,7 @@ class VariantDetect:
                 except KeyError:
                     _ = next(f)
             out.close()
-        os.remove(fasta)
+        # os.remove(fasta)
 
 
 # Write to files

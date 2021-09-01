@@ -1,7 +1,7 @@
 """
 Functions for creating VCF file.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -27,7 +27,8 @@ from natsort import natsorted
 from nanovar import __version__
 
 
-def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen, depth):
+def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen, depth,
+               index2te):
     rdata = nn_out
     # Calculating number of entries
     t = len(rdata)
@@ -49,11 +50,12 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
         normcov = int(float(tmpread[0].split('\t')[12]))
         dnnscore = float(tmpread[0].split('\t')[13])
         dnn = str(round(float(dnnscore), 3))
-        phred = str(abs(round(float(phredc(dnnscore)), 1)))
+        phred = phredc(dnnscore)
         sv_id = tmpread[0].split('\t')[6].split('~')[0]
         bp_name = tmpread[0].split('\t')[3].split(' ')[0]
         chrm1 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
         filt = filterer(float(phred), thres)
+        phred = str(abs(round(phred, 1)))
         dp = str(covl + normcov)
         ratio = round(float(covl) / int(dp), 3)
         geno = genotyper(ratio, homo_t, het_t)
@@ -61,19 +63,27 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             sv = '<INS>'
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            if sv_id in index2te:
+                te = ";TE=" + ','.join(index2te[sv_id])
+            else:
+                te = ''
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
-                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'E-Nov_Ins_bp' or bp_name == 'S-Nov_Ins_bp':
             pass
             sv = '<INS>'
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
+            if sv_id in index2te:
+                te = ";TE=" + ','.join(index2te[sv_id])
+            else:
+                te = ''
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=>' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
-                       str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Del':
             sv = '<DEL>'
             sv_len = int(tmpread[0].split('\t')[3].split(' ')[1].split('~')[0])
@@ -212,6 +222,7 @@ def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_d
     vcf_file.write('##INFO=<ID=NN,Number=1,Type=Float,Description="Neural network confidence probability">\n')
     vcf_file.write('##INFO=<ID=SV2,Number=1,Type=String,Description="BND SV assessment: TPO - Transposition, '
                    'TLO - Translocation">\n')
+    vcf_file.write('##INFO=<ID=TE,Number=.,Type=String,Description="Identity of transposable element insertion">\n')
     vcf_file.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     vcf_file.write('##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">\n')
     vcf_file.write('##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Read depth for each allele">\n')

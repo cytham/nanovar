@@ -5,7 +5,7 @@ NanoVar
 
 This is the main executable file of the program NanoVar.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 NanoVar is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import pysam
 import logging
 import nanovar
 import random
+import pickle
 import threading
 from datetime import datetime
 from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe, check_index
@@ -45,6 +46,7 @@ def main():
     wk_dir = args.dir
     data_type = args.data_type
     genome_filter = args.filter_bed
+    cnv = args.cnv
     minlen = args.minlen
     splitpct = args.splitpct
     minalign = args.minalign
@@ -59,11 +61,15 @@ def main():
     force = args.force
     model_path = args.model
     filter_bed_dir = os.path.join(os.path.dirname(nanovar.__file__), 'gaps')
+    ref_dir = os.path.join(os.path.dirname(nanovar.__file__), 'ref')
     mm = args.mm
     st = args.st
     mdb = args.mdb
     wmk = args.wmk
     hsb = args.hsb
+    pickle_bool = args.pickle
+    archivefasta = args.archivefasta
+    blastout = args.blastout
 
     # Check model file
     if model_path is None:
@@ -93,6 +99,27 @@ def main():
     mdb = check_exe(mdb, 'makeblastdb')
     wmk = check_exe(wmk, 'windowmasker')
     hsb = check_exe(hsb, 'hs-blastn')
+
+    # If additional CNV mode
+    hg38_size_dict = {}
+    if cnv:
+        # Check CytoCAD
+        try:
+            import cytocad
+            data_dir = os.path.join(os.path.dirname(cytocad.__file__), 'data')
+            hg38_size_path = os.path.join(data_dir, 'hg38_sizes_main.bed')
+            with open(hg38_size_path) as f:
+                for bed in f:
+                    line = bed.split('\t')
+                    hg38_size_dict[line[0]] = int(line[2])
+        except ImportError:
+            raise Exception("Error: cytocad module not found, please install CytoCAD - https://github.com/cytham/cytocad")
+        # Check tagore and rsvg
+        _ = check_exe(None, 'tagore')
+        _ = check_exe(None, 'rsvg-convert')
+        # Check hg38 build input
+        if cnv != 'hg38':
+            raise Exception("Error: Reference genome build %s is not recognised. CytoCAD only supports build hg38." % cnv)
 
     # Observe verbosity
     if quiet:
@@ -151,7 +178,7 @@ def main():
         if fastx_check[0] == "Fail":
             logging.critical("Error: Input FASTQ/FASTA file is corrupted around line %s +/- 4" % str(fastx_check[1]))
             raise Exception("Error: Input FASTQ/FASTA file is corrupted around line %s +/- 4" % str(fastx_check[1]))
-        else:
+        elif fastx_check[0] == "Pass":
             logging.debug("Input FASTQ/FASTA file passed")
     elif filename.lower().endswith(bam_suffix):
         save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
@@ -174,8 +201,8 @@ def main():
         raise Exception("Error: Input file is not recognised, please ensure file suffix has '.fa' or '.fq' or '.bam'")
 
     if gzip_check(ref_path):
-        logging.critical("Error: Input reference file is gzipped, please unpack it")
-        raise Exception("Error: Input reference file is gzipped, please unpack it")
+        logging.critical("Error: Input reference file is gzipped, please unzip it")
+        raise Exception("Error: Input reference file is gzipped, please unzip it")
 
     # Logging config info
     logging.info('Input file: %s' % file_path)
@@ -207,6 +234,16 @@ def main():
         contig_len_dict[seq_record.id] = len(seq_record)
         total_gsize += len(seq_record)
 
+    # Check if contig sizes from BAM is same as hg38 if CNV mode
+    if cnv:
+        for chrom in hg38_size_dict:
+            if chrom in contig_len_dict:
+                if contig_len_dict[chrom] != hg38_size_dict[chrom]:
+                    raise Exception("Error: Contig %s in BAM (%i) has different length in hg38 genome assembly (%i)" %
+                                    (chrom, contig_len_dict[chrom], hg38_size_dict[chrom]))
+            else:
+                raise Exception("Error: hg38 contig %s is absent in BAM" % chrom)
+
     # Check BAM contigs in reference genome
     if input_type == 'bam':
         for c in contig_list:
@@ -219,7 +256,9 @@ def main():
 
     # Validate filter BED file
     if genome_filter is not None:
-        if genome_filter in ('hg38', 'hg19', 'mm10'):
+        if genome_filter == 'hg38':
+            filter_path = os.path.join(filter_bed_dir, genome_filter + '_curated_filter_main.bed')
+        elif genome_filter in ('hg19', 'mm10'):
             filter_path = os.path.join(filter_bed_dir, genome_filter + '_filter-B400.bed')
         else:
             filter_path = genome_filter
@@ -297,7 +336,7 @@ def main():
     logging.info('Parsing BAM and detecting SVs')
     run = VariantDetect(wk_dir, bam_path, splitpct, minalign, filter_path, minlen, buff, model_path,
                         total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, mma[0],
-                        mincov, homo_t, het_t, debug, contig_omit)
+                        mincov, homo_t, het_t, debug, contig_omit, cnv)
     run.bam_parse_detect()
     run.coverage_stats()
 
@@ -341,10 +380,13 @@ def main():
         make_index(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb)
 
     # Run hsblastn on INS and INV reads
-    hsba = align_hsb(ref_path, wk_dir, ref_name, threads_bt, hsb, debug)
+    if not blastout:
+        hsba = align_hsb(ref_path, wk_dir, ref_name, threads_bt, hsb, debug)
+    else:
+        hsba = ['blast-command', blastout]
     sub_run = VariantDetect(wk_dir, hsba[1], splitpct, minalign, filter_path, minlen, buff, model_path,
                             total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, hsba[0],
-                            mincov, homo_t, het_t, debug, contig_omit)
+                            mincov, homo_t, het_t, debug, contig_omit, cnv)
 
     # Parsing INS and INV SVs and clustering
     sub_run.rlendict = run.rlendict
@@ -367,11 +409,31 @@ def main():
     else:
         print('Generating VCF files and report -')
 
+    # Analyze TE
+    from nanovar.nv_te_analyzer import te_analyzer
+    index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, threads, debug)
+
     # Write parse2 and cluster intermediate files
     run.write2file(add_out=sub_run.total_out)
 
+    # Pickle objects
+    if pickle_bool:
+        saveobjects = (wk_dir, bam_path, splitpct, minalign, filter_path, minlen, buff, model_path,
+                       total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, mma[0],
+                       mincov, homo_t, het_t, debug, contig_omit, cnv, run.rlendict, run.total_subdata, run.total_out,
+                       run.out_nn, sub_run.total_out)
+        with open(os.path.join(wk_dir, "nv_run.pkl"), "wb") as f:
+            pickle.dump(saveobjects, f)
+
+    # Delete temporary fasta file
+    if not archivefasta:
+        f = os.path.join(wk_dir, 'temp1.fa')
+        os.remove(f)
+        f = os.path.join(wk_dir, 'temp1.fa.fai')
+        os.remove(f)
+
     # Generating VCF and HTML report
-    run.vcf_report()
+    run.vcf_report(index2te)
     logging.info('NanoVar ended')
     now = datetime.now()
     if spin_switch:
