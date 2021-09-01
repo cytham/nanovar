@@ -411,7 +411,7 @@ def main():
 
     # Analyze TE
     from nanovar.nv_te_analyzer import te_analyzer
-    index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, threads, debug)
+    index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
 
     # Write parse2 and cluster intermediate files
     run.write2file(add_out=sub_run.total_out)
