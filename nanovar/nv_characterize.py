@@ -174,8 +174,6 @@ class VariantDetect:
                     self.total_out.extend(final)
                 temp1 = []
                 chromocollect = []
-        if not self.debug:  # Remove blast table if not debug mode
-            os.remove(self.bam)
 
     def vcf_report(self, index2te):
         logging.info("Creating VCF")
