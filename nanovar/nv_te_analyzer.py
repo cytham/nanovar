@@ -21,13 +21,12 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 
 
 import os
+import logging
 from pybedtools import BedTool
 from subprocess import Popen, PIPE, STDOUT
-from pathlib import Path
-import logging
 
 
-def te_analyzer(wk_dir, out_nn, total_out1, total_out2, score_threshold, ref_dir, hsb, threads, debug):
+def te_analyzer(wk_dir, out_nn, total_out1, total_out2, score_threshold, ref_dir, hsb, mdb, threads, debug):
     # Convert score threshold to nn probability
     nn_score = 1-10**(score_threshold/-10)
     index2reads = {}
@@ -79,13 +78,23 @@ def te_analyzer(wk_dir, out_nn, total_out1, total_out2, score_threshold, ref_dir
     _ = fasta.save_seqs(os.path.join(wk_dir, 'ins_seq.fa'))
     # HS-BLASTN alignment
     ref = os.path.join(ref_dir, 'hg38_L1_Alu.fa')
-    Path(ref_dir, 'hg38_L1_Alu.fa.bwt').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.header').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.nhr').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.nin').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.nsq').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.sa').touch()
-    Path(ref_dir, 'hg38_L1_Alu.fa.sequence').touch()
+    # Index TE reference (makeblastdb)
+    process = Popen([mdb, '-in', ref, '-input_type', 'fasta', '-dbtype', 'nucl'], universal_newlines=True,
+                    stdout=PIPE, stderr=STDOUT)
+    with process.stdout:
+        log_subprocess(process.stdout)
+    exitcode = process.wait()
+    if exitcode != 0:
+        logging.critical("Error: makeblastdb failed (2)")
+        raise Exception("Error: makeblastdb failed (2), see log")
+    # Index TE reference (hs-blastn)
+    process = Popen([hsb, 'index', ref], universal_newlines=True, stdout=PIPE, stderr=STDOUT)
+    with process.stdout:
+        log_subprocess(process.stdout)
+    exitcode = process.wait()
+    if exitcode != 0:
+        logging.critical("Error: hs-blastn index failed (2)")
+        raise Exception("Error: hs-blastn index failed (2), see log")
     obinary_path = os.path.join(ref_dir, 'hg38_L1_Alu.counts.obinary')
     read_path = os.path.join(wk_dir, 'ins_seq.fa')
     out_path = os.path.join(wk_dir, 'temp-te-blast.tab')
