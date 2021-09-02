@@ -108,8 +108,6 @@ def te_analyzer(wk_dir, out_nn, total_out1, total_out2, score_threshold, ref_dir
     if exitcode != 0:
         logging.critical("Error: hs-blastn alignment failed (2)")
         raise Exception("Error: hs-blastn alignment failed (2), see log")
-    if not debug:  # Remove ins_seq.fa
-        os.remove(read_path)
     index2te = {}
     with open(out_path) as f:
         for line in f:
@@ -128,6 +126,10 @@ def te_analyzer(wk_dir, out_nn, total_out1, total_out2, score_threshold, ref_dir
                     else:
                         index2te[read2index[line[0]]] = set()
                         index2te[read2index[line[0]]].add(line[1].rsplit('_', 1)[1])
+    if not debug:
+        os.remove(read_path)
+        os.remove(out_path)
+        
     return index2te
 
 
