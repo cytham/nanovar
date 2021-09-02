@@ -39,7 +39,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     fwd = os.path.join(os.getcwd(), wk_dir, 'fig')
     fwd_fig = './fig'
     threshold = thres
-    num_header = len(contig_len_dict) + 26  # This has to adjusted according to number of headers in VCF
+    num_header = len(contig_len_dict) + 25  # This has to adjusted according to number of headers in VCF
     vcf_path = os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name)
     vcf_path_pass = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name)
     vcf_data = open(vcf_path, 'r').read().splitlines()
