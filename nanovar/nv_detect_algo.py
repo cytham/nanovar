@@ -21,14 +21,10 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 
 
 def sv_detect(subdata, splitpct, minalign, gapdict):
-    tempname = ''
     c = len(subdata)  # Number of entries
     if c == 0:
         out1, out2 = '', ''
     else:
-        if subdata[0].split('\t')[4].strip() == 'bf1ad2a0-6a8f-418a-9507-1dd795e598f6':
-            tempname = 'bf1ad2a0-6a8f-418a-9507-1dd795e598f6'
-            print(subdata)
         if c == 1:
             sv_status = single_alignment_check(subdata, splitpct, minalign)
         else:
