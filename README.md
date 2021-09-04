@@ -5,7 +5,7 @@
 <br/><br/>
 
 ## NanoVar - Structural variant caller using low-depth long-read sequencing
-[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.com/cytham/nanovar)
+[![Build Status](https://app.travis-ci.com/cytham/nanovar.svg?branch=master)](https://app.travis-ci.com/github/cytham/nanovar)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
 [![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
