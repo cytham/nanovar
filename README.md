@@ -26,6 +26,8 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
+* Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
+* Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file) 
 
 ## Getting Started
 
