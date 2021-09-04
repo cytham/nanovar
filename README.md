@@ -34,13 +34,14 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 ### Quick run
 
 ```
-nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir 
+nanovar [Options] -t 24 -f hg38 --cnv hg38 sample.fq/sample.bam ref.fa working_dir 
 ```
 
 | Parameter | Argument | Comment |
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
 | `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
+| `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
 | - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
