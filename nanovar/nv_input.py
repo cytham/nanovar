@@ -1,7 +1,7 @@
 """
 Functions for parsing and verifying input parameters.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -51,6 +51,12 @@ will overwrite indexes created by other aligners such as bwa.""")
                         metavar="[work_directory]",
                         help="""path to work directory. Directory will be created 
 if it does not exist.""")
+
+    parser.add_argument("--cnv", type=str, metavar="hg38",
+                        default=None,
+                        help="""also detects large genomic copy-number variations 
+using CytoCAD (e.g. loss/gain of whole chromosomes). 
+Only works with hg38 genome assembly. Please state 'hg38' [None]""")
 
     parser.add_argument("-x", "--data_type", type=str, metavar="str",
                         default='ont',
@@ -135,6 +141,15 @@ Default score 1.0 was estimated from simulated analysis. """)
 
     parser.add_argument("--hsb", type=str, metavar="path",
                         help="specify path to 'hs-blastn' executable")
+
+    parser.add_argument("--pickle", action='store_true',
+                        help=argparse.SUPPRESS)
+
+    parser.add_argument("--archivefasta", action='store_true',
+                        help=argparse.SUPPRESS)
+
+    parser.add_argument("--blastout", type=str, metavar="path",
+                        help=argparse.SUPPRESS)
 
     args = parser.parse_args(args)
     return args

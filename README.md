@@ -5,7 +5,7 @@
 <br/><br/>
 
 ## NanoVar - Structural variant caller using low-depth long-read sequencing
-[![Build Status](https://travis-ci.org/cytham/nanovar.svg?branch=master)](https://travis-ci.com/cytham/nanovar)
+[![Build Status](https://app.travis-ci.com/cytham/nanovar.svg?branch=master)](https://app.travis-ci.com/github/cytham/nanovar)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
 [![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
@@ -26,22 +26,27 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
+* Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
+* Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file) 
 
 ## Getting Started
 
 ### Quick run
 
 ```
-nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir 
+nanovar [Options] -t 24 -f hg38 --cnv hg38 sample.fq/sample.bam ref.fa working_dir 
 ```
 
 | Parameter | Argument | Comment |
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
 | `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
+| `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
 | - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
+
+See [wiki](https://github.com/cytham/nanovar/wiki) for entire list of options.
 
 #### Output
 | Output file | Comment |
@@ -61,7 +66,7 @@ There are three ways to install NanoVar:
 # Installing from bioconda automatically installs all dependencies 
 conda install -c bioconda nanovar
 ```
-#### Option 2: Pip (See dependencies below)
+#### Option 2: PyPI (See dependencies below)
 ```
 # Installing from PyPI requires own installation of dependencies, see below
 pip install nanovar
@@ -145,6 +150,6 @@ Although NanoVar is provided with a universal model and threshold score, instruc
 
 * For BND SVs, NanoVar is unable to calculate the actual number of SV-opposing reads (normal reads) at the novel adjacency as
  there are two breakends from distant locations. It is not clear whether the novel adjacency is derived from both or either
-  breakends, in cases of balanced and unbalanced variants, and therefore its not possible to know which breakend location(s) to
+  breakends, in cases of balanced and unbalanced variants, and therefore it is not possible to know which breakend location(s) to
    consider for counting normal reads. Currently, NanoVar approximates the normal read count by the minimum count from either 
    breakend location. Although this helps in capturing unbalanced BNDs, it might lead to some false positives.

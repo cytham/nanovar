@@ -1,7 +1,7 @@
 """
 Functions to calculate the upper limit for long-read SV depth coverage.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -63,9 +63,10 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
     depth = round(float(basecov)/total_gsize, 2)
     maxovl = max(round((medad * 4) + med, 1), 10)  # minimum overlap threshold is set at 10
+    maxovl3 = max(round((medad * 3) + med, 1), 10)
     # me = np.mean(data2)
     # std = np.std(data2)
-    return maxovl, depth  # , me, std, med, medad
+    return maxovl, depth, maxovl3
 
 
 # Make genome size file

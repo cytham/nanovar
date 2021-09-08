@@ -1,7 +1,7 @@
 """
 Functions for verifying files.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 

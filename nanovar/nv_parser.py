@@ -1,7 +1,7 @@
 """
 Parsing algorithm.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -265,7 +265,7 @@ def breakpoint_parser(out, minlen, sig_index, seed, aligner):
             coord1 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[0])
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
             pair = '.'
-            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(min(coord1, coord2)) + '-' + str(max(coord1, coord2))
+            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(coord1) + '-' + str(coord2)
             uniqname = read_name + '~' + bp_uname
             final.append(
                 str(read_name) + '\t' + str(bp1) + '\t' + str(bp2) + '\t' + str(bp_name) + ' 99.99' + '~' +
@@ -279,7 +279,7 @@ def breakpoint_parser(out, minlen, sig_index, seed, aligner):
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
             inv_size = out.split('\t')[11].split(' ')[0].split(',')[int(inv_count - inv_counter)].split('nv')[1]
             pair = 'Inv1'
-            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(min(coord1, coord2)) + '-' + str(max(coord1, coord2))
+            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(coord1) + '-' + str(coord2)
             uniqname = read_name + '~' + bp_uname
             if int(inv_size) >= minlen:
                 final.append(
@@ -294,7 +294,7 @@ def breakpoint_parser(out, minlen, sig_index, seed, aligner):
             coord2 = int(out.split('\t')[11].split(' ')[1].split(',')[int(inv_count - inv_counter)].split(':')[1].split('-')[1])
             inv_size = out.split('\t')[11].split(' ')[0].split(',')[int(inv_count - inv_counter)].split('nv')[1]
             pair = 'Inv2'
-            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(min(coord1, coord2)) + '-' + str(max(coord1, coord2))
+            uniqidx = bp_uname + '~' + str(chrom) + ':' + str(coord1) + '-' + str(coord2)
             uniqname = read_name + '~' + bp_uname
             if int(inv_size) >= minlen:
                 final.append(

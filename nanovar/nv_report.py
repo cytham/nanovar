@@ -1,7 +1,7 @@
 """
 Functions to create HTML report.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -39,7 +39,8 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     fwd = os.path.join(os.getcwd(), wk_dir, 'fig')
     fwd_fig = './fig'
     threshold = thres
-    num_header = len(contig_len_dict) + 25  # This has to adjusted according to number of headers in VCF
+    len_cap = 100000
+    num_header = len(contig_len_dict) + 26  # This has to adjusted according to number of headers in VCF
     vcf_path = os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name)
     vcf_path_pass = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name)
     vcf_data = open(vcf_path, 'r').read().splitlines()
@@ -49,6 +50,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     svdict = {'DEL': 0, 'INV': 0, 'DUP': 0, 'INS': 0, 'BND': 0}
     dellen, inslen, invlen, duplen, bndlen = [], [], [], [], []
     delnolen, insnolen, invnolen, dupnolen, bndnolen = 0, 0, 0, 0, 0
+    delcap, inscap, invcap, dupcap, bndcap = 0, 0, 0, 0, 0
     data = []
     totalsv, n = 0, 0
     for i in vcf:
@@ -73,24 +75,38 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                     svdict[sv_type] += 1
                     if sv_type == 'DEL':
                         try:
-                            dellen.append(svlencap(int(sv_len)))
+                            if int(sv_len) * -1 <= len_cap:
+                                dellen.append(svlencap(int(sv_len)) * -1)
+                            else:
+                                delcap += 1
                         except ValueError:
                             delnolen += 1
                     elif sv_type == 'INS':
                         try:
-                            inslen.append(svlencap(int(sv_len)))
+                            if int(sv_len) <= len_cap:
+                                inslen.append(svlencap(int(sv_len)))
+                            else:
+                                inscap += 1
                         except ValueError:
                             insnolen += 1
                     elif sv_type == 'INV':
                         try:
-                            invlen.append(svlencap(int(sv_len)))
+                            if int(sv_len) <= len_cap:
+                                invlen.append(svlencap(int(sv_len)))
+                            else:
+                                invcap += 1
                         except ValueError:
                             invnolen += 1
                     elif sv_type == 'DUP':
                         try:
-                            duplen.append(svlencap(int(sv_len)))
+                            if int(sv_len) <= len_cap:
+                                duplen.append(svlencap(int(sv_len)))
+                            else:
+                                dupcap += 1
                         except ValueError:
                             dupnolen += 1
+                    else:
+                        raise Exception('Error: Unrecognized SV type %s' % sv_type)
                 else:
                     sv_type = i.split('\t')[7].split(';')[5].split('=')[1]
                     chrom2 = i.split('\t')[4].split(':')[0].strip('N[]')
@@ -101,11 +117,15 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                                  str(ratio), i.split('\t')[9].split(':')[0], i.split('\t')[2]])
                     svdict['BND'] += 1
                     try:
-                        bndlen.append(svlencap(int(sv_len)))
+                        if int(sv_len) <= len_cap:
+                            bndlen.append(svlencap(int(sv_len)))
+                        else:
+                            bndcap += 1
                     except ValueError:
                         bndnolen += 1
-    totalsvlen = [dellen, inslen, invlen, bndlen, duplen]
-    tab = [[len(dellen), len(inslen), len(invlen), len(bndlen), len(duplen)], [delnolen, insnolen, invnolen, bndnolen, dupnolen]]
+    totalsvlen = np.array([dellen, inslen, invlen, bndlen, duplen], dtype=object)
+    tab = [[len(dellen), len(inslen), len(invlen), len(bndlen), len(duplen)], [delcap, inscap, invcap, bndcap, dupcap],
+           [delnolen, insnolen, invnolen, bndnolen, dupnolen]]
     # Setting global figure parameters
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10,
               'xtick.labelsize': 12, 'ytick.labelsize': 12, 'font.family': 'Arial, Helvetica, sans-serif'}
@@ -130,10 +150,11 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
 
 # SV Length cap
 def svlencap(x):
-    if x >= 10000:
-        return 10000
-    else:
-        return x
+    # if x >= 10000:
+    #     return 10000
+    # else:
+    #     return x
+    return x
 
 
 # Scatter plots generation
@@ -160,7 +181,7 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
         mcov = 10
     ax.scatter(lcovlist, scorelist, c='#3f5d7d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
-    ax.annotate("Threshold=" + str(threshold), xy=(mcov - 2.8, threshold+0.2))
+    ax.annotate("Threshold=" + str(threshold), xy=(mcov - mcov/5, threshold+0.2))
     ax.set_facecolor('#ebebff')
     plt.ylabel('Confidence score')
     plt.xlabel('Number of breakend-supporting reads')
@@ -181,11 +202,14 @@ def sv_len_dict(fwd, totalsvlen, tab):
     ax.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
     for patch, color in zip(bp['boxes'], colors):
         patch.set_facecolor(color)
-    ax.table(cellText=tab, rowLabels=['Known size', 'Unknown size'], colLabels=label, loc='bottom')
+    ax.table(cellText=tab, rowLabels=['Size <= 100,000 bp', 'Size > 100,000 bp', 'Unknown size'],
+             colLabels=label, loc='bottom', bbox=[0, -0.3, 1, 0.275])
     ax.set_facecolor('#ebebff')
     ax.xaxis.grid(False)
     ax.yaxis.grid(color='white', linewidth=1)
-    plt.ylabel('Length (base pair)')
+    ax.set_yscale('log')
+    plt.yticks([100, 1000, 10000, 100000], ['100', '1,000', '10,000', '100,000'], rotation=45)
+    plt.ylabel('SV length (bp)')
     plt.savefig(os.path.join(fwd, 'sv_lengths.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(),
                 edgecolor='none')
 
@@ -232,7 +256,7 @@ def sv_type_dist(svdict, fwd):
                         horizontalalignment=horizontalalignment, **kw)
 
     plt.setp(autotexts, size=11)
-    ax.text(0, 0, 'SV types', ha='center')
+    ax.text(0, 0, 'SV types', ha='center', fontsize=15)
     plt.savefig(os.path.join(fwd, 'sv_type_donut.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(),
                 edgecolor='none')
 
@@ -246,7 +270,7 @@ def read_len_dict(rlen_dict, fwd):
     fig = plt.figure(figsize=(8, 6))
     fig.patch.set_facecolor('#f6f7f9')
     ax = fig.add_subplot(111)
-    ax.hist(qlen, bins=bins, color="#403f7d", edgecolor='black', linewidth=0.5)
+    ax.hist(qlen, bins=bins, color="#403f7d", edgecolor="#403f7d", linewidth=0.5, histtype='stepfilled')
     ax.set_xscale('log')
     ax.xaxis.set_major_formatter(ScalarFormatter())
     ax.ticklabel_format(useOffset=False, style='plain')

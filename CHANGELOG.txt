@@ -4,9 +4,23 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.4.0 - Sept 1, 2021
+    * Implemented a large cytogenetic variation detection algorithm through CytoCAD (Add the paramenter "--cnv hg38" during run)
+    * Added LINE (L1) and SINE (Alu) novel insertion detection functionality (NanoVar screens the sequence of INS SVs
+    for L1 and Alu elements and output the results in the INFO column of VCF file (E.g. TE=L1HS)
+    * Updated curated hg38 filter file (added all N regions)
+    * Expanded the CIGAR reading values to include '=' and 'X'
+    * Improved breakpoint clustering algorithm and rectified bugs
+    * Modified setup.py to state compatibility with python3.8
+    * Fixed Numpy VisibleDeprecationWarning in nv_report.py
+    * Added '--pickle' arguement for debugging purposes (Hidden option)
+    * Added '--archivefasta' arguement for debugging purposes (Hidden option
+    * Added '--blastout' arguement for debugging purposes (Hidden option)
+
+
 Version 1.3.9 - Mar 24, 2021
     * Fixed nv_detect_algo insertion and deletion large size bug
-    * Added pysam >=0.15.4 into bioconda metal.yml as prerequisite
+    * Added pysam >=0.15.3 into bioconda metal.yml as prerequisite
     * Added pybedtools >=0.8.2 prerequisite to fixed RuntimeWarning buffering=1 error (Refer to https://github.com/daler/pybedtools/issues/322)
     * Prevent repeated read-indexes by adjusting seed (Thanks to Geoffrey Woodland)
     * Improve read cluster exception message (Thanks to Geoffrey Woodland)

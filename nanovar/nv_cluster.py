@@ -1,7 +1,7 @@
 """
 Functions for SV breakend clustering.
 
-Copyright (C) 2019 Tham Cheng Yong
+Copyright (C) 2021 Tham Cheng Yong
 
 This file is part of NanoVar.
 
@@ -126,31 +126,57 @@ def rangecollect(x, buf, contigs, hsb_switch, mincov):
                     leftclust[chm1][rnameidx + '-l'] = le
                     rightclust[chm1][rnameidx + '-r'] = le
                 else:
-                    raise Exception('Error, single SV breakend has unknown naming')
+                    raise Exception('Error: single SV breakend %s has unknown naming' % rnameidx)
             elif len(i.split('\t')[6].split('~')[1].split(':')[1].split('-')) == 2:  # If double breakends
                 chm1 = i.split('\t')[6].split('~')[1].split(':')[0]  # Get contig name
                 le = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[0])  # Get default left coord
                 r = int(i.split('\t')[6].split('~')[1].split(':')[1].split('-')[1])  # Get default right coord
                 if svtype == 'TDupl':  # If tandem dup, reverse left and right groups
-                    leftclust[chm1][rnameidx + '-l'] = r
-                    rightclust[chm1][rnameidx + '-r'] = le
+                    leftclust[chm1][rnameidx + '-r'] = r
+                    rightclust[chm1][rnameidx + '-l'] = le
+                elif svtype in ['Inv', 'Inv2']:
+                    col4s = i.split('\t')[3].split(' ')[1].split('~')[1]  # Get SV strand info
+                    if col4s.split(',')[0] == '+' and col4s.split(',')[1] == '-':
+                        leftclust[chm1][rnameidx + '-l'] = le
+                        leftclust[chm1][rnameidx + '-r'] = r
+                    elif col4s.split(',')[0] == '-' and col4s.split(',')[1] == '+':
+                        rightclust[chm1][rnameidx + '-l'] = le
+                        rightclust[chm1][rnameidx + '-r'] = r
+                    elif col4s.split(',')[0] == '+' and col4s.split(',')[1] == '+':
+                        leftclust[chm1][rnameidx + '-l'] = le
+                        rightclust[chm1][rnameidx + '-r'] = r
+                    elif col4s.split(',')[0] == '-' and col4s.split(',')[1] == '-':
+                        rightclust[chm1][rnameidx + '-l'] = le
+                        leftclust[chm1][rnameidx + '-r'] = r
+                    else:
+                        raise Exception('Error: Inversion % has unidentified strand orientation' % rnameidx)
+                elif svtype in ['Intra-Ins', 'Intra-Ins2']:
+                    col4s = i.split('\t')[3].split(' ')[1].split('~')[1]  # Get SV strand info
+                    if col4s.split(',')[0] == '+':
+                        leftclust[chm1][rnameidx + '-l'] = le
+                    elif col4s.split(',')[0] == '-':
+                        rightclust[chm1][rnameidx + '-l'] = le
+                    if col4s.split(',')[1] == '+':
+                        rightclust[chm1][rnameidx + '-r'] = r
+                    elif col4s.split(',')[1] == '-':
+                        leftclust[chm1][rnameidx + '-r'] = r
                 else:
                     leftclust[chm1][rnameidx + '-l'] = le
                     rightclust[chm1][rnameidx + '-r'] = r
         elif len(i.split('\t')[6].split('~')) == 3:  # Inter translocation
             chm1 = i.split('\t')[6].split('~')[1].split(':')[0]  # Get contig name1
             chm2 = i.split('\t')[6].split('~')[2].split(':')[0]  # Get contig name2
-            col4 = i.split('\t')[3].split(' ')[1].split('~')[1]  # Get SV type label
+            col4s = i.split('\t')[3].split(' ')[1].split('~')[1]  # Get SV strand info
             le = int(i.split('\t')[6].split('~')[1].split(':')[1])  # Get default left coord
             r = int(i.split('\t')[6].split('~')[2].split(':')[1])  # Get default right coord
             # Assign coord to left or right group depending on strand
-            if col4.split(',')[0] == '+':
+            if col4s.split(',')[0] == '+':
                 leftclust[chm1][rnameidx + '-l'] = le
-            elif col4.split(',')[0] == '-':
+            elif col4s.split(',')[0] == '-':
                 rightclust[chm1][rnameidx + '-l'] = le
-            if col4.split(',')[1] == '+':
+            if col4s.split(',')[1] == '+':
                 rightclust[chm2][rnameidx + '-r'] = r
-            elif col4.split(',')[1] == '-':
+            elif col4s.split(',')[1] == '-':
                 leftclust[chm2][rnameidx + '-r'] = r
         else:
             raise Exception('Error: %s is missed' % rnameidx)
@@ -167,10 +193,10 @@ def rangecollect(x, buf, contigs, hsb_switch, mincov):
         rightchrnamelist[chrm] = []
         rightchrcoorlist[chrm] = []
         for key in leftclust[chrm]:
-            leftchrnamelist[chrm].append(key[:-2])
+            leftchrnamelist[chrm].append(key)  # [:-2]
             leftchrcoorlist[chrm].append(leftclust[chrm][key])
         for key in rightclust[chrm]:
-            rightchrnamelist[chrm].append(key[:-2])
+            rightchrnamelist[chrm].append(key)  # [:-2]
             rightchrcoorlist[chrm].append(rightclust[chrm][key])
 
     # Carry out clustering
@@ -225,21 +251,21 @@ def cluster(leftchrnamelist,
                 groupnames.append(leftchrnamelist[chrm][i])
             else:
                 avgcoord = int(round(sum(group) / len(group), 0))
-                leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+                leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
                 for read in sorted(set(groupnames)):
-                    if read not in read2cluster:
-                        read2cluster[read] = []
-                    read2cluster[read].append(chrm + ':' + str(avgcoord))
+                    if read[:-2] not in read2cluster:
+                        read2cluster[read[:-2]] = []
+                    read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'l')
                 group = [leftchrcoorlist[chrm][i]]
                 groupnames = [leftchrnamelist[chrm][i]]
             last = leftchrcoorlist[chrm][i]
         if group:
             avgcoord = int(round(sum(group) / len(group), 0))
-            leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+            leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
             for read in sorted(set(groupnames)):
-                if read not in read2cluster:
-                    read2cluster[read] = []
-                read2cluster[read].append(chrm + ':' + str(avgcoord))
+                if read[:-2] not in read2cluster:
+                    read2cluster[read[:-2]] = []
+                read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'l')
 
     # Right group clustering
     for chrm in rightchrnamelist:
@@ -253,21 +279,21 @@ def cluster(leftchrnamelist,
                 groupnames.append(rightchrnamelist[chrm][i])
             else:
                 avgcoord = int(round(sum(group) / len(group), 0))
-                rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+                rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
                 for read in sorted(set(groupnames)):
-                    if read not in read2cluster:
-                        read2cluster[read] = []
-                    read2cluster[read].append(chrm + ':' + str(avgcoord))
+                    if read[:-2] not in read2cluster:
+                        read2cluster[read[:-2]] = []
+                    read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'r')
                 group = [rightchrcoorlist[chrm][i]]
                 groupnames = [rightchrnamelist[chrm][i]]
             last = rightchrcoorlist[chrm][i]
         if group:
             avgcoord = int(round(sum(group) / len(group), 0))
-            rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(groupnames))
+            rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
             for read in sorted(set(groupnames)):
-                if read not in read2cluster:
-                    read2cluster[read] = []
-                read2cluster[read].append(chrm + ':' + str(avgcoord))
+                if read[:-2] not in read2cluster:
+                    read2cluster[read[:-2]] = []
+                read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'r')
     """
     - leftcluster2read or rightcluster2read: Dict, key=cluster, value=list of read_ids having the cluster
     - read2cluster: Dict, key=read_id, value=cluster
@@ -307,24 +333,30 @@ def cluster(leftchrnamelist,
     for coord in clusterlink:  # For clusters that are either unpaired or paired (left)
         if not clusterlink[coord]:  # If cluster is unpaired, which means single breakend SVs
             if not hsb_switch:
-                if coord in leftcluster2read:
-                    if coord in rightcluster2read:
-                        readlist = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
-                    else:
-                        readlist = leftcluster2read[coord]
+                if coord[-1] == 'l':
+                    readlist = leftcluster2read[coord[:-1]]
+                    # if coord in rightcluster2read:
+                    #     readlist = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
+                    # else:
+                    #     readlist = leftcluster2read[coord]
+                elif coord[-1] == 'r':
+                    readlist = rightcluster2read[coord[:-1]]
                 else:
-                    readlist = rightcluster2read[coord]
+                    raise Exception('Error: Coord %s did not specify direction' % coord)
                 lead, main = leadread_bp(readlist, svsizedict, classdict)  # Gather lead read
                 if len({x.rsplit('~', 1)[0] for x in readlist}) >= min(2, mincov):
                     cluster_parse[coord + '~' + main] = sorted(readlist)
             else:
-                if coord in leftcluster2read:
-                    if coord in rightcluster2read:
-                        readlist = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
-                    else:
-                        readlist = leftcluster2read[coord]
+                if coord[-1] == 'l':
+                    readlist = leftcluster2read[coord[:-1]]
+                    # if coord in rightcluster2read:
+                    #     readlist = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
+                    # else:
+                    #     readlist = leftcluster2read[coord]
+                elif coord[-1] == 'r':
+                    readlist = rightcluster2read[coord[:-1]]
                 else:
-                    readlist = rightcluster2read[coord]
+                    raise Exception('Error: Coord %s did not specify direction' % coord)
                 mm = []
                 hsb = []
                 for r in readlist:
@@ -333,7 +365,7 @@ def cluster(leftchrnamelist,
                     elif len(r.rsplit('~', 1)[1]) == 4:  # hsb
                         hsb.append(r.rsplit('~', 1)[0])
                     else:
-                        raise Exception('Error: %d read has unrecognised unique ID' % r)
+                        raise Exception('Error: %s read has unrecognised unique ID' % r)
                 for r in mm:
                     if r.rsplit('~', 1)[0] in hsb:
                         readlist.remove(r)  # Remove minimap reads if blast reads present in read list
@@ -342,23 +374,36 @@ def cluster(leftchrnamelist,
                 readteam[coord].extend(sorted(set(readlist).difference([lead])))  # Append remaining reads
                 mainclass[coord] = main
         else:  # If cluster is paired (left)
-            if coord in leftcluster2read:
-                if coord in rightcluster2read:
-                    reads1 = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
-                else:
-                    reads1 = leftcluster2read[coord]
+            if coord[-1] == 'l':
+                reads1 = leftcluster2read[coord[:-1]]
+                # if coord in rightcluster2read:
+                #     reads1 = list(set(leftcluster2read[coord] + rightcluster2read[coord]))
+                # else:
+                #     reads1 = leftcluster2read[coord]
+            elif coord[-1] == 'r':
+                reads1 = rightcluster2read[coord[:-1]]
+                # raise Exception('First coord in clusterlink %s is not in leftcluster' % str(coord))
+                # reads1 = rightcluster2read[coord]
             else:
-                reads1 = rightcluster2read[coord]
+                raise Exception('Error: Coord %s did not specify direction' % coord)
             for coord2 in clusterlink[coord]:
-                if coord2 in leftcluster2read:
-                    if coord2 in rightcluster2read:
-                        reads2 = list(set(leftcluster2read[coord2] + rightcluster2read[coord2]))
-                    else:
-                        reads2 = leftcluster2read[coord2]
+                if coord2[-1] == 'l':
+                    reads2 = leftcluster2read[coord2[:-1]]
+                    # if coord2 in rightcluster2read:
+                    #     reads2 = list(set(leftcluster2read[coord2] + rightcluster2read[coord2]))
+                    # else:
+                    #     reads2 = leftcluster2read[coord2]
+                elif coord2[-1] == 'r':
+                    # reads2 = rightcluster2read[coord2]
+                    reads2 = rightcluster2read[coord2[:-1]]
+                    # raise Exception('Second coord in clusterlink %s is not in rightcluster' % str(coord2))
                 else:
-                    reads2 = rightcluster2read[coord2]
+                    raise Exception('Error: Coord %s did not specify direction' % coord2)
                 readlist0 = sorted(set(reads1).intersection(reads2))  # Get reads that intersect with both clusters
                 readlist = [x for x in readlist0 if x not in pastbps]
+                if coord[-1] in ['l', 'r']:
+                    coord = coord[:-1]
+                coord2 = coord2[:-1]
                 if readlist:
                     for i in readlist:
                         pastbps[i] = 1
@@ -370,7 +415,7 @@ def cluster(leftchrnamelist,
                                     pastbps[read] = 1
                         lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, hsb_switch)
                         # Filter 2
-                        # Delete cluster if it is supported by <mincov or 2 number of reads and it is <100 bp
+                        # Delete cluster if it is supported by <mincov or 2 number of reads, else if it is <100 bp
                         if main == 'Del':
                             if len({x.rsplit('~', 1)[0] for x in readlist}) >= min(2, mincov):
                                 cluster_parse[coord + '-' + coord2 + '~' + main] = sorted(readlist)
@@ -383,7 +428,7 @@ def cluster(leftchrnamelist,
                                             str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
                                 cluster_parse[avg_coord + '~' + main] = sorted(readlist)
                             else:
-                                if svsizedict[readlist[0]] >= 100:  # Arbituary threshold for small deletions
+                                if svsizedict[readlist[0]] >= 100:  # Arbituary threshold for small insertions
                                     avg_coord = coord.split(':')[0] + ':' + \
                                                 str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
                                     cluster_parse[avg_coord + '~' + main] = sorted(readlist)
@@ -393,41 +438,44 @@ def cluster(leftchrnamelist,
                         lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, hsb_switch)
                         for read in sorted(set(reads1).difference(reads2)) + sorted(set(reads2).difference(reads1)):
                             if classdict[read] == 'bp_Nov_Ins':
-                                if main in ['Del', 'Intra-Ins', 'Inter', 'Nov_Ins', 'Inter-Ins', 'Intra-Ins2']:
-                                    if read not in pastbps:
-                                        readlist.append(read)
-                                        pastbps[read] = 1
+                                # if main in ['Del', 'Intra-Ins', 'Inter', 'Nov_Ins', 'Inter-Ins', 'Intra-Ins2']:
+                                if read not in pastbps:
+                                    readlist.append(read)
+                                    pastbps[read] = 1
                             else:
                                 if main == 'Del':
                                     if classdict[read] in ['Del']:
                                         if read not in pastbps:
                                             readlist.append(read)
                                             pastbps[read] = 1
-                                elif main in ['Intra-Ins', 'Inter', 'Nov_Ins', 'Inter-Ins', 'Intra-Ins2']:
-                                    if classdict[read] in ['Intra-Ins', 'Inter']:
+                                elif main in ['Intra-Ins', 'Intra-Ins2']:
+                                    if classdict[read] in ['Nov_Ins', 'Intra-Ins', 'Intra-Ins2']:
                                         if read not in pastbps:
                                             readlist.append(read)
                                             pastbps[read] = 1
-                                    elif classdict[read] in ['Nov_Ins', 'Inter-Ins', 'Intra-Ins2']:
+                                elif main in ['Inter', 'Inter-Ins']:
+                                    if classdict[read] in ['Nov_Ins', 'Inter', 'Inter-Ins']:
                                         if read not in pastbps:
                                             readlist.append(read)
                                             pastbps[read] = 1
-                                        else:
-                                            if pastbps[read] == 1:  # Allow to be clustered one more time
-                                                pastbps[read] = 2
-                                                readlist.append(read)
                                 elif main in ['Inv', 'Inv2']:
-                                    if classdict[read] in ['Inv', 'Inv2']:
+                                    if classdict[read] in ['Nov_Ins', 'Inv', 'Inv2']:
                                         if read not in pastbps:
                                             readlist.append(read)
                                             pastbps[read] = 1
-                                elif main in ['TDupl']:
-                                    if classdict[read] in ['TDupl']:
+                                elif main in 'TDupl':
+                                    if classdict[read] in ['Nov_Ins', 'TDupl']:
+                                        if read not in pastbps:
+                                            readlist.append(read)
+                                            pastbps[read] = 1
+                                elif main == 'Nov_Ins':
+                                    if classdict[read] in ['Intra-Ins', 'Intra-Ins2', 'Inter', 'Inter-Ins', 'TDupl']:
                                         if read not in pastbps:
                                             readlist.append(read)
                                             pastbps[read] = 1
                                 else:
-                                    raise Exception('Error: Main SV type in cluster %d is not recognised' % (coord+coord2))
+                                    raise Exception('Error: Main SV type in cluster %s with lead %s is not recognised' %
+                                                    ((coord+coord2), lead))
                         # Remove duplicate reads from mm
                         mm = []
                         hsb = []
@@ -439,9 +487,18 @@ def cluster(leftchrnamelist,
                             else:
                                 raise Exception('Error: %d read has unrecognised unique ID' % r)
                         for r in mm:
-                            if r.rsplit('~', 1)[0] in hsb:
-                                readlist.remove(r)  # Remove minimap reads if blast reads present in read list
-                        lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, hsb_switch)
+                            rn = r.rsplit('~', 1)[0]
+                            if rn in hsb:
+                                if r == lead:
+                                    # readlist.remove(r)  # Remove blast read if mm read is leader present in read list
+                                    for rl in readlist:
+                                        if rl.rsplit('~', 1)[0] == rn and len(rl.rsplit('~', 1)[1]) == 4:
+                                            readlist.remove(rl)
+                                            # lead = rl
+                                            # main = classdict[rl]
+                                else:
+                                    readlist.remove(r)  # Remove minimap reads if blast reads present in read list
+                        # lead, main = leadread(sorted(set(readlist)), svsizedict, classdict, hsb_switch)
                         if main == 'Nov_Ins':
                             avg_coord = coord.split(':')[0] + ':' + \
                                         str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
@@ -498,7 +555,7 @@ def leadread_bp(reads, svsizedict, classdict):
             leader = read
             break
     if leader == '':
-        raise Exception("Error: Main SV class not found")
+        raise Exception("Error: Main SV class not found for reads %s" % ','.join(reads))
     return leader, mainsvclass
 
 
@@ -580,7 +637,7 @@ def svbed2(readteam, mainclass):
     totalsvbed = []
     for clusters in readteam:
         svtype = mainclass[clusters]
-        c = clusters.split('-')
+        c = [x.strip('lr') for x in clusters.split('-')]
         totalsvbed.append(c[0].split(':')[0] + '\t' + c[0].split(':')[1] + '\t' + str(int(c[0].split(':')[1]) + 1) + '\t' +
                           clusters + '\t' + svtype + '\t' + '1')
         if svtype in ['Nov_Ins', 'bp_Nov_Ins']:
@@ -672,8 +729,8 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                 if len(clusters.split('-')) == 1:
                     output.append(
                         '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
-                        infodict[bestread].split('\t')[6].split('~')[0] + '~' + clusters + '-' +
-                        str(int(clusters.split(':')[1]) + 1) + '\t' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' + clusters.strip('lr') + '-' +
+                        str(int(clusters.strip('lr').split(':')[1]) + 1) + '\t' +
                         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
                         ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
                     )
