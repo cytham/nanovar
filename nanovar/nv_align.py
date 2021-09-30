@@ -153,12 +153,14 @@ def make_index(mode, ref, wk_dir, ref_name, mdb, wmk, hsb):
 def align_mm(ref, read, wk_dir, read_name, ref_name, threads, mm, data_type, st):
     out_path = os.path.join(wk_dir, '%s-%s-mm.bam' % (read_name, ref_name))
     if data_type == 'ont':
-        x = 'map-ont'
-    elif data_type == 'pacbio':
-        x = 'map-pb'
+        x = 'x map-ont'
+    elif data_type == 'pacbio-clr':
+        x = 'x map-pb'
+    elif data_type == 'pacbio-ccs':
+        x = 'x map-hifi'
     else:
         x = ''
-    process = Popen([mm + ' -t ' + str(threads) + ' -ax ' + x + ' ' + ref + ' ' + read + ' | ' + st +
+    process = Popen([mm + ' -t ' + str(threads) + ' -a' + x + ' ' + ref + ' ' + read + ' | ' + st +
                      ' view -Sb - -o ' + out_path],
                     universal_newlines=True, stdout=PIPE, stderr=STDOUT, shell=True, executable='/bin/bash')
     with process.stdout:
