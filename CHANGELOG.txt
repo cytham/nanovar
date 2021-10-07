@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.4.1 - Oct 8, 2021
+    * Bump version for Bioconda build for various Python versions
+
+
 Version 1.4.0 - Sept 1, 2021
     * Implemented a large cytogenetic variation detection algorithm through CytoCAD (Add the paramenter "--cnv hg38" during run)
     * Added LINE (L1) and SINE (Alu) novel insertion detection functionality (NanoVar screens the sequence of INS SVs
