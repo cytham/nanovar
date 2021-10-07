@@ -169,7 +169,7 @@ def align_mm(ref, read, wk_dir, read_name, ref_name, threads, mm, data_type, st)
     if exitcode != 0:
         logging.critical("Error: minimap2 alignment failed")
         raise Exception("Error: minimap2 alignment failed, see log")
-    return ['minimap2 -t ' + str(threads) + ' -ax ' + x + ' ' + ref + ' ' + read + ' | samtools view -Sb - -o ' + out_path,
+    return ['minimap2 -t ' + str(threads) + ' -a' + x + ' ' + ref + ' ' + read + ' | samtools view -Sb - -o ' + out_path,
             out_path]
 
 
