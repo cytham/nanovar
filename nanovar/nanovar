@@ -138,8 +138,8 @@ def main():
         task = TaskProgress()
         msg = 'Checking integrity of input files'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         print('Checking integrity of input files -')
@@ -284,8 +284,8 @@ def main():
         task = TaskProgress()
         msg = 'Indexing genome and aligning reads'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         if len(contig_omit) > 0:
@@ -324,8 +324,8 @@ def main():
         task = TaskProgress()
         msg = 'Analyzing read alignments and detecting SVs'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         print('Analyzing read alignments and detecting SVs -')
@@ -350,8 +350,8 @@ def main():
         task = TaskProgress()
         msg = 'Clustering SV breakends'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         print('Clustering SV breakends -')
@@ -367,8 +367,8 @@ def main():
         task = TaskProgress()
         msg = 'Re-evaluating SVs with BLAST and inferencing'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         print('Re-evaluating SVs with BLAST and inferencing -')
