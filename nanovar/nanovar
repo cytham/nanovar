@@ -403,8 +403,8 @@ def main():
         task = TaskProgress()
         msg = 'Generating VCF files and report'
         spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,))
-        thread_spin.setDaemon(True)
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
         print('Generating VCF files and report -')
