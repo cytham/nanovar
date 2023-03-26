@@ -127,7 +127,7 @@ def curve(data, n, upper_limit, wk_dir):
     spl = make_interp_spline(c, y)
     smooth = spl(xnew)
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10, 'xtick.labelsize': 12, 'ytick.labelsize': 12,
-              'font.family': 'Arial, Helvetica, sans-serif'}
+              'font.family': 'sans-serif'}
     matplotlib.rcParams.update(params)
     fig = plt.figure(figsize=(8, 6))
     fig.patch.set_facecolor('#f6f7f9')
