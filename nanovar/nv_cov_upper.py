@@ -62,7 +62,7 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     medad = mad(data2)
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
     # Ignore 0 depth regions
-    depth = np.mean(data)
+    depth = round(np.mean(data), 2)
     # depth = round(float(basecov)/total_gsize, 2)
     med = np.median(data) #
     medad = mad(data) #
