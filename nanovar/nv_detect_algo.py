@@ -544,13 +544,13 @@ def single_alignment_check(subdata, splitpct, minalign):
 
 # Reduce mapping of multi-mapping reads
 def reduce_multi_map(subdata):
-    if len(subdata) > 4:
+    if len(subdata) > 6:
         sortdictlen = {}
         for line in subdata:
             sortdictlen[line] = int(line.split('\t')[6])
         # Sorting according to alignment length
         subdata2 = [key for (key, value) in sorted(sortdictlen.items(), key=lambda x: x[1], reverse=True)]
-        subdata3 = subdata2[0:4]  # Selecting top 4 longest alignments
+        subdata3 = subdata2[0:6]  # Selecting top 4 longest alignments
         # Sort back according to query start
         sortdict = {}
         for e in subdata3:
