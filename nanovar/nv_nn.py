@@ -38,7 +38,7 @@ def inference(cluster, parse, model):
         tmpkey.append(key)
     readarray = np.array(tmp, dtype=np.float64)
     nnmodel = load_model(model, compile=False)
-    predictions = nnmodel.predict(readarray)
+    predictions = nnmodel.predict(readarray, verbose=0)
     predlist = [float(x[0]) for x in predictions]
     probdict = {}
     for i in range(len(tmpkey)):
