@@ -69,7 +69,8 @@ def main():
     hsb = args.hsb
     pickle_bool = args.pickle
     archivefasta = args.archivefasta
-    blastout = args.blastout
+    # blastout = args.blastout
+    blastout = 'blastoff'  #
 
     # Check model file
     if model_path is None:
@@ -297,12 +298,12 @@ def main():
 
     # Pre-indexing
     from nanovar.nv_align import make_index, align_mm, align_hsb
-    if threads_index == 1:
-        indexing = threading.Thread(target=make_index, args=(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb))
-        indexing.daemon = True
-        indexing.start()
-    else:
-        indexing = ''
+    #if threads_index == 1:
+    #    indexing = threading.Thread(target=make_index, args=(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb))
+    #    indexing.daemon = True
+    #    indexing.start()
+    #else:
+    #    indexing = ''
 
     # Aligning using minimap2
     if input_type == 'raw':
@@ -374,26 +375,27 @@ def main():
         print('Re-evaluating SVs with BLAST and inferencing -')
 
     # Wait for indexing or make index
-    if threads_index == 1:
-        indexing.join()
-    elif threads_index == 0:
-        make_index(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb)
+    #if threads_index == 1:
+    #    indexing.join()
+    #elif threads_index == 0:
+    #    make_index(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb)
 
     # Run hsblastn on INS and INV reads
     if not blastout:
         hsba = align_hsb(ref_path, wk_dir, ref_name, threads_bt, hsb, debug)
     else:
         hsba = ['blast-command', blastout]
-    sub_run = VariantDetect(wk_dir, hsba[1], splitpct, minalign, filter_path, minlen, buff, model_path,
-                            total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, hsba[0],
-                            mincov, homo_t, het_t, debug, contig_omit, cnv)
+    #sub_run = VariantDetect(wk_dir, hsba[1], splitpct, minalign, filter_path, minlen, buff, model_path,
+    #                        total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, hsba[0],
+    #                        mincov, homo_t, het_t, debug, contig_omit, cnv)
 
     # Parsing INS and INV SVs and clustering
-    sub_run.rlendict = run.rlendict
-    sub_run.seed = run.seed  # Try to prevent repeated read-indexes
-    sub_run.parse_detect_hsb()
-    logging.info('Parsing BAM and detecting INV and INS SVs')
-    run.cluster_nn(add_out=sub_run.total_out)
+    #sub_run.rlendict = run.rlendict
+    #sub_run.seed = run.seed  # Try to prevent repeated read-indexes
+    #sub_run.parse_detect_hsb()
+    #logging.info('Parsing BAM and detecting INV and INS SVs')
+    #run.cluster_nn(add_out=sub_run.total_out)
+    run.cluster_nn()  #
 
     # Update progress
     if spin_switch:
@@ -415,7 +417,7 @@ def main():
     index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
 
     # Write parse2 and cluster intermediate files
-    run.write2file(add_out=sub_run.total_out)
+    #run.write2file(add_out=sub_run.total_out)
 
     # Pickle objects
     if pickle_bool:
