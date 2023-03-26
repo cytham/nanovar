@@ -128,7 +128,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
            [delnolen, insnolen, invnolen, bndnolen, dupnolen]]
     # Setting global figure parameters
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10,
-              'xtick.labelsize': 12, 'ytick.labelsize': 12, 'font.family': 'Arial, Helvetica, sans-serif'}
+              'xtick.labelsize': 12, 'ytick.labelsize': 12, 'font.family': 'sans-serif'}
     matplotlib.rcParams.update(params)
     # Make plots
     scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold)
@@ -317,14 +317,14 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
                 margin-left: 4px;
                 font-weight: bold;
                 font-size: 40px;
-                font-family: Arial, Helvetica, sans-serif;
+                font-family: sans-serif;
             }
             h2, h3, h4, h5, p { 
                 margin-left: 4px;
-                font-family: Arial, Helvetica, sans-serif;
+                font-family: sans-serif;
             }
             table {
-                font-family: Arial, Helvetica, sans-serif;
+                font-family: sans-serif;
             }
             #image {
                 text-align:center;
