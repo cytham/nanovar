@@ -61,7 +61,11 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     med = np.median(data2)
     medad = mad(data2)
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
-    depth = round(float(basecov)/total_gsize, 2)
+    # Ignore 0 depth regions
+    depth = np.mean(data)
+    # depth = round(float(basecov)/total_gsize, 2)
+    med = np.median(data) #
+    medad = mad(data) #
     maxovl = max(round((medad * 4) + med, 1), 10)  # minimum overlap threshold is set at 10
     maxovl3 = max(round((medad * 3) + med, 1), 10)
     # me = np.mean(data2)
