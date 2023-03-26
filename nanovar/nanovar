@@ -436,6 +436,7 @@ def main():
         os.remove(f)
 
     # Generating VCF and HTML report
+    index2te = dict() # 
     run.vcf_report(index2te)
     logging.info('NanoVar ended')
     now = datetime.now()
