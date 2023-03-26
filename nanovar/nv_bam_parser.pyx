@@ -48,7 +48,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     seed = 0
     basecov = 0
     ovlt = 0.9  # Set overlap tolerance
-    sig_index = [0, 2, 4]
+    sig_index = [0, 2, 4, 6, 8]
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
     fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
     for seg in sam:
