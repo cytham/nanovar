@@ -114,10 +114,10 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 qseg = aln[10]
                 sseg = aln[11]
                 del_list = aln[12]
-                ins_list = aln[13]
-                contig_collect = sorted(set(contig_collect))
+                ins_list = aln[13]     
                 total_lines, contig_collect = info_parse(qname, rname, readlen, qlen, flag, nm, total_score, qseg, sseg,
                 del_list, ins_list, minalign)
+                contig_collect = sorted(set(contig_collect))
                 lines_sort = sorted(sorted(total_lines, key=lambda x: x[1], reverse=True), key=lambda y: y[0])
                 temp1 = [tup[2] for tup in lines_sort]
                 # Parse entries and correct overlap alignments
