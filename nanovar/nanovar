@@ -395,7 +395,7 @@ def main():
     #sub_run.parse_detect_hsb()
     #logging.info('Parsing BAM and detecting INV and INS SVs')
     #run.cluster_nn(add_out=sub_run.total_out)
-    run.cluster_nn()  #
+    run.cluster_nn(add_out=[])  #
 
     # Update progress
     if spin_switch:
