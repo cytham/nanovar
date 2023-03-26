@@ -59,6 +59,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
             rlendict[qname] = len(seg.query_sequence)
             continue
+        if flag in (256, 272):  # Skip secondary alignments
+            continue
         rname = seg.reference_name
         readlen = seg.infer_read_length()
         rstart = seg.reference_start
