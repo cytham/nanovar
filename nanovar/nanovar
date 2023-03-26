@@ -418,6 +418,7 @@ def main():
 
     # Write parse2 and cluster intermediate files
     #run.write2file(add_out=sub_run.total_out)
+    run.write2file(add_out=[])  #
 
     # Pickle objects
     if pickle_bool:
