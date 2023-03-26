@@ -562,9 +562,9 @@ def leadread_bp(reads, svsizedict, classdict):
 # Function to rank and filter best sv type
 def mainclasssv(reads, classdict, hsb_switch):
     if hsb_switch:
-        tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2', 'TDupl']
+        tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
         tierxsv = ['Intra-Ins', 'Inter']
-        tier2sv = ['Inv', 'Del', 'Nov_Ins']
+        tier2sv = ['Inv', 'Del', 'Nov_Ins', 'TDupl']
         tier1sv = ['bp_Nov_Ins']
     else:
         tier3sv = ['Inv2', 'Inter-Ins', 'Intra-Ins2']
