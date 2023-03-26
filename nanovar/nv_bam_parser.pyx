@@ -22,11 +22,11 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import pysam
 import os
 import logging
-from nv_detect_algo import sv_detect
-from nv_parser import entry_parser, breakpoint_parser
+# from nv_detect_algo import sv_detect
+# from nv_parser import entry_parser, breakpoint_parser
 
 
-def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
+def bam_parse(bam, unsigned int minlen, float split_pct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
     cdef:
         unsigned int readlen, rstart, rend, flag, qlen, nm, seed
         unsigned long long basecov
@@ -46,21 +46,25 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         dict gapdict = {}
     pysam.set_verbosity(save)  # Revert verbosity level
     seed = 0
-    basecov = 0
-    ovlt = 0.9  # Set overlap tolerance
-    sig_index = [0, 2, 4]
+    # basecov = 0
+    # ovlt = 0.9  # Set overlap tolerance
+    # sig_index = [0, 2, 4]
+    alignment_df = unpack_bam(sam, minlen)
+
+cdef unpack_bam(object sam, int minlen, float split_pct)
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
-    fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
+    # fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
     for seg in sam:
-        flag = seg.flag
-        qname = seg.query_name
-        if flag == 4:
-            fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
-            fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
-            rlendict[qname] = len(seg.query_sequence)
+        # flag = seg.flag
+        # qname = seg.query_name
+        if seg.flag == 4:  # Save unaligned reads and skip
+            # fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
+            fasta.write('>' + seg.query_name + '\n' + seg.query_sequence + '\n')
+            rlendict[seg.query_name] = len(seg.query_sequence)
             continue
-        if flag in (256, 272):  # Skip secondary alignments
+        elif seg.flag in (256, 272):  # Skip secondary alignments
             continue
+        else:
         rname = seg.reference_name
         readlen = seg.infer_read_length()
         rstart = seg.reference_start
@@ -68,9 +72,9 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         qlen = seg.query_alignment_length
         nm = seg.get_tag('NM')
         total_score = seg.get_tag('AS')
-        cigar_tup = seg.cigartuples
-        adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
-        if flag in (0, 16):
+        # cigar_tup = seg.cigartuples
+        adv, qseg, sseg, del_list, ins_list = read_cigar(seg.cigartuples, minlen, split_pct, seg.reference_start, seg.reference_end, seg.infer_read_length())
+        if seg.flag in (0, 16):
             try:
                 if repeat_dict[qname]:
                     pass
@@ -86,7 +90,9 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
     fasta.close()
-    fasta2.close()
+    # fasta2.close()
+    
+    
     total_subdata, total_lines, contig_collect, total_out, detect_out = [], [], [], [], []
     # Make gap dictionary
     gapdict = makegapdict(filter_file, contig_omit)
