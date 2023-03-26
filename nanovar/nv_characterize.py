@@ -148,7 +148,7 @@ class VariantDetect:
         temp1 = []
         chromocollect = []
         ovlt = 0.9
-        sig_index = [0, 2, 4]
+        sig_index = [0, 2, 4, 6, 8]
         data = open(self.bam, 'r').read().splitlines()
         data.append('null\tnull\tnull\tnull\tnull\tnull')
         nlines = len(data) - 1
