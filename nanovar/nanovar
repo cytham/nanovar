@@ -415,6 +415,7 @@ def main():
     from nanovar.nv_te_analyzer import te_analyzer
     pysam.faidx(os.path.join(wk_dir, 'temp1.fa'))
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
+    index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, [], score_threshold, ref_dir, hsb, mdb, threads, debug)
 
     # Write parse2 and cluster intermediate files
     #run.write2file(add_out=sub_run.total_out)
@@ -441,7 +442,7 @@ def main():
         os.remove(f)
 
     # Generating VCF and HTML report
-    index2te = dict() # 
+    # index2te = dict() # 
     run.vcf_report(index2te)
     logging.info('NanoVar ended')
     now = datetime.now()
