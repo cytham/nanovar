@@ -59,18 +59,19 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
             rlendict[qname] = len(seg.query_sequence)
             continue
-        if flag in (256, 272):  # Skip secondary alignments
+        elif flag in (256, 272):  # Skip secondary alignments
             continue
-        rname = seg.reference_name
-        readlen = seg.infer_read_length()
-        rstart = seg.reference_start
-        rend = seg.reference_end
-        qlen = seg.query_alignment_length
-        nm = seg.get_tag('NM')
-        total_score = seg.get_tag('AS')
-        cigar_tup = seg.cigartuples
-        adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
-        if flag in (0, 16):
+        else:  # 0, 16, 2048, 2064
+            # if flag in (0, 16):
+            rname = seg.reference_name
+            readlen = seg.infer_read_length()
+            rstart = seg.reference_start
+            rend = seg.reference_end
+            qlen = seg.query_alignment_length
+            nm = seg.get_tag('NM')
+            total_score = seg.get_tag('AS')
+            cigar_tup = seg.cigartuples
+            adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
             try:
                 if repeat_dict[qname]:
                     pass
