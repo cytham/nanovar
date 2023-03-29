@@ -54,24 +54,13 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
+        readlen = seg.infer_read_length()
         if flag == 4:
             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
             rlendict[qname] = len(seg.query_sequence)
             continue
-        elif flag in (256, 272):  # Skip secondary alignments
-            continue
-        else:  # 0, 16, 2048, 2064
-            # if flag in (0, 16):
-            rname = seg.reference_name
-            readlen = seg.infer_read_length()
-            rstart = seg.reference_start
-            rend = seg.reference_end
-            qlen = seg.query_alignment_length
-            nm = seg.get_tag('NM')
-            total_score = seg.get_tag('AS')
-            cigar_tup = seg.cigartuples
-            adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
+        elif flag in (256, 272):  # Skip secondary alignments but save fasta if not done yet
             try:
                 if repeat_dict[qname]:
                     pass
@@ -79,7 +68,25 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 repeat_dict[qname] = ''
                 fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
                 rlendict[qname] = readlen
-        try:
+            continue
+        rname = seg.reference_name
+        # readlen = seg.infer_read_length()
+        rstart = seg.reference_start
+        rend = seg.reference_end
+        qlen = seg.query_alignment_length
+        nm = seg.get_tag('NM')
+        total_score = seg.get_tag('AS')
+        cigar_tup = seg.cigartuples
+        adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
+        if flag in (0, 16):
+            try:
+                if repeat_dict[qname]:
+                    pass
+            except KeyError:
+                repeat_dict[qname] = ''
+                fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
+                rlendict[qname] = readlen
+        try:  # Save data for flags 0, 16, 2048, 2064
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
         except KeyError:
