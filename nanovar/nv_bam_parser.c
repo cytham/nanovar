@@ -3216,7 +3216,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *         total_score = seg.get_tag('AS')
  *         cigar_tup = seg.cigartuples             # <<<<<<<<<<<<<<
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  */
     __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_cigartuples); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 79, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
@@ -3228,7 +3228,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *         total_score = seg.get_tag('AS')
  *         cigar_tup = seg.cigartuples
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)             # <<<<<<<<<<<<<<
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  *             try:
  */
     __pyx_t_3 = __pyx_f_7nanovar_13nv_bam_parser_read_cigar(__pyx_v_cigar_tup, __pyx_v_minlen, __pyx_v_splitpct, __pyx_v_rstart, __pyx_v_rend, __pyx_v_readlen); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 80, __pyx_L1_error)
@@ -3314,19 +3314,17 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
     /* "nanovar/nv_bam_parser.pyx":81
  *         cigar_tup = seg.cigartuples
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):             # <<<<<<<<<<<<<<
+ *         if flag in (0, 16):             # <<<<<<<<<<<<<<
  *             try:
  *                 if repeat_dict[qname]:
  */
     switch (__pyx_v_flag) {
       case 0:
       case 16:
-      case 0x800:
-      case 0x810:
 
       /* "nanovar/nv_bam_parser.pyx":82
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  *             try:             # <<<<<<<<<<<<<<
  *                 if repeat_dict[qname]:
  *                     pass
@@ -3341,7 +3339,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
         /*try:*/ {
 
           /* "nanovar/nv_bam_parser.pyx":83
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  *             try:
  *                 if repeat_dict[qname]:             # <<<<<<<<<<<<<<
  *                     pass
@@ -3356,7 +3354,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
 
           /* "nanovar/nv_bam_parser.pyx":82
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  *             try:             # <<<<<<<<<<<<<<
  *                 if repeat_dict[qname]:
  *                     pass
@@ -3462,7 +3460,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
 
         /* "nanovar/nv_bam_parser.pyx":82
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):
+ *         if flag in (0, 16):
  *             try:             # <<<<<<<<<<<<<<
  *                 if repeat_dict[qname]:
  *                     pass
@@ -3483,7 +3481,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
       /* "nanovar/nv_bam_parser.pyx":81
  *         cigar_tup = seg.cigartuples
  *         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
- *         if flag in (0, 16, 2048, 2064):             # <<<<<<<<<<<<<<
+ *         if flag in (0, 16):             # <<<<<<<<<<<<<<
  *             try:
  *                 if repeat_dict[qname]:
  */
