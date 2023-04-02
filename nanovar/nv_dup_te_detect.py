@@ -167,7 +167,7 @@ def parse_bam_ref(bam, ins_coord_dict, read2index):
 def overlap_dup(supposed_coord, seg, buffer=20):
     if seg.reference_name == supposed_coord[0]:
         if supposed_coord[1] - buffer <= seg.reference_start and seg.reference_end <= supposed_coord[2] + buffer:
-            return True, seg.reference_name + ':' + seg.reference_start + '-' +  seg.reference_end
+            return True, seg.reference_name + ':' + str(seg.reference_start) + '-' +  str(seg.reference_end)
         else:
             return False, ''
     else:
