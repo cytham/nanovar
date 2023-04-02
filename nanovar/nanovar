@@ -104,7 +104,7 @@ def main():
     # If additional CNV mode
     hg38_size_dict = {}
     if cnv:
-        raise Exception("Error: CNV module presently not available on this version. Please remove "--cnv" option. Sorry, we are actively improving.")
+        raise Exception("Error: CNV module presently not available on this version. Please remove '--cnv' option. Sorry, we are actively improving.")
         # Check CytoCAD
         try:
             import cytocad
