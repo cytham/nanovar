@@ -37,7 +37,7 @@ def dup_te_analyzer(wk_dir, out_nn, total_out1, score_threshold, ref_dir, ref_pa
     index2te = parse_bam_te(bam_te, wk_dir, read2index)
     unmap_reads_file = os.path.join(wk_dir, 'ins_seq_te-unmap.fa')
     _, bam_ref = align_mm(ref_path, unmap_reads_file, wk_dir, 'unmap', 'ref', threads, mm, data_type, st)
-    index2dup = parse_bam_ref(bam_ref, ins_coord_dict, read2index)
+    index2dup, dup_coord = parse_bam_ref(bam_ref, ins_coord_dict, read2index)
     index2dup = update_dups(dups, index2dup, index2reads)
     dup_indexes, _ = filter_dup(index2dup, index2reads, threshold=0.75)
     new_out_nn = update_out_nn(dup_indexes, out_nn)
@@ -150,26 +150,28 @@ def parse_bam_ref(bam, ins_coord_dict, read2index):
     sam = pysam.AlignmentFile(bam, "rb")
     pysam.set_verbosity(save)
     index2dup = {}
+    dup_coord = {}
     for seg in sam:
         flag = seg.flag
         if flag in (0, 16):
             qname = seg.query_name.split('::')[0]
-            dup = overlap_dup(ins_coord_dict[qname], seg)
+            dup, coord = overlap_dup(ins_coord_dict[qname], seg)
             if dup:
+                dup_coord[qname] = coord
                 if read2index[qname] in index2dup:
                     index2dup[read2index[qname]] += 1
                 else:
                     index2dup[read2index[qname]] = 1
-    return index2dup
+    return index2dup, dup_coord
 
 def overlap_dup(supposed_coord, seg, buffer=20):
     if seg.reference_name == supposed_coord[0]:
         if supposed_coord[1] - buffer <= seg.reference_start and seg.reference_end <= supposed_coord[2] + buffer:
-            return True
+            return True, seg.reference_name + ':' + seg.reference_start + '-' +  seg.reference_end
         else:
-            return False
+            return False, ''
     else:
-        return False
+        return False, ''
 
 # Add originally TDupl reads
 def update_dups(dups, index2dup, index2reads):
@@ -188,16 +190,19 @@ def filter_dup(index2dup, index2reads, threshold=0.75):
     fail_dups = {}
     for i in index2dup:
         if index2dup[i]/len(index2reads[i].split(',')) >= threshold:
-            dup_indexes[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
+            # dup_indexes[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
+            dup_indexes[i] = 
         else:
-            fail_dups[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
+            # fail_dups[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
+            fail_dups[i] = ''
     return dup_indexes, fail_dups
 
-def update_out_nn(dup_indexes, out_nn):
+def update_out_nn(dup_indexes, out_nn, dup_coord):
     new_out_nn = []
     for i in out_nn:
         if i.split('\t')[6].split('~')[0] in dup_indexes:
-            new_out_nn.append('\t'.join(i.split('\t')[0:3]) + '\tTDupl 99.99~' + i.split('\t')[3].split('~')[1] + '\t' + '\t'.join(i.split('\t')[4:]))
+            index_coord = i.split('\t')[6].split('~')[0] + '~' + dup_coord[i.split('\t')[8]]
+            new_out_nn.append('\t'.join(i.split('\t')[0:3]) + '\tTDupl 99.99~' + i.split('\t')[3].split('~')[1] + '\t' + '\t'.join(i.split('\t')[4:6]) + '\t' + index_coord + '\t' + '\t'.join(i.split('\t')[7:]))
         else:
             new_out_nn.append(i)
     return new_out_nn
