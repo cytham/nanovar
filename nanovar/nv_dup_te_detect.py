@@ -200,8 +200,17 @@ def update_out_nn(dup_indexes, out_nn, dup_coord):
     new_out_nn = []
     for i in out_nn:
         if i.split('\t')[6].split('~')[0] in dup_indexes:
-            index_coord = i.split('\t')[6].split('~')[0] + '~' + dup_coord[i.split('\t')[8]]
+            index_coord = i.split('\t')[6].split('~')[0] + '~' + get_coord(dup_coord, i)
             new_out_nn.append('\t'.join(i.split('\t')[0:3]) + '\tTDupl 99.99~' + i.split('\t')[3].split('~')[1] + '\t' + '\t'.join(i.split('\t')[4:6]) + '\t' + index_coord + '\t' + '\t'.join(i.split('\t')[7:]))
         else:
             new_out_nn.append(i)
     return new_out_nn
+
+def get_coord(dup_coord, i):
+    try:
+        return dup_coord[i.split('\t')[8]]
+    except KeyError:
+        for r in i.split('\t')[11].split(',')
+            if r in dup_coord:
+                return dup_coord[r]
+
