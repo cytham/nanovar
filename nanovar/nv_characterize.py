@@ -31,6 +31,7 @@ from nanovar.nv_nn import inference, svread_ovl
 from nanovar.nv_cov_upper import ovl_upper
 from nanovar.nv_vcf import create_vcf
 from nanovar.nv_report import create_report
+from nanovar.nv_dup_te_detect import dup_te_analyzer
 from cytocad.change_detection import cad
 from cytocad.ideogram import tagore_wrapper
 
@@ -64,7 +65,7 @@ class VariantDetect:
         self.cnv = cnv
         self.basecov, self.maxovl, self.depth, self.maxovl3 = 0, 0, 0, 0
         self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out = [], [], [], [], [], []
-        self.rlendict, self.parse_dict = {}, {}
+        self.rlendict, self.parse_dict, self.index2te  = {}, {}, {}
         # HTML SV table entry limit
         self.num_limit = 1000
         # HTML SV table SV ratio limit
@@ -176,11 +177,15 @@ class VariantDetect:
                 chromocollect = []
         if not self.debug:  # Remove blast table if not debug mode
             os.remove(self.bam)
-
-    def vcf_report(self, index2te):
+    
+    def dup_te_detect(self, ref_dir, threads, mm, st, datatype):
+        logging.info("Detecting DUP and TE")
+        self.index2te, self.out_nn = dup_te_analyzer(self.dir, self.out_nn, self.total_out, self.thres, ref_dir, self.refpath, mm, threads, data_type, st, self.debug)
+    
+    def vcf_report(self):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t, self.minlen, self.depth, index2te)
+                   self.homo_t, self.het_t, self.minlen, self.depth, self.index2te)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)
