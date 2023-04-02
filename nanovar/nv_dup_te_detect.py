@@ -190,8 +190,7 @@ def filter_dup(index2dup, index2reads, threshold=0.75):
     fail_dups = {}
     for i in index2dup:
         if index2dup[i]/len(index2reads[i].split(',')) >= threshold:
-            # dup_indexes[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
-            dup_indexes[i] = 
+            dup_indexes[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
         else:
             # fail_dups[i] = round(index2dup[i]/len(index2reads[i].split(',')), 3)
             fail_dups[i] = ''
