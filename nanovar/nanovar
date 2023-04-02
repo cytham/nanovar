@@ -362,18 +362,18 @@ def main():
     run.cluster_extract()
 
     # Update progress
-    if spin_switch:
-        task.endspin()
-        thread_spin.join()
-        print('')
-        task = TaskProgress()
-        msg = 'Re-evaluating SVs with BLAST and inferencing'
-        spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
-        # thread_spin.setDaemon(True)
-        thread_spin.start()
-    else:
-        print('Re-evaluating SVs with BLAST and inferencing -')
+#     if spin_switch:
+#         task.endspin()
+#         thread_spin.join()
+#         print('')
+#         task = TaskProgress()
+#         msg = 'Re-evaluating SVs with BLAST and inferencing'
+#         spinner = Spinner(msg + ' - ')
+#         thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+#         # thread_spin.setDaemon(True)
+#         thread_spin.start()
+#     else:
+#         print('Re-evaluating SVs with BLAST and inferencing -')
 
     # Wait for indexing or make index
     #if threads_index == 1:
@@ -398,24 +398,10 @@ def main():
     #run.cluster_nn(add_out=sub_run.total_out)
     run.cluster_nn(add_out=[])  #
 
-    # Update progress
-    if spin_switch:
-        task.endspin()
-        thread_spin.join()
-        print('')
-        task = TaskProgress()
-        msg = 'Generating VCF files and report'
-        spinner = Spinner(msg + ' - ')
-        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
-        # thread_spin.setDaemon(True)
-        thread_spin.start()
-    else:
-        print('Generating VCF files and report -')
-
     # Analyze TE
     from nanovar.nv_te_analyzer import te_analyzer
     pysam.faidx(os.path.join(wk_dir, 'temp1.fa'))
-    run.dup_te_detect(ref_dir, threads, mm, st, datatype) #
+    run.dup_te_detect(ref_dir, threads, mm, st, data_type) #
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, [], score_threshold, ref_dir, hsb, mdb, threads, debug)
 
@@ -443,7 +429,21 @@ def main():
         os.remove(f)
         f = os.path.join(wk_dir, 'temp1.fa.fai')
         os.remove(f)
-
+    
+    # Update progress
+    if spin_switch:
+        task.endspin()
+        thread_spin.join()
+        print('')
+        task = TaskProgress()
+        msg = 'Generating VCF files and report'
+        spinner = Spinner(msg + ' - ')
+        thread_spin = threading.Thread(target=task.run, args=(spinner,), daemon=True)
+        # thread_spin.setDaemon(True)
+        thread_spin.start()
+    else:
+        print('Generating VCF files and report -')
+    
     # Generating VCF and HTML report
     # index2te = dict() # 
     #run.vcf_report(index2te)
