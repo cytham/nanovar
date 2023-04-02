@@ -210,7 +210,7 @@ def get_coord(dup_coord, i):
     try:
         return dup_coord[i.split('\t')[8]]
     except KeyError:
-        for r in i.split('\t')[11].split(',')
+        for r in i.split('\t')[11].split(','):
             if r in dup_coord:
                 return dup_coord[r]
 
