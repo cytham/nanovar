@@ -178,7 +178,7 @@ class VariantDetect:
         if not self.debug:  # Remove blast table if not debug mode
             os.remove(self.bam)
     
-    def dup_te_detect(self, ref_dir, threads, mm, st, datatype):
+    def dup_te_detect(self, ref_dir, threads, mm, st, data_type):
         logging.info("Detecting DUP and TE")
         self.index2te, self.out_nn = dup_te_analyzer(self.dir, self.out_nn, self.total_out, self.thres, ref_dir, self.refpath, mm, threads, data_type, st, self.debug)
     
