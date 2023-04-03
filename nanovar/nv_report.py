@@ -26,6 +26,7 @@ import datetime
 import numpy as np
 import nanovar
 import matplotlib
+import htmlark
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
