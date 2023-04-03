@@ -137,15 +137,15 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     read_len_dict(rlen_dict, fwd)
     # Resize data for table
     data2 = data[0:num_limit]
-    # Write HTML
-    create_html(data2, fwd_fig, wk_dir, vcf_path_pass, timenow, read_name, read_path, ref_path, threshold, n, totalsv)
-    # Copy css and js directories
+    # Get CSS and JS paths
     css = os.path.join(os.path.dirname(nanovar.__file__), 'css')
     js = os.path.join(os.path.dirname(nanovar.__file__), 'js')
-    css_to = os.path.join(os.getcwd(), wk_dir, 'css')
-    js_to = os.path.join(os.getcwd(), wk_dir, 'js')
-    null = copy_tree(css, css_to)
-    null = copy_tree(js, js_to)
+    # Write HTML
+    create_html(data2, fwd_fig, wk_dir, vcf_path_pass, timenow, read_name, read_path, ref_path, threshold, n, totalsv, css, js)
+    #css_to = os.path.join(os.getcwd(), wk_dir, 'css')
+    #js_to = os.path.join(os.getcwd(), wk_dir, 'js')
+    #null = copy_tree(css, css_to)
+    #null = copy_tree(js, js_to)
 
 
 # SV Length cap
@@ -290,8 +290,8 @@ def measureqlen(rlen_dict):
 
 
 # Create html
-def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_path, threshold, n, totalsv):
-    html = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
+def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_path, threshold, n, totalsv, css, js):
+    html = open(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name), 'w')
     begin = """<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -302,13 +302,13 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
         <!-- Bootstrap core CSS -->
-        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="{}/bootstrap.min.css" rel="stylesheet">
         <!-- Material Design Bootstrap -->
-        <link href="css/mdb.min.css" rel="stylesheet">
+        <link href="{}/mdb.min.css" rel="stylesheet">
         <!-- DataTable CSS -->
-        <link href="css/jquery.dataTables.min.css" rel="stylesheet">
-        <!-- DataTable buttons CSS  -->
-        <link href="css/buttons.dataTables.min.css" rel="stylesheet">
+        <link href="{}/jquery.dataTables.min.css" rel="stylesheet">
+        <!-- DataTable buttons CSS -->
+        <link href="{}/buttons.dataTables.min.css" rel="stylesheet">
         <style>
             body {
                 background-color: #f6f7f9;
@@ -360,6 +360,8 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
             }
         </style>
     </head>
+    """.format(css, css, css, css) +
+    """
     <body>
     <div id="margin">
         <div>
@@ -526,23 +528,23 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <br>
         <!-- SCRIPTS -->
         <!-- JQuery -->
-        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="{}/jquery-3.3.1.min.js"></script>
         <!-- datatable javascript  -->
-        <script type="text/javascript" src="js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="{}/jquery.dataTables.min.js"></script>
         <!-- datatable buttons javascript  -->
-        <script type="text/javascript" src="js/dataTables.buttons.min.js"></script>
+        <script type="text/javascript" src="{}/dataTables.buttons.min.js"></script>
         <!-- buttons flash javascript  -->
-        <script type="text/javascript" src="js/buttons.flash.min.js"></script>
+        <script type="text/javascript" src="{}/buttons.flash.min.js"></script>
         <!-- buttons jszip javascript  -->
-        <script type="text/javascript" src="js/jszip.min.js"></script>
+        <script type="text/javascript" src="{}/jszip.min.js"></script>
         <!-- buttons html5 buttons javascript  -->
-        <script type="text/javascript" src="js/buttons.html5.min.js"></script>
+        <script type="text/javascript" src="{}/buttons.html5.min.js"></script>
         <!-- Bootstrap tooltips -->
-        <script type="text/javascript" src="js/popper.min.js"></script>
+        <script type="text/javascript" src="{}/popper.min.js"></script>
         <!-- Bootstrap core JavaScript -->
-        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="{}/bootstrap.min.js"></script>
         <!-- MDB core JavaScript -->
-        <script type="text/javascript" src="js/mdb.min.js"></script>
+        <script type="text/javascript" src="{}/mdb.min.js"></script>
         <script type="text/javascript">
             $('#NanoVar_report_table').DataTable({
                 "scrollX": true,
@@ -557,6 +559,10 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     </div>
     </body>
     </html>
-    """
+    """.format(js, js, js, js, js, js, js, js, js)
     html.write(row)
     html.close()
+    packed_html = htmlark.convert_page(html)
+    html_final = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
+    html_final.write(packed_html)
+    html_final.close()
