@@ -430,6 +430,10 @@ def main():
         f = os.path.join(wk_dir, 'temp1.fa.fai')
         os.remove(f)
     
+    if not debug:
+        f = os.path.join(wk_dir, 'temp2.fa')
+        os.remove(f)
+    
     # Update progress
     if spin_switch:
         task.endspin()
