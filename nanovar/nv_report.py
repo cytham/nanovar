@@ -310,6 +310,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <link href="{}/jquery.dataTables.min.css" rel="stylesheet">
         <!-- DataTable buttons CSS -->
         <link href="{}/buttons.dataTables.min.css" rel="stylesheet">
+        """.format(css, css, css, css) + """
         <style>
             body {
                 background-color: #f6f7f9;
@@ -361,7 +362,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
             }
         </style>
     </head>
-    """.format(css, css, css, css) + """<body>
+    <body>
     <div id="margin">
         <div>
             <h1 style="text-align:center;">NanoVar Report</h1>
