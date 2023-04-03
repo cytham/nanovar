@@ -567,3 +567,4 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     html_final = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
     html_final.write(packed_html)
     html_final.close()
+    os.remove(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name))
