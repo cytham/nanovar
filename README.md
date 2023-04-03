@@ -145,7 +145,7 @@ SV simulation datasets used in the manuscript can be downloaded [here](https://d
 Although NanoVar is provided with a universal model and threshold score, instructions required for building a custom neural-network model is available [here](https://github.com/cytham/nanovar/wiki/Model-training).
 
 ## Limitations
-* The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as Guppy to minimize this possibility.
+* The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as Dorado to minimize this possibility.
 
 * For BND SVs, NanoVar is unable to calculate the actual number of SV-opposing reads (normal reads) at the novel adjacency as
  there are two breakends from distant locations. It is not clear whether the novel adjacency is derived from both or either
