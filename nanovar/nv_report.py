@@ -360,9 +360,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
                 float: right;
             }
         </style>
-    </head>
-    """.format(css, css, css, css) +
-    """
+    </head>""".format(css, css, css, css) + """
     <body>
     <div id="margin">
         <div>
