@@ -20,22 +20,24 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
-* Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
 * Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file) 
+<!--
+* Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
+| `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
+-->
 
 ## Getting Started
 
 ### Quick run
 
 ```
-nanovar [Options] -t 24 -f hg38 --cnv hg38 sample.fq/sample.bam ref.fa working_dir 
+nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir 
 ```
 
 | Parameter | Argument | Comment |
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
 | `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
-| `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
 | - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
@@ -76,8 +78,10 @@ pip install .
 * bedtools >=2.26.0
 * samtools >=1.3.0
 * minimap2 >=2.17
+<!--
 * makeblastdb and windowmasker
 * hs-blastn ==0.0.5
+-->
 
 Please make sure each executable binary is in PATH.
 ##### 1. _bedtools_
@@ -88,7 +92,7 @@ Please visit [here](http://www.htslib.org/download/) for instructions to install
 
 ##### 3. _minimap2_
 Please visit [here](https://github.com/lh3/minimap2) for instructions to install.
-
+<!--
 ##### 4. _makeblastdb_ and _windowmasker_
 ```
 # Download NCBI-BLAST v2.3.0+ from NCBI FTP server
@@ -111,6 +115,7 @@ make
 cp hs-blastn ~/bin
 ```
 If you encounter "isnan" error during compilation, please refer to [this](https://github.com/cytham/nanovar/issues/7#issuecomment-644546378).
+-->
 
 ## Documentation
 See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
