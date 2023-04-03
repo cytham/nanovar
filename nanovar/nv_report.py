@@ -545,6 +545,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <script type="text/javascript" src="{}/bootstrap.min.js"></script>
         <!-- MDB core JavaScript -->
         <script type="text/javascript" src="{}/mdb.min.js"></script>
+        """.format(js, js, js, js, js, js, js, js, js) + """
         <script type="text/javascript">
             $('#NanoVar_report_table').DataTable({
                 "scrollX": true,
@@ -559,7 +560,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     </div>
     </body>
     </html>
-    """.format(js, js, js, js, js, js, js, js, js)
+    """
     html.write(row)
     html.close()
     packed_html = htmlark.convert_page(html)
