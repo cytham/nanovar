@@ -65,9 +65,10 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 if repeat_dict[qname]:
                     pass
             except KeyError:
-                repeat_dict[qname] = ''
-                fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
-                rlendict[qname] = readlen
+                #repeat_dict[qname] = ''
+                #fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
+                #rlendict[qname] = readlen
+                pass
             continue
         rname = seg.reference_name
         # readlen = seg.infer_read_length()
