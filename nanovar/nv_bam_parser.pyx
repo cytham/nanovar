@@ -54,7 +54,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
-        readlen = seg.infer_read_length()
+        #readlen = seg.infer_read_length()
         if flag == 4:
             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
@@ -71,7 +71,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 pass
             continue
         rname = seg.reference_name
-        # readlen = seg.infer_read_length()
+        readlen = seg.infer_read_length()
         rstart = seg.reference_start
         rend = seg.reference_end
         qlen = seg.query_alignment_length
