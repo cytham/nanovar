@@ -1172,13 +1172,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject
 /* PyObjectCallOneArg.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
-/* PyObjectCallNoArg.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
-#else
-#define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
-#endif
-
 /* DictGetItem.proto */
 #if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
 static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key);
@@ -1248,6 +1241,13 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
 #define __Pyx_ErrFetchInState(tstate, type, value, tb)  PyErr_Fetch(type, value, tb)
 #define __Pyx_ErrRestore(type, value, tb)  PyErr_Restore(type, value, tb)
 #define __Pyx_ErrFetch(type, value, tb)  PyErr_Fetch(type, value, tb)
+#endif
+
+/* PyObjectCallNoArg.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
+#else
+#define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
 #endif
 
 /* RaiseTooManyValuesToUnpack.proto */
@@ -2745,7 +2745,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *     for seg in sam:
  *         flag = seg.flag             # <<<<<<<<<<<<<<
  *         qname = seg.query_name
- *         readlen = seg.infer_read_length()
+ *         #readlen = seg.infer_read_length()
  */
     __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_flag); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 55, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
@@ -2757,7 +2757,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *     for seg in sam:
  *         flag = seg.flag
  *         qname = seg.query_name             # <<<<<<<<<<<<<<
- *         readlen = seg.infer_read_length()
+ *         #readlen = seg.infer_read_length()
  *         if flag == 4:
  */
     __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_query_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 56, __pyx_L1_error)
@@ -2766,37 +2766,9 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
     __Pyx_XDECREF_SET(__pyx_v_qname, ((PyObject*)__pyx_t_5));
     __pyx_t_5 = 0;
 
-    /* "nanovar/nv_bam_parser.pyx":57
- *         flag = seg.flag
- *         qname = seg.query_name
- *         readlen = seg.infer_read_length()             # <<<<<<<<<<<<<<
- *         if flag == 4:
- *             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
- */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_infer_read_length); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 57, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = NULL;
-    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
-      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
-      if (likely(__pyx_t_3)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
-        __Pyx_INCREF(__pyx_t_3);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_2, function);
-      }
-    }
-    __pyx_t_5 = (__pyx_t_3) ? __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3) : __Pyx_PyObject_CallNoArg(__pyx_t_2);
-    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 57, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_8 = __Pyx_PyInt_As_unsigned_int(__pyx_t_5); if (unlikely((__pyx_t_8 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 57, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_v_readlen = __pyx_t_8;
-
     /* "nanovar/nv_bam_parser.pyx":58
  *         qname = seg.query_name
- *         readlen = seg.infer_read_length()
+ *         #readlen = seg.infer_read_length()
  *         if flag == 4:             # <<<<<<<<<<<<<<
  *             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
  *             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
@@ -2805,7 +2777,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
       case 4:
 
       /* "nanovar/nv_bam_parser.pyx":59
- *         readlen = seg.infer_read_length()
+ *         #readlen = seg.infer_read_length()
  *         if flag == 4:
  *             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')             # <<<<<<<<<<<<<<
  *             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
@@ -2913,7 +2885,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
 
       /* "nanovar/nv_bam_parser.pyx":58
  *         qname = seg.query_name
- *         readlen = seg.infer_read_length()
+ *         #readlen = seg.infer_read_length()
  *         if flag == 4:             # <<<<<<<<<<<<<<
  *             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
  *             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
@@ -3019,7 +2991,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *                 pass
  *             continue             # <<<<<<<<<<<<<<
  *         rname = seg.reference_name
- *         # readlen = seg.infer_read_length()
+ *         readlen = seg.infer_read_length()
  */
       goto __pyx_L3_continue;
 
@@ -3038,7 +3010,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
  *                 pass
  *             continue
  *         rname = seg.reference_name             # <<<<<<<<<<<<<<
- *         # readlen = seg.infer_read_length()
+ *         readlen = seg.infer_read_length()
  *         rstart = seg.reference_start
  */
     __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_reference_name); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 73, __pyx_L1_error)
@@ -3047,9 +3019,37 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
     __Pyx_XDECREF_SET(__pyx_v_rname, ((PyObject*)__pyx_t_5));
     __pyx_t_5 = 0;
 
+    /* "nanovar/nv_bam_parser.pyx":74
+ *             continue
+ *         rname = seg.reference_name
+ *         readlen = seg.infer_read_length()             # <<<<<<<<<<<<<<
+ *         rstart = seg.reference_start
+ *         rend = seg.reference_end
+ */
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_seg, __pyx_n_s_infer_read_length); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_3 = NULL;
+    if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
+      __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_2);
+      if (likely(__pyx_t_3)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_2);
+        __Pyx_INCREF(__pyx_t_3);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_2, function);
+      }
+    }
+    __pyx_t_5 = (__pyx_t_3) ? __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3) : __Pyx_PyObject_CallNoArg(__pyx_t_2);
+    __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_8 = __Pyx_PyInt_As_unsigned_int(__pyx_t_5); if (unlikely((__pyx_t_8 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(0, 74, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_v_readlen = __pyx_t_8;
+
     /* "nanovar/nv_bam_parser.pyx":75
  *         rname = seg.reference_name
- *         # readlen = seg.infer_read_length()
+ *         readlen = seg.infer_read_length()
  *         rstart = seg.reference_start             # <<<<<<<<<<<<<<
  *         rend = seg.reference_end
  *         qlen = seg.query_alignment_length
@@ -3061,7 +3061,7 @@ static PyObject *__pyx_pf_7nanovar_13nv_bam_parser_bam_parse(CYTHON_UNUSED PyObj
     __pyx_v_rstart = __pyx_t_8;
 
     /* "nanovar/nv_bam_parser.pyx":76
- *         # readlen = seg.infer_read_length()
+ *         readlen = seg.infer_read_length()
  *         rstart = seg.reference_start
  *         rend = seg.reference_end             # <<<<<<<<<<<<<<
  *         qlen = seg.query_alignment_length
@@ -11312,28 +11312,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObjec
 }
 #endif
 
-/* PyObjectCallNoArg */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
-#if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCall(func, NULL, 0);
-    }
-#endif
-#if defined(__Pyx_CyFunction_USED) && defined(NDEBUG)
-    if (likely(PyCFunction_Check(func) || __Pyx_CyFunction_Check(func)))
-#else
-    if (likely(PyCFunction_Check(func)))
-#endif
-    {
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
-            return __Pyx_PyObject_CallMethO(func, NULL);
-        }
-    }
-    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
-}
-#endif
-
 /* DictGetItem */
 #if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
 static PyObject *__Pyx_PyDict_GetItem(PyObject *d, PyObject* key) {
@@ -11460,6 +11438,28 @@ static CYTHON_INLINE void __Pyx_ErrFetchInState(PyThreadState *tstate, PyObject 
     tstate->curexc_type = 0;
     tstate->curexc_value = 0;
     tstate->curexc_traceback = 0;
+}
+#endif
+
+/* PyObjectCallNoArg */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, NULL, 0);
+    }
+#endif
+#if defined(__Pyx_CyFunction_USED) && defined(NDEBUG)
+    if (likely(PyCFunction_Check(func) || __Pyx_CyFunction_Check(func)))
+#else
+    if (likely(PyCFunction_Check(func)))
+#endif
+    {
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
+            return __Pyx_PyObject_CallMethO(func, NULL);
+        }
+    }
+    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
 }
 #endif
 
