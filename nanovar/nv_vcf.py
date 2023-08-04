@@ -81,7 +81,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             else:
                 te = ''
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
-                       filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=>' + str(sv_len) + ';SR=' + str(
+                       filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
                        str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Del':
