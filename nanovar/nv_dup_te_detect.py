@@ -42,7 +42,7 @@ def dup_te_analyzer(wk_dir, out_nn, total_out1, score_threshold, ref_dir, ref_pa
     dup_indexes, _ = filter_dup(index2dup, index2reads, threshold=0.75)
     new_out_nn = update_out_nn(dup_indexes, out_nn, dup_coord)
     if not debug:
-        os.remove(reads_file)
+        # os.remove(reads_file)
         os.remove(unmap_reads_file)
         os.remove(bam_te)
         os.remove(bam_ref)
