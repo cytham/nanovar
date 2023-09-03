@@ -33,7 +33,7 @@ import random
 import pickle
 import threading
 from datetime import datetime
-from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe, check_index
+from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe, align_mm
 from progress.spinner import Spinner
 
 
@@ -58,15 +58,15 @@ def main():
     threads = args.threads
     debug = args.debug
     quiet = args.quiet
-    force = args.force
+    # force = args.force
     model_path = args.model
     filter_bed_dir = os.path.join(os.path.dirname(nanovar.__file__), 'gaps')
     ref_dir = os.path.join(os.path.dirname(nanovar.__file__), 'ref')
     mm = args.mm
     st = args.st
-    mdb = args.mdb
-    wmk = args.wmk
-    hsb = args.hsb
+    # mdb = args.mdb
+    # wmk = args.wmk
+    # hsb = args.hsb
     pickle_bool = args.pickle
     archivefasta = args.archivefasta
     # blastout = args.blastout
@@ -128,9 +128,9 @@ def main():
         sys.stdout = open(os.devnull, 'w')
 
     # Assign threads
-    spin_switch, threads_mm, threads_bt, threads_index = assign_threads(force, threads, quiet, ref_path, wk_dir, ref_name)
-
-    # spin_switch = False
+    # spin_switch, threads_mm, threads_bt, threads_index = assign_threads(force, threads, quiet, ref_path, wk_dir, ref_name)
+    spin_switch = False
+    threads_mm = threads
 
     # Print initiation message
     now = datetime.now()
@@ -144,7 +144,7 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Checking integrity of input files -')
+        print('Checking integrity of input files - ', end='', flush=True)
         task = ''
         thread_spin = ''
 
@@ -273,6 +273,8 @@ def main():
     else:
         filter_path = genome_filter
 
+    print('Pass')
+
     # Update progress
     if spin_switch:
         task.endspin()
@@ -295,10 +297,10 @@ def main():
                   'will be ignored.' % ', '.join(['>' + x for x in contig_omit]))
             logging.warning('Warning: The following contig id(s) contains invalid symbols [ ~ : - ] %s. Reads mapping to these '
                             'contig(s) will be ignored.' % ', '.join(['>' + x for x in contig_omit]))
-        print('Indexing genome and aligning reads -')
-
+    
     # Pre-indexing
-    from nanovar.nv_align import make_index, align_mm, align_hsb
+    # from nanovar.nv_align import make_index, align_mm, align_hsb
+    
     #if threads_index == 1:
     #    indexing = threading.Thread(target=make_index, args=(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb))
     #    indexing.daemon = True
@@ -309,14 +311,16 @@ def main():
     # Aligning using minimap2
     if input_type == 'raw':
         logging.info('Read alignment using minimap2')
+        print('Read mapping using minimap2 - ', end='', flush=True)
         mma = align_mm(ref_path, file_path, wk_dir, input_name, ref_name, threads_mm, mm, data_type, st)
         bam_path = mma[1]
+        print('Done')
     elif input_type == 'bam':
         logging.info('Input BAM file, skipping minimap2 alignment')
         mma = ['-', '']
         bam_path = file_path
-    else:
-        raise Exception("Error: Internal error, input_type: %s unknown" % input_type)
+    # else:
+    #     raise Exception("Error: Internal error, input_type: %s unknown" % input_type)
 
     # Update progress
     if spin_switch:
@@ -330,8 +334,8 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Analyzing read alignments and detecting SVs -')
-
+        print('Analyzing read alignments and detecting SVs - ', end='', flush=True)
+    
     # Parse and detect SVs
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     from nanovar.nv_characterize import VariantDetect
@@ -341,9 +345,11 @@ def main():
                         mincov, homo_t, het_t, debug, contig_omit, cnv)
     run.bam_parse_detect()
     run.coverage_stats()
+    print('Done')
 
     logging.info('Total number of mapped reads: %s\n' % str(run.maps))
-
+    # print('Total number of mapped reads: %s' % str(run.maps))
+    
     # Update progress
     if spin_switch:
         task.endspin()
@@ -356,11 +362,12 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Clustering SV breakends -')
+        print('Clustering SV breakends - ', end='', flush=True)
 
     # SV breakend clustering and extracting INS and INV SVs
-    run.cluster_extract()
-
+    # run.cluster_extract()
+    run.cluster_nn2()
+    print('Done')
     # Update progress
 #     if spin_switch:
 #         task.endspin()
@@ -382,10 +389,11 @@ def main():
     #    make_index(force, ref_path, wk_dir, ref_name, mdb, wmk, hsb)
 
     # Run hsblastn on INS and INV reads
-    if not blastout:
-        hsba = align_hsb(ref_path, wk_dir, ref_name, threads_bt, hsb, debug)
-    else:
-        hsba = ['blast-command', blastout]
+    # if not blastout:
+    #     hsba = align_hsb(ref_path, wk_dir, ref_name, threads_bt, hsb, debug)
+    # else:
+    #     hsba = ['blast-command', blastout]
+
     #sub_run = VariantDetect(wk_dir, hsba[1], splitpct, minalign, filter_path, minlen, buff, model_path,
     #                        total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, hsba[0],
     #                        mincov, homo_t, het_t, debug, contig_omit, cnv)
@@ -396,10 +404,10 @@ def main():
     #sub_run.parse_detect_hsb()
     #logging.info('Parsing BAM and detecting INV and INS SVs')
     #run.cluster_nn(add_out=sub_run.total_out)
-    run.cluster_nn(add_out=[])  #
+    #run.cluster_nn(add_out=[])  #
 
     # Analyze TE
-    from nanovar.nv_te_analyzer import te_analyzer
+    # from nanovar.nv_te_analyzer import te_analyzer
     pysam.faidx(os.path.join(wk_dir, 'temp1.fa'))
     run.dup_te_detect(ref_dir, threads, mm, st, data_type) #
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
@@ -422,17 +430,6 @@ def main():
         with open(os.path.join(wk_dir, "nv_run.pkl"), "wb") as f:
             #pickle.dump(saveobjects, f)
             pickle.dump(run, f) #
-
-    # Delete temporary fasta file
-    if not archivefasta:
-        f = os.path.join(wk_dir, 'temp1.fa')
-        os.remove(f)
-        f = os.path.join(wk_dir, 'temp1.fa.fai')
-        os.remove(f)
-    
-    if not debug:
-        f = os.path.join(wk_dir, 'temp2.fa')
-        os.remove(f)
     
     # Update progress
     if spin_switch:
@@ -446,12 +443,29 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Generating VCF files and report -')
+        print('Generating VCF files and report - ', end='', flush=True)
     
     # Generating VCF and HTML report
     # index2te = dict() # 
     #run.vcf_report(index2te)
     run.vcf_report() #
+    print('Done')
+
+    # Delete temporary fasta file
+    if not archivefasta:
+        f = os.path.join(wk_dir, 'temp1.fa')
+        os.remove(f)
+        f = os.path.join(wk_dir, 'temp1.fa.fai')
+        os.remove(f)
+    
+    if not debug:
+        f = os.path.join(wk_dir, 'temp2.fa')
+        os.remove(f)
+        f = os.path.join(wk_dir, '%s.nanovar.total.vcf' % input_name)
+        os.remove(f)
+        f = os.path.join(wk_dir, 'genome.sizes')
+        os.remove(f)
+    
     logging.info('NanoVar ended')
     now = datetime.now()
     if spin_switch:
@@ -474,100 +488,100 @@ def checkcontignames(contig_len_dict):
 
 
 # Progress message
-class TaskProgress:
+# class TaskProgress:
 
-    def __init__(self):
-        self.prog_spin = True
+#     def __init__(self):
+#         self.prog_spin = True
 
-    def endspin(self):
-        self.prog_spin = False
+#     def endspin(self):
+#         self.prog_spin = False
 
-    def run(self, spin):
-        while self.prog_spin:
-            spin.next()
-            sleep()
+#     def run(self, spin):
+#         while self.prog_spin:
+#             spin.next()
+#             sleep()
 
 
 # Randomize sleep timing
-def sleep():
-    t = 0.05
-    t += t * random.uniform(-0.1, 0.1)
-    time.sleep(t)
+# def sleep():
+#     t = 0.05
+#     t += t * random.uniform(-0.1, 0.1)
+#     time.sleep(t)
 
 
 # Assign thread usage according to number of threads
-def assign_threads(force, threads, quiet, ref_path, wk_dir, ref_name):
-    if force:
-        if threads == 1:
-            spin_switch = False
-            threads_mm = 1
-            threads_bt = 1
-            threads_index = 0
-        elif threads == 2:
-            spin_switch = False
-            threads_mm = 1
-            threads_bt = 2
-            threads_index = 1
-        else:  # threads > 2
-            if quiet:
-                spin_switch = False
-                threads_mm = threads - 1
-                threads_bt = min(threads, 53)
-                threads_index = 1
-            else:
-                spin_switch = True
-                threads_mm = threads - 2
-                threads_bt = min(threads - 1, 53)
-                threads_index = 1
-    else:
-        # Check indexes
-        index_present = check_index(ref_path, wk_dir, ref_name)
-        if threads == 1:
-            spin_switch = False
-            threads_mm = 1
-            threads_bt = 1
-            threads_index = 0
-        elif threads == 2:
-            if index_present:
-                if quiet:
-                    spin_switch = False
-                    threads_mm = 2
-                    threads_bt = 2
-                    threads_index = 0
-                else:
-                    spin_switch = True
-                    threads_mm = 1
-                    threads_bt = 1
-                    threads_index = 0
-            else:
-                spin_switch = False
-                threads_mm = 1
-                threads_bt = 2
-                threads_index = 1
-        else:  # threads > 2
-            if index_present:
-                if quiet:
-                    spin_switch = False
-                    threads_mm = threads
-                    threads_bt = min(threads, 53)
-                    threads_index = 0
-                else:
-                    spin_switch = True
-                    threads_mm = threads - 1
-                    threads_bt = min(threads - 1, 53)
-                    threads_index = 0
-            else:
-                if quiet:
-                    spin_switch = False
-                    threads_mm = threads - 1
-                    threads_bt = min(threads, 53)
-                    threads_index = 1
-                else:
-                    spin_switch = True
-                    threads_mm = threads - 2
-                    threads_bt = min(threads - 1, 53)
-                    threads_index = 1
-    return spin_switch, threads_mm, threads_bt, threads_index
+# def assign_threads(force, threads, quiet, ref_path, wk_dir, ref_name):
+#     if force:
+#         if threads == 1:
+#             spin_switch = False
+#             threads_mm = 1
+#             threads_bt = 1
+#             threads_index = 0
+#         elif threads == 2:
+#             spin_switch = False
+#             threads_mm = 1
+#             threads_bt = 2
+#             threads_index = 1
+#         else:  # threads > 2
+#             if quiet:
+#                 spin_switch = False
+#                 threads_mm = threads - 1
+#                 threads_bt = min(threads, 53)
+#                 threads_index = 1
+#             else:
+#                 spin_switch = True
+#                 threads_mm = threads - 2
+#                 threads_bt = min(threads - 1, 53)
+#                 threads_index = 1
+#     else:
+#         # Check indexes
+#         index_present = check_index(ref_path, wk_dir, ref_name)
+#         if threads == 1:
+#             spin_switch = False
+#             threads_mm = 1
+#             threads_bt = 1
+#             threads_index = 0
+#         elif threads == 2:
+#             if index_present:
+#                 if quiet:
+#                     spin_switch = False
+#                     threads_mm = 2
+#                     threads_bt = 2
+#                     threads_index = 0
+#                 else:
+#                     spin_switch = True
+#                     threads_mm = 1
+#                     threads_bt = 1
+#                     threads_index = 0
+#             else:
+#                 spin_switch = False
+#                 threads_mm = 1
+#                 threads_bt = 2
+#                 threads_index = 1
+#         else:  # threads > 2
+#             if index_present:
+#                 if quiet:
+#                     spin_switch = False
+#                     threads_mm = threads
+#                     threads_bt = min(threads, 53)
+#                     threads_index = 0
+#                 else:
+#                     spin_switch = True
+#                     threads_mm = threads - 1
+#                     threads_bt = min(threads - 1, 53)
+#                     threads_index = 0
+#             else:
+#                 if quiet:
+#                     spin_switch = False
+#                     threads_mm = threads - 1
+#                     threads_bt = min(threads, 53)
+#                     threads_index = 1
+#                 else:
+#                     spin_switch = True
+#                     threads_mm = threads - 2
+#                     threads_bt = min(threads - 1, 53)
+#                     threads_index = 1
+#     return spin_switch, threads_mm, threads_bt, threads_index
 
 
 if __name__ == "__main__":

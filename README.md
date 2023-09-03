@@ -7,12 +7,11 @@
 [![PyPI license](https://img.shields.io/pypi/l/nanovar)](./LICENSE.txt)
   
 NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long-read sequencing such as
- Oxford Nanopore Technologies (ONT). It characterizes SVs with high accuracy and speed using only 4x depth
-  sequencing for homozygous SVs and 8x depth for heterozygous SVs. NanoVar reduces sequencing cost and computational requirements
-   which makes it compatible with large cohort SV-association studies or routine clinical SV investigations.  
+ Oxford Nanopore Technologies (ONT). It characterizes SVs with using only 4x depth
+  sequencing for homozygous SVs and 8x depth for heterozygous SVs.
 
 ### Basic capabilities
-* Performs long-read mapping (Minimap2 and HS-BLASTN) and SV discovery in a single rapid pipeline.
+* Performs long-read mapping (Minimap2) and SV discovery in a single pipeline.
 * Accurately characterizes SVs using long sequencing reads (High SV recall and precision in simulation datasets, overall F1
  score >0.9)  
 * Characterizes six classes of SVs including novel-sequence insertion, deletion, inversion, tandem duplication, sequence
@@ -140,15 +139,15 @@ Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterizat
 This project is licensed under GNU General Public License - see [LICENSE.txt](./LICENSE.txt) for details.
 
 ## Simulation datasets and scripts used in the manuscript
-SV simulation datasets used in the manuscript can be downloaded [here](https://doi.org/10.5281/zenodo.3569479 ). Scripts used for simulation dataset generation and tool performance comparison are available [here](./scripts).
+SV simulation datasets used in the manuscript can be downloaded [here](https://doi.org/10.5281/zenodo.3569479). Scripts used for simulation dataset generation and tool performance comparison are available [here](./scripts).
 
 Although NanoVar is provided with a universal model and threshold score, instructions required for building a custom neural-network model is available [here](https://github.com/cytham/nanovar/wiki/Model-training).
 
 ## Limitations
-* The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as Dorado to minimize this possibility.
+* The inaccurate basecalling of large homopolymer or low complexity DNA regions may result in the false determination of deletion SVs. We advise the use of up-to-date ONT basecallers such as [Dorado](https://github.com/nanoporetech/dorado) to minimize this possibility.
 
 * For BND SVs, NanoVar is unable to calculate the actual number of SV-opposing reads (normal reads) at the novel adjacency as
  there are two breakends from distant locations. It is not clear whether the novel adjacency is derived from both or either
-  breakends, in cases of balanced and unbalanced variants, and therefore it is not possible to know which breakend location(s) to
+  breakends in cases of balanced and unbalanced variants, and therefore it is not possible to know which breakend location(s) to
    consider for counting normal reads. Currently, NanoVar approximates the normal read count by the minimum count from either 
    breakend location. Although this helps in capturing unbalanced BNDs, it might lead to some false positives.

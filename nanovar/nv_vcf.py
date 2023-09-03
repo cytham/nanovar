@@ -111,9 +111,14 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inv(1)' or bp_name == 'Inv(2)':
             sv = '<INV>'
-            sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
+            # sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
+            if coord2 - coord1 < minlen:
+                mid = (coord2 + coord1) / 2
+                coord1 = max(1, int(mid - round(minlen / 2, 0)))
+                coord2 = int(mid + round(minlen / 2, 0) + 1)
+            sv_len = str(coord2 - coord1)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))

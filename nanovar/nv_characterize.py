@@ -24,8 +24,8 @@ import os
 import logging
 import random
 from nanovar.nv_bam_parser import bam_parse
-from nanovar.nv_detect_algo import sv_detect
-from nanovar.nv_parser import entry_parser, align_info, breakpoint_parser
+# from nanovar.nv_detect_algo import sv_detect
+# from nanovar.nv_parser import entry_parser, align_info, breakpoint_parser
 from nanovar.nv_cluster import sv_cluster
 from nanovar.nv_nn import inference, svread_ovl
 from nanovar.nv_cov_upper import ovl_upper
@@ -103,80 +103,92 @@ class VariantDetect:
             logging.warning("Sequencing depth is less than 4x, output may not be comprehensive")
         logging.info("Read overlap upper limit: %s\n" % str(self.maxovl))
 
-    def cluster_extract(self):
+    def cluster_nn2(self):
         logging.info("Clustering SV breakends")
-        cluster_parse = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
-                                   self.contig, False, self.seed2)
-        logging.info("Filtering INS and INV SVs")
-        total_qnames = []
-        for line in cluster_parse:
-            svtype = line.split('~')[1]
-            qnames = []
-            if svtype in ['bp_Nov_Ins', 'Nov_Ins']:  # Some INS are actually DUP
-                for r in cluster_parse[line]:
-                    qnames.append(r.rsplit('~', 1)[0])
-                    self.ins_out.append(self.parse_dict[r])
-                total_qnames.extend(qnames)
-            elif svtype == 'Del':
-                for r in cluster_parse[line]:
-                    self.ins_out.append(self.parse_dict[r])
-            else:
-                for r in cluster_parse[line]:
-                    qnames.append(r.rsplit('~', 1)[0])
-                total_qnames.extend(qnames)
-        qnames_dict = {x: 1 for x in set(total_qnames)}
-        self.fasta_extract(qnames_dict)
-
-    def cluster_nn(self, add_out):
-        logging.info("Re-clustering INS/INV SVs and merging")
-        # Merge old ins with new from hsblastn
-        sub_out = self.ins_out + add_out
-        cluster_out_ins, _ = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, self.contig, True,
-                                        self.seed2)
-        new_cluster_out = self.out_rest + cluster_out_ins
+        cluster_out, _ = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
+                                   self.contig, True, self.seed2)
         logging.info("Neural network inference")
-        new_total_out = self.total_out + add_out
-        if new_cluster_out:
-            self.out_nn = inference(new_cluster_out, new_total_out, self.model)
+        if cluster_out:
+            self.out_nn = inference(cluster_out, self.total_out, self.model)
         else:
             self.out_nn = []
         # Generate sv_overlap file
         svread_ovl(self.dir, self.out_nn)
 
-    def parse_detect_hsb(self):
-        # Make gap dictionary
-        gapdict = makegapdict(self.filter, self.contig_omit)
-        temp1 = []
-        chromocollect = []
-        ovlt = 0.9
-        sig_index = [0, 2, 4, 6, 8]
-        data = open(self.bam, 'r').read().splitlines()
-        data.append('null\tnull\tnull\tnull\tnull\tnull')
-        nlines = len(data) - 1
-        for i in range(nlines):
-            if data[i].split('\t')[0] == data[i + 1].split('\t')[0]:  # Grouping alignments by read name
-                temp1.append(align_info(data[i], self.rlendict))
-                if data[i].split('\t')[1].strip() not in chromocollect:
-                    chromocollect.append(data[i].split('\t')[1].strip())
-            else:
-                temp1.append(align_info(data[i], self.rlendict))
-                if data[i].split('\t')[1].strip() not in chromocollect:
-                    chromocollect.append(data[i].split('\t')[1].strip())
-                self.seed += 1
-                # Parse entries and correct overlap alignments
-                subdata = entry_parser(temp1, chromocollect, ovlt)
-                # SV detection
-                out1, out2 = sv_detect(subdata, self.splitpct, self.minalign, gapdict)
-                if out2 == '':
-                    pass
-                else:
-                    # Parse breakpoints
-                    final = breakpoint_parser(out2, self.minlen, sig_index, self.seed, 'hsb')
-                    self.total_out.extend(final)
-                temp1 = []
-                chromocollect = []
-        if not self.debug:  # Remove blast table if not debug mode
-            os.remove(self.bam)
+    # def cluster_extract(self):
+    #     logging.info("Clustering SV breakends")
+    #     cluster_parse = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
+    #                                self.contig, False, self.seed2)
+    #     logging.info("Filtering INS and INV SVs")
+    #     total_qnames = []
+    #     for line in cluster_parse:
+    #         svtype = line.split('~')[1]
+    #         qnames = []
+    #         if svtype in ['bp_Nov_Ins', 'Nov_Ins']:  # Some INS are actually DUP
+    #             for r in cluster_parse[line]:
+    #                 qnames.append(r.rsplit('~', 1)[0])
+    #                 self.ins_out.append(self.parse_dict[r])
+    #             total_qnames.extend(qnames)
+    #         elif svtype == 'Del':
+    #             for r in cluster_parse[line]:
+    #                 self.ins_out.append(self.parse_dict[r])
+    #         else:
+    #             for r in cluster_parse[line]:
+    #                 qnames.append(r.rsplit('~', 1)[0])
+    #             total_qnames.extend(qnames)
+    #     qnames_dict = {x: 1 for x in set(total_qnames)}
+    #     self.fasta_extract(qnames_dict)
+
+    # def cluster_nn(self, add_out):
+    #     logging.info("Re-clustering INS/INV SVs and merging")
+    #     # Merge old ins with new from hsblastn
+    #     sub_out = self.ins_out + add_out
+    #     cluster_out_ins, _ = sv_cluster(self.total_subdata, sub_out, self.buff, self.maxovl, self.mincov, self.contig, True,
+    #                                     self.seed2)
+    #     new_cluster_out = self.out_rest + cluster_out_ins
+    #     logging.info("Neural network inference")
+    #     new_total_out = self.total_out + add_out
+    #     if new_cluster_out:
+    #         self.out_nn = inference(new_cluster_out, new_total_out, self.model)
+    #     else:
+    #         self.out_nn = []
+    #     # Generate sv_overlap file
+    #     svread_ovl(self.dir, self.out_nn)
+
+    # def parse_detect_hsb(self):
+    #     # Make gap dictionary
+    #     gapdict = makegapdict(self.filter, self.contig_omit)
+    #     temp1 = []
+    #     chromocollect = []
+    #     ovlt = 0.9
+    #     sig_index = [0, 2, 4, 6, 8]
+    #     data = open(self.bam, 'r').read().splitlines()
+    #     data.append('null\tnull\tnull\tnull\tnull\tnull')
+    #     nlines = len(data) - 1
+    #     for i in range(nlines):
+    #         if data[i].split('\t')[0] == data[i + 1].split('\t')[0]:  # Grouping alignments by read name
+    #             temp1.append(align_info(data[i], self.rlendict))
+    #             if data[i].split('\t')[1].strip() not in chromocollect:
+    #                 chromocollect.append(data[i].split('\t')[1].strip())
+    #         else:
+    #             temp1.append(align_info(data[i], self.rlendict))
+    #             if data[i].split('\t')[1].strip() not in chromocollect:
+    #                 chromocollect.append(data[i].split('\t')[1].strip())
+    #             self.seed += 1
+    #             # Parse entries and correct overlap alignments
+    #             subdata = entry_parser(temp1, chromocollect, ovlt)
+    #             # SV detection
+    #             out1, out2 = sv_detect(subdata, self.splitpct, self.minalign, gapdict)
+    #             if out2 == '':
+    #                 pass
+    #             else:
+    #                 # Parse breakpoints
+    #                 final = breakpoint_parser(out2, self.minlen, sig_index, self.seed, 'hsb')
+    #                 self.total_out.extend(final)
+    #             temp1 = []
+    #             chromocollect = []
+    #     if not self.debug:  # Remove blast table if not debug mode
+    #         os.remove(self.bam)
     
     def dup_te_detect(self, ref_dir, threads, mm, st, data_type):
         logging.info("Detecting DUP and TE")

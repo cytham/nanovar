@@ -54,21 +54,14 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
-        #readlen = seg.infer_read_length()
         if flag == 4:
             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
-            rlendict[qname] = len(seg.query_sequence)
+            # rlendict[qname] = len(seg.query_sequence)
             continue
         elif flag in (256, 272):  # Skip secondary alignments but save fasta if not done yet
-            try:
-                if repeat_dict[qname]:
-                    pass
-            except KeyError:
-                #repeat_dict[qname] = ''
-                #fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
-                #rlendict[qname] = readlen
-                pass
+            continue
+        if seg.mapping_quality > 0 and seg.mapping_quality < 30:
             continue
         rname = seg.reference_name
         readlen = seg.infer_read_length()

@@ -4,6 +4,23 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.5.0 - Sept ?, 2023
+    * Fixed font warning during report generation
+    * NanoVar no longer relies on HS-BLASTn (This would fixed multiple run errors)
+    * Suppressed keras tensorflow model warning
+    * Reworked DUP calling to increase accuracy (Previously INS miscalled as DUP)
+    * Added MAPQ score filter against alignments between with 0 < MAPQ < 30
+    * HTML report is now a standalone file
+    * ins_seq.fa is output by default, it contains the inserted sequences of all INS SVs
+    * Removed ">" in SVLEN for one-sided INS SVs
+    * Temporary removed option to run CNV through CopyCAD (work in progress)
+    * Removed progress spinner and modified stdout status reporting
+    * Output no longer produces total.vcf file, unless --debug specified
+    * genome.sizes removed from output
+    * Modified paired INV breakends size calculation to that of single INV breakend (coord2-coord1)
+    * INS size adjusted (Taking median INS size across reads, instead of largest size)
+
+
 Version 1.4.1 - Oct 8, 2021
     * Bump version for Bioconda build for various Python versions
 
@@ -18,7 +35,7 @@ Version 1.4.0 - Sept 1, 2021
     * Modified setup.py to state compatibility with python3.8
     * Fixed Numpy VisibleDeprecationWarning in nv_report.py
     * Added '--pickle' arguement for debugging purposes (Hidden option)
-    * Added '--archivefasta' arguement for debugging purposes (Hidden option
+    * Added '--archivefasta' arguement for debugging purposes (Hidden option)
     * Added '--blastout' arguement for debugging purposes (Hidden option)
 
 
