@@ -144,7 +144,8 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Checking integrity of input files - ', end='', flush=True)
+        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Checking integrity of input files - ', end='', flush=True)
         task = ''
         thread_spin = ''
 
@@ -311,7 +312,8 @@ def main():
     # Aligning using minimap2
     if input_type == 'raw':
         logging.info('Read alignment using minimap2')
-        print('Read mapping using minimap2 - ', end='', flush=True)
+        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Read mapping using minimap2 - ', end='', flush=True)
         mma = align_mm(ref_path, file_path, wk_dir, input_name, ref_name, threads_mm, mm, data_type, st)
         bam_path = mma[1]
         print('Done')
@@ -334,7 +336,8 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Analyzing read alignments and detecting SVs - ', end='', flush=True)
+        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Analyzing read alignments and detecting SVs - ', end='', flush=True)
     
     # Parse and detect SVs
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -362,7 +365,8 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Clustering SV breakends - ', end='', flush=True)
+        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Clustering SV breakends - ', end='', flush=True)
 
     # SV breakend clustering and extracting INS and INV SVs
     # run.cluster_extract()
@@ -408,14 +412,16 @@ def main():
 
     # Analyze TE
     # from nanovar.nv_te_analyzer import te_analyzer
+    print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Correcting DUP and detecting TE - ', end='', flush=True)
     pysam.faidx(os.path.join(wk_dir, 'temp1.fa'))
     run.dup_te_detect(ref_dir, threads, mm, st, data_type) #
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, sub_run.total_out, score_threshold, ref_dir, hsb, mdb, threads, debug)
     #index2te = te_analyzer(wk_dir, run.out_nn, run.total_out, [], score_threshold, ref_dir, hsb, mdb, threads, debug)
-
+    
     # Write parse2 and cluster intermediate files
     #run.write2file(add_out=sub_run.total_out)
     run.write2file(add_out=[])  #
+    print('Done')
 
     # Pickle objects
     if pickle_bool:
@@ -443,7 +449,9 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        print('Generating VCF files and report - ', end='', flush=True)
+        #now = datetime.now()
+        #now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Generating VCF files and report - ', end='', flush=True)
     
     # Generating VCF and HTML report
     # index2te = dict() # 
