@@ -22,8 +22,8 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import pysam
 import os
 import logging
-from nv_detect_algo import sv_detect
-from nv_parser import entry_parser, breakpoint_parser
+from .nv_detect_algo import sv_detect
+from .nv_parser import entry_parser, breakpoint_parser
 
 
 def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
