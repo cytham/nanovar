@@ -15,7 +15,7 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Accurately characterizes SVs using long sequencing reads (High SV recall and precision in simulation datasets, overall F1
  score >0.9)  
 * Characterizes six classes of SVs including novel-sequence insertion, deletion, inversion, tandem duplication, sequence
- transposition and translocation.  
+ transposition (TPO) and translocation (TRA).  
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype

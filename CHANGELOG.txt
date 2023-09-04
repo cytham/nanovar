@@ -8,6 +8,7 @@ Version 1.5.0 - Sept ?, 2023
     * Fixed font warning during report generation
     * NanoVar no longer relies on HS-BLASTn (This would fixed multiple run errors)
     * Suppressed keras tensorflow model warning
+    * Fixed nv_detect_algo import error due to Cython 3.0.2 Namespace update
     * Reworked DUP calling to increase accuracy (Previously INS miscalled as DUP)
     * Added MAPQ score filter against alignments between with 0 < MAPQ < 30
     * HTML report is now a standalone file
@@ -19,6 +20,11 @@ Version 1.5.0 - Sept ?, 2023
     * genome.sizes removed from output
     * Modified paired INV breakends size calculation to that of single INV breakend (coord2-coord1)
     * INS size adjusted (Taking median INS size across reads, instead of largest size)
+    * Simplified run status verbose
+    * Changed SVLEN placeholder for translocations and transpositions from '.' to 0.
+    * Changed translocation abbreviation from TLO to TRA
+    * Modified clustering from mean to median SV coordinates amongst reads
+    * Added NanoVar execution command into VCF header
 
 
 Version 1.4.1 - Oct 8, 2021

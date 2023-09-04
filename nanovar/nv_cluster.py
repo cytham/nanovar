@@ -251,22 +251,24 @@ def cluster(leftchrnamelist,
                 group.append(leftchrcoorlist[chrm][i])
                 groupnames.append(leftchrnamelist[chrm][i])
             else:
-                avgcoord = int(round(sum(group) / len(group), 0))
-                leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
+                # avgcoord = int(round(sum(group) / len(group), 0))
+                medcoord = int(median(group))
+                leftcluster2read[chrm + ':' + str(medcoord)] = sorted(set(y[:-2] for y in groupnames))
                 for read in sorted(set(groupnames)):
                     if read[:-2] not in read2cluster:
                         read2cluster[read[:-2]] = []
-                    read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'l')
+                    read2cluster[read[:-2]].append(chrm + ':' + str(medcoord) + 'l')
                 group = [leftchrcoorlist[chrm][i]]
                 groupnames = [leftchrnamelist[chrm][i]]
             last = leftchrcoorlist[chrm][i]
         if group:
-            avgcoord = int(round(sum(group) / len(group), 0))
-            leftcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
+            # avgcoord = int(round(sum(group) / len(group), 0))
+            medcoord = int(median(group))
+            leftcluster2read[chrm + ':' + str(medcoord)] = sorted(set(y[:-2] for y in groupnames))
             for read in sorted(set(groupnames)):
                 if read[:-2] not in read2cluster:
                     read2cluster[read[:-2]] = []
-                read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'l')
+                read2cluster[read[:-2]].append(chrm + ':' + str(medcoord) + 'l')
     
     # Right group clustering
     for chrm in rightchrnamelist:
@@ -279,22 +281,24 @@ def cluster(leftchrnamelist,
                 group.append(rightchrcoorlist[chrm][i])
                 groupnames.append(rightchrnamelist[chrm][i])
             else:
-                avgcoord = int(round(sum(group) / len(group), 0))
-                rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
+                # avgcoord = int(round(sum(group) / len(group), 0))
+                medcoord = int(median(group))
+                rightcluster2read[chrm + ':' + str(medcoord)] = sorted(set(y[:-2] for y in groupnames))
                 for read in sorted(set(groupnames)):
                     if read[:-2] not in read2cluster:
                         read2cluster[read[:-2]] = []
-                    read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'r')
+                    read2cluster[read[:-2]].append(chrm + ':' + str(medcoord) + 'r')
                 group = [rightchrcoorlist[chrm][i]]
                 groupnames = [rightchrnamelist[chrm][i]]
             last = rightchrcoorlist[chrm][i]
         if group:
-            avgcoord = int(round(sum(group) / len(group), 0))
-            rightcluster2read[chrm + ':' + str(avgcoord)] = sorted(set(y[:-2] for y in groupnames))
+            # avgcoord = int(round(sum(group) / len(group), 0))
+            medcoord = int(median(group))
+            rightcluster2read[chrm + ':' + str(medcoord)] = sorted(set(y[:-2] for y in groupnames))
             for read in sorted(set(groupnames)):
                 if read[:-2] not in read2cluster:
                     read2cluster[read[:-2]] = []
-                read2cluster[read[:-2]].append(chrm + ':' + str(avgcoord) + 'r')
+                read2cluster[read[:-2]].append(chrm + ':' + str(medcoord) + 'r')
     """
     - leftcluster2read or rightcluster2read: Dict, key=cluster, value=list of read_ids having the cluster
     - read2cluster: Dict, key=read_id, value=cluster

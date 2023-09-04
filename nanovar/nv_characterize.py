@@ -40,7 +40,7 @@ class VariantDetect:
 
     def __init__(self, wk_dir, bam, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
                  contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug,
-                 contig_omit, cnv):
+                 contig_omit, cnv, nv_cmd):
         self.dir = wk_dir
         self.bam = bam
         self.splitpct = splitpct
@@ -73,6 +73,7 @@ class VariantDetect:
         self.maps = 0
         self.seed = 0
         self.seed2 = 1
+        self.nv_cmd = nv_cmd
 
     def bam_parse_detect(self):
         random.seed(1)
@@ -197,7 +198,7 @@ class VariantDetect:
     def vcf_report(self):
         logging.info("Creating VCF")
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t, self.minlen, self.depth, self.index2te)
+                   self.homo_t, self.het_t, self.minlen, self.depth, self.index2te, self.nv_cmd)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)

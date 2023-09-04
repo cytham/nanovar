@@ -41,7 +41,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     fwd_fig = './fig'
     threshold = thres
     len_cap = 100000
-    num_header = len(contig_len_dict) + 26  # This has to adjusted according to number of headers in VCF
+    num_header = len(contig_len_dict) + 27  # This has to adjusted according to number of headers in VCF
     # vcf_path = os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name)
     vcf_path_pass = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name)
     vcf_data = open(vcf_path_pass, 'r').read().splitlines()
@@ -221,7 +221,7 @@ def sv_type_dist(svdict, fwd):
     fig.patch.set_facecolor('#f6f7f9')
     svnamedict = {"DEL": " Deletions", "INS": " Insertions",
                   "INV": " Inversions", "DUP": " TandemDups",
-                  "BND": " Breakends (TLO/TPO)"}
+                  "BND": " Breakends (TRA/TPO)"}
     label = []
     data = []
     for key in svdict:

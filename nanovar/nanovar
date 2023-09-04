@@ -71,6 +71,7 @@ def main():
     archivefasta = args.archivefasta
     # blastout = args.blastout
     blastout = 'blastoff'  #
+    nv_cmd = ' '.join(sys.argv)
 
     # Check model file
     if model_path is None:
@@ -160,7 +161,7 @@ def main():
                         datefmt='%d/%m/%Y %H:%M:%S')
     logging.info('Initialize NanoVar log file')
     logging.info('Version: NanoVar-%s' % __version__)
-    logging.info('Command: %s' % ' '.join(sys.argv))
+    logging.info('Command: %s' % nv_cmd)
 
     # Detect read or map file
     filename = os.path.basename(file_path)
@@ -342,7 +343,7 @@ def main():
     logging.info('Parsing BAM and detecting SVs')
     run = VariantDetect(wk_dir, bam_path, splitpct, minalign, filter_path, minlen, buff, model_path,
                         total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, mma[0],
-                        mincov, homo_t, het_t, debug, contig_omit, cnv)
+                        mincov, homo_t, het_t, debug, contig_omit, cnv, nv_cmd)
     run.bam_parse_detect()
     run.coverage_stats()
     print('Done')

@@ -28,7 +28,7 @@ from nanovar import __version__
 
 
 def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd, contig_len_dict, homo_t, het_t, minlen, depth,
-               index2te):
+               index2te, nv_cmd):
     rdata = nn_out
     # Calculating number of entries
     t = len(rdata)
@@ -40,8 +40,8 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
     read_path = os.path.abspath(read_path)
     vcf_total = open(os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name), 'w')
     vcf_pass = open(os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name), 'w')
-    add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth)
-    add_header(vcf_pass, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth)
+    add_header(vcf_total, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth, nv_cmd)
+    add_header(vcf_pass, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth, nv_cmd)
     tmpread = []
     out = []
     for i in k:
@@ -135,7 +135,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
                        filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Intra-Ins':
-            sv_len = '.'
+            sv_len = '0'
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
@@ -143,10 +143,10 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Intra-Ins(1)' or bp_name == 'Intra-Ins(2)':
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
@@ -174,7 +174,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'InterTx':
-            sv_len = '.'
+            sv_len = '0'
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
@@ -182,10 +182,10 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TLO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         else:
             raise Exception("Error: Unrecognised breakpoint name")
         tmpread = []
@@ -200,7 +200,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, blast_cmd,
 
 
 # Write VCF header
-def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth):
+def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_dict, thres, depth, nv_cmd):
     today = date.today()
     today_date = today.strftime("%d-%m-%Y")
     vcf_file.write('##fileformat=VCFv4.2\n')
@@ -208,6 +208,7 @@ def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_d
     vcf_file.write('##source=NanoVar-%s\n' % __version__)
     vcf_file.write('##source_reads=%s\n' % read_path)
     vcf_file.write('##reference=%s\n' % ref_path)
+    vcf_file.write('##command=%s\n' % nv_cmd)
     vcf_file.write('##mapping=%s\n' % blast_cmd)
     vcf_file.write('##phasing=none\n')
     vcf_file.write('##depth_of_coverage=%sX\n' % str(depth))
@@ -226,7 +227,7 @@ def add_header(vcf_file, read_path, ref_path, blast_cmd, read_name, contig_len_d
     vcf_file.write('##INFO=<ID=SR,Number=1,Type=Integer,Description="Number of supporting reads">\n')
     vcf_file.write('##INFO=<ID=NN,Number=1,Type=Float,Description="Neural network confidence probability">\n')
     vcf_file.write('##INFO=<ID=SV2,Number=1,Type=String,Description="BND SV assessment: TPO - Transposition, '
-                   'TLO - Translocation">\n')
+                   'TRA - Translocation">\n')
     vcf_file.write('##INFO=<ID=TE,Number=.,Type=String,Description="Identity of transposable element insertion">\n')
     vcf_file.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     vcf_file.write('##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">\n')
