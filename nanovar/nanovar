@@ -97,9 +97,9 @@ def main():
     # Check for required executables
     mm = check_exe(mm, 'minimap2')
     st = check_exe(st, 'samtools')
-    #mdb = check_exe(mdb, 'makeblastdb')
-    #wmk = check_exe(wmk, 'windowmasker')
-    #hsb = check_exe(hsb, 'hs-blastn')
+    # mdb = check_exe(mdb, 'makeblastdb')
+    # wmk = check_exe(wmk, 'windowmasker')
+    # hsb = check_exe(hsb, 'hs-blastn')
 
     # If additional CNV mode
     hg38_size_dict = {}
@@ -144,7 +144,6 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Checking integrity of input files - ', end='', flush=True)
         task = ''
         thread_spin = ''
@@ -312,7 +311,6 @@ def main():
     # Aligning using minimap2
     if input_type == 'raw':
         logging.info('Read alignment using minimap2')
-        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Read mapping using minimap2 - ', end='', flush=True)
         mma = align_mm(ref_path, file_path, wk_dir, input_name, ref_name, threads_mm, mm, data_type, st)
         bam_path = mma[1]
@@ -336,7 +334,6 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Analyzing read alignments and detecting SVs - ', end='', flush=True)
     
     # Parse and detect SVs
@@ -365,7 +362,6 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        # now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Clustering SV breakends - ', end='', flush=True)
 
     # SV breakend clustering and extracting INS and INV SVs
@@ -449,8 +445,6 @@ def main():
         # thread_spin.setDaemon(True)
         thread_spin.start()
     else:
-        #now = datetime.now()
-        #now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Generating VCF files and report - ', end='', flush=True)
     
     # Generating VCF and HTML report
