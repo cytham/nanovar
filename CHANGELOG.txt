@@ -25,6 +25,7 @@ Version 1.5.0 - Sept ?, 2023
     * Changed translocation abbreviation from TLO to TRA
     * Modified clustering from mean to median SV coordinates amongst reads
     * Added NanoVar execution command into VCF header
+    * Included svtype in clustering filter
 
 
 Version 1.4.1 - Oct 8, 2021
