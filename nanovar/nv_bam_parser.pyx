@@ -125,7 +125,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 # Parse entries and correct overlap alignments
                 subdata = entry_parser(temp1, contig_collect, ovlt)
                 for entry in subdata:
-                    total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                    # total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                    total_subdata.append(entry)
                     # Add to base coverage
                     basecov += int(entry.split('\t')[2])
                 # SV detection
@@ -166,7 +167,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             # Parse entries and correct overlap alignments
             subdata = entry_parser(temp1, contig_collect, ovlt)
             for entry in subdata:
-                total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                # total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                total_subdata.append(entry)
                 # Add to base coverage
                 basecov += int(entry.split('\t')[2])
             # SV detection
