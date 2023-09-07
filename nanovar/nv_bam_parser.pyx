@@ -270,8 +270,8 @@ def info_parse(qname, rname, readlen, qlen, flag, nm, total_score, qseg, sseg, d
     for i in range(nsegs):
         substart = sseg[i][0]
         substretch = sseg[i][1] - sseg[i][0]
-        # if substretch < minlen:
-        #     continue
+        if substretch < 20:
+            continue
         qstart, qstretch, strand = query_sign(qseg[i][0], qseg[i][1], flag, readlen)
         ndel = del_list[i]
         nins = ins_list[i]
