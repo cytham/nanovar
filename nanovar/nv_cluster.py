@@ -782,18 +782,18 @@ def intersection3(bed, clustid2reads, newdictnouniq, clustid2class):
         clustid = line.fields[7]
         ind = line.fields[9]
         read = line.fields[3]
-        if read not in newdictnouniq[clustid]:
+        if read not in newdictnouniq[int(clustid)]:
             norm_connect[clustid + '~' + ind].add(read)
     for clustid in clustid2reads:
         svtype = clustid2class[clustid]
         if svtype in ['Del', 'Inv', 'Inv2']:
-            norm_cov[clustid] = int(round((len(norm_connect[clustid + '~1']) + len(norm_connect[clustid + '~2']))/2, 0))
+            norm_cov[clustid] = int(round((len(norm_connect[str(clustid) + '~1']) + len(norm_connect[str(clustid) + '~2']))/2, 0))
         elif svtype == 'TDupl':
-            norm_cov[clustid] = len(norm_connect[clustid + '~1'].intersection(norm_connect[clustid + '~2']))
+            norm_cov[clustid] = len(norm_connect[str(clustid) + '~1'].intersection(norm_connect[str(clustid) + '~2']))
         elif svtype in ['Nov_Ins', 'bp_Nov_Ins']:
-            norm_cov[clustid] = len(norm_connect[clustid + '~1'])
+            norm_cov[clustid] = len(norm_connect[str(clustid) + '~1'])
         elif svtype in ['Intra-Ins2', 'Intra-Ins', 'Inter', 'Inter-Ins']:
-            norm_cov[clustid] = min(len(norm_connect[clustid + '~1']), len(norm_connect[clustid + '~2']))
+            norm_cov[clustid] = min(len(norm_connect[str(clustid) + '~1']), len(norm_connect[str(clustid) + '~2']))
         else:
             raise Exception('Error: SV type not recognised.')
     return norm_cov
