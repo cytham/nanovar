@@ -544,7 +544,7 @@ def single_alignment_check(subdata, splitpct, minalign):
 
 # Reduce mapping of multi-mapping reads
 def reduce_multi_map(subdata):
-    if len(subdata) > 6:
+    if len(subdata) > 10:
         sortdictlen = {}
         for line in subdata:
             sortdictlen[line] = int(line.split('\t')[6])
