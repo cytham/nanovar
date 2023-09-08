@@ -71,7 +71,8 @@ Keyword arguments:
         bed3 = bed3.sort()
 
         # Convert SV breakends to BED format
-        bed4 = svbed2(readteam, mainclass)
+        # bed4 = svbed2(readteam, mainclass)
+        bed4 = svbed2(clustid2reads, clustid2class, clustid2coord)
         bed4 = BedTool('\n'.join(bed4), from_string=True)
         bed4 = bed4.sort()
 
@@ -79,13 +80,14 @@ Keyword arguments:
         intersect = bed3.intersect(bed4, wa=True, wb=True)
 
         # Create a duplicated readteam dict where reads have their unique identifier removed
-        newdictnouniq = remove_uniq(readteam)
+        # newdictnouniq = remove_uniq(readteam)
+        newdictnouniq = remove_uniq(clustid2reads)
 
         # Parse intersection BED to discover breakend-opposing reads for each breakend
-        svnormalcov = intersection3(intersect, readteam, newdictnouniq, mainclass)
+        svnormalcov = intersection3(intersect, clustid2reads, newdictnouniq, clustid2class)
 
         # Output all information into a list of strings
-        output, seed = arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict, seed, ins_median_size)
+        output, seed = arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict, clustid2class, svsizedict, seed, clustid2ins_size)
         return output, seed + 1
 
 
@@ -624,16 +626,22 @@ def cluster(leftchrnamelist,
 def separate_cluster_type(reads1, reads2, classdict):
     intersect = sorted(set(reads1).intersection(reads2))
     cluster_class_dict = {}
+    remainder = []
     for read in intersect:
-        svtype = classdict[read]
-        if svtype[0:3] not in cluster_class_dict:  # Taking first 3 element of svtype (E.g. Inv2 -> Inv)
-            cluster_class_dict[svtype[0:3]] = [read]
+        svtype = classdict[read][0:3]  # Taking first 3 element of svtype (E.g. Inv2 -> Inv)
+        if svtype != 'bp_':
+            if svtype not in cluster_class_dict:  
+                cluster_class_dict[svtype] = [read]
+            else:
+                cluster_class_dict[svtype].append(read)
         else:
-            cluster_class_dict[svtype[0:3]].append(read)
+            remainder.append(read)
     _readlists = []
     for svtype in cluster_class_dict:
         if len(cluster_class_dict[svtype]) >=2:
             _readlists.append(cluster_class_dict[svtype])
+    for read in sorted(set(reads1).difference(reads2)) + sorted(set(reads2).difference(reads1)):
+        remainder.append(read)
     return _readlists, remainder
 
 def leadread(reads, svsizedict, classdict, hsb_switch):
@@ -751,68 +759,68 @@ def normalbed(subdata):
 
 
 # Create BED from SV breakends
-def svbed2(readteam, mainclass):
+def svbed2(clustid2reads, clustid2class, clustid2coord):
     totalsvbed = []
-    for clusters in readteam:
-        svtype = mainclass[clusters]
-        c = [x.strip('lr') for x in clusters.split('-')]
+    for clustid in clustid2reads:
+        svtype = clustid2class[clustid]
+        c = [x.strip('lr') for x in clustid2coord[clustid].split('-')]
         totalsvbed.append(c[0].split(':')[0] + '\t' + c[0].split(':')[1] + '\t' + str(int(c[0].split(':')[1]) + 1) + '\t' +
-                          clusters + '\t' + svtype + '\t' + '1')
+                          clustid + '\t' + svtype + '\t' + '1')
         if svtype in ['Nov_Ins', 'bp_Nov_Ins']:
             pass
         else:
             totalsvbed.append(c[1].split(':')[0] + '\t' + c[1].split(':')[1] + '\t' + str(int(c[1].split(':')[1]) + 1) + '\t' +
-                              clusters + '\t' + svtype + '\t' + '2')
+                              clustid + '\t' + svtype + '\t' + '2')
     return totalsvbed
 
 
 # Parse BED intersection output
-def intersection3(bed, readteam, newdictnouniq, mainclass):
+def intersection3(bed, clustid2reads, newdictnouniq, clustid2class):
     norm_connect = defaultdict(set)
     norm_cov = defaultdict(int)
     for line in bed:
-        clusters = line.fields[7]
+        clustid = line.fields[7]
         ind = line.fields[9]
         read = line.fields[3]
-        if read not in newdictnouniq[clusters]:
-            norm_connect[clusters + '~' + ind].add(read)
-    for clusters in readteam:
-        svtype = mainclass[clusters]
+        if read not in newdictnouniq[clustid]:
+            norm_connect[clustid + '~' + ind].add(read)
+    for clustid in clustid2reads:
+        svtype = clustid2class[clustid]
         if svtype in ['Del', 'Inv', 'Inv2']:
-            norm_cov[clusters] = int(round((len(norm_connect[clusters + '~1']) + len(norm_connect[clusters + '~2']))/2, 0))
+            norm_cov[clustid] = int(round((len(norm_connect[clustid + '~1']) + len(norm_connect[clustid + '~2']))/2, 0))
         elif svtype == 'TDupl':
-            norm_cov[clusters] = len(norm_connect[clusters + '~1'].intersection(norm_connect[clusters + '~2']))
+            norm_cov[clustid] = len(norm_connect[clustid + '~1'].intersection(norm_connect[clustid + '~2']))
         elif svtype in ['Nov_Ins', 'bp_Nov_Ins']:
-            norm_cov[clusters] = len(norm_connect[clusters + '~1'])
+            norm_cov[clustid] = len(norm_connect[clustid + '~1'])
         elif svtype in ['Intra-Ins2', 'Intra-Ins', 'Inter', 'Inter-Ins']:
-            norm_cov[clusters] = min(len(norm_connect[clusters + '~1']), len(norm_connect[clusters + '~2']))
+            norm_cov[clustid] = min(len(norm_connect[clustid + '~1']), len(norm_connect[clustid + '~2']))
         else:
             raise Exception('Error: SV type not recognised.')
     return norm_cov
 
 
 # Remove unique identifier from read name
-def remove_uniq(readteam):
+def remove_uniq(clustid2reads):
     newdictnouniq = {}
-    for clusters in readteam:
-        newdictnouniq[clusters] = set()
-        for read in readteam[clusters]:
-            newdictnouniq[clusters].add(read.rsplit('~', 1)[0])
+    for clustid in clustid2reads:
+        newdictnouniq[clustid] = set()
+        for read in clustid2reads[clustid]:
+            newdictnouniq[clustid].add(read.rsplit('~', 1)[0])
     return newdictnouniq
 
 
 # Parse info into output
-def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedict, seed, ins_median_size):
+def arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict, clustid2class, svsizedict, seed, clustid2ins_size):
     output = []
     n = seed
-    for clusters in readteam:
-        svtype = mainclass[clusters]
-        lcov = countcov(readteam[clusters])
-        bestread = readteam[clusters][0]
+    for clustid in clustid2reads:
+        svtype = clustid2class[clustid]
+        lcov = countcov(clustid2reads[clustid])
+        bestread = clustid2reads[clustid][0]
         # Filter 3
-        if mincov <= lcov <= maxovl and svnormalcov[clusters] <= maxovl:
+        if mincov <= lcov <= maxovl and svnormalcov[clustid] <= maxovl:
             if svtype in ['Inter', 'Inter-Ins']:
-                _cluster = clusterorder(clusters,
+                _cluster = clusterorder(clustid2coord[clustid],
                                         infodict[bestread].split('\t')[6].split('~')[1].split(':')[0],
                                         infodict[bestread].split('\t')[6].split('~')[1].split(':')[1],
                                         'Inter')
@@ -821,10 +829,10 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                     infodict[bestread].split('\t')[6].split('~')[0] +
                     '~' + _cluster.split('-')[0] + '~' + _cluster.split('-')[1] + '\t' +
                     '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                    ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                    ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
                 )
             elif svtype in ['Intra-Ins2', 'Intra-Ins']:
-                _cluster = clusterorder(clusters,
+                _cluster = clusterorder(clustid2coord[clustid],
                                         infodict[bestread].split('\t')[6].split('~')[1].split(':')[0],
                                         infodict[bestread].split('\t')[6].split('~')[1].split(':')[1].split('-')[0],
                                         'Intra')
@@ -835,33 +843,33 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                     infodict[bestread].split('\t')[6].split('~')[0] + '~' +
                     chrm_coord1 + '-' + coord2 + '\t' +
                     '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                    ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                    ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
                     )
             # Filter 3
-            elif svtype in ['Del'] and svsizedict[bestread] <= 200 and lcov < max(mincov, 2):  # minimally requires 2
-                continue
-            elif svtype in ['Nov_Ins', 'bp_Nov_Ins'] and ins_median_size[clusters] <= 200 and lcov < max(mincov, 2):  # minimally requires 2
-                continue
+            # elif svtype in ['Del'] and svsizedict[bestread] <= 200 and lcov < max(mincov, 2):  # minimally requires 2
+            #     continue
+            # elif svtype in ['Nov_Ins', 'bp_Nov_Ins'] and ins_median_size[clusters] <= 200 and lcov < max(mincov, 2):  # minimally requires 2
+            #     continue
             else:
-                if len(clusters.split('-')) == 1:
+                if len(clustid2coord[clustid].split('-')) == 1:
                     output.append(
-                        ins_size_mod(infodict[bestread].split('\t')[0:6], ins_median_size[clusters]) + '\tnv_SV' + str(n) + '-' +
-                        infodict[bestread].split('\t')[6].split('~')[0] + '~' + clusters.strip('lr') + '-' +
-                        str(int(clusters.strip('lr').split(':')[1]) + 1) + '\t' +
+                        ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' + clustid2coord[clustid].strip('lr') + '-' +
+                        str(int(clustid2coord[clustid].strip('lr').split(':')[1]) + 1) + '\t' +
                         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                        ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                        ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
                     )
-                elif len(clusters.split('-')) == 2:
-                    chrm = clusters.split('-')[0].split(':')[0]
-                    coord1 = str(min(int(clusters.split('-')[0].split(':')[1]), int(clusters.split('-')[1].split(':')[1])))
-                    coord2 = str(max(int(clusters.split('-')[0].split(':')[1]), int(clusters.split('-')[1].split(':')[1])))
+                elif len(clustid2coord[clustid].split('-')) == 2:
+                    chrm = clustid2coord[clustid].split('-')[0].split(':')[0]
+                    coord1 = str(min(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
+                    coord2 = str(max(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
                     if svtype == 'Nov_Ins':
                         output.append(
-                            ins_size_mod(infodict[bestread].split('\t')[0:6], ins_median_size[clusters]) + '\tnv_SV' + str(n) + '-' +
+                            ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
                             infodict[bestread].split('\t')[6].split('~')[0] + '~' +
                             chrm + ':' + coord1 + '-' + coord2 + '\t' +
                             '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
                         )
                     else:
                         output.append(
@@ -869,7 +877,7 @@ def arrange(svnormalcov, readteam, maxovl, mincov, infodict, mainclass, svsizedi
                             infodict[bestread].split('\t')[6].split('~')[0] + '~' +
                             chrm + ':' + coord1 + '-' + coord2 + '\t' +
                             '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(readteam[clusters])) + '\t' + str(svnormalcov[clusters])
+                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
                         )
                 else:
                     raise Exception('Error: Cluster name error')
