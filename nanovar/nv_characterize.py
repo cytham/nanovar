@@ -64,7 +64,7 @@ class VariantDetect:
         self.debug = debug
         self.cnv = cnv
         self.basecov, self.maxovl, self.depth, self.maxovl3 = 0, 0, 0, 0
-        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out = [], [], [], [], [], []
+        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out, self.beddata = [], [], [], [], [], []
         self.rlendict, self.parse_dict, self.index2te  = {}, {}, {}
         # HTML SV table entry limit
         self.num_limit = 1000
@@ -77,7 +77,7 @@ class VariantDetect:
 
     def bam_parse_detect(self):
         random.seed(1)
-        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out, self.seed \
+        self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out, self.seed, self.beddata \
             = bam_parse(self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
         writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
         writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
@@ -85,7 +85,7 @@ class VariantDetect:
 
     def coverage_stats(self):
         # Obtaining upper cov limit and depth of coverage
-        self.maxovl, self.depth, self.maxovl3 = ovl_upper(self.gsize, self.contig, self.basecov, self.total_subdata, self.dir)
+        self.maxovl, self.depth, self.maxovl3 = ovl_upper(self.gsize, self.contig, self.basecov, self.beddata, self.dir)
         # CNV detection using cytocad
         if self.cnv:
             cnv_out, tag = cad(self.total_subdata, self.depth, self.maxovl3, self.rname, ref_build=self.cnv, cov_plots=True,
@@ -106,7 +106,7 @@ class VariantDetect:
 
     def cluster_nn2(self):
         logging.info("Clustering SV breakends")
-        cluster_out, _ = sv_cluster(self.total_subdata, self.total_out, self.buff, self.maxovl, self.mincov,
+        cluster_out, _ = sv_cluster(self.beddata, self.total_out, self.buff, self.maxovl, self.mincov,
                                    self.contig, True, self.seed2)
         logging.info("Neural network inference")
         if cluster_out:
