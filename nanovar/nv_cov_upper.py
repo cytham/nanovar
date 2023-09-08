@@ -101,7 +101,7 @@ def normalbed(beddata):
         # coord1 = int(line.split('\t')[1])
         # coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2])
         # totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
-        totalbed.append(line[0] + '\t' + line[1] + '\t' + line[2] + '\t' + line[3])
+        totalbed.append(line[0] + '\t' + str(line[1]) + '\t' + str(line[2]) + '\t' + line[3])
     bed_str = '\n'.join(totalbed)
     return bed_str
 
