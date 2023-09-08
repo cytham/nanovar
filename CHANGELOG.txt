@@ -4,7 +4,7 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.5.0 - Sept ?, 2023
+Version 1.5.0 - Sept 8, 2023
     * Fixed font warning during report generation
     * NanoVar no longer relies on HS-BLASTn (This would fixed multiple run errors)
     * Suppressed keras tensorflow model warning
@@ -26,6 +26,9 @@ Version 1.5.0 - Sept ?, 2023
     * Modified clustering from mean to median SV coordinates amongst reads
     * Added NanoVar execution command into VCF header
     * Included svtype in clustering filter
+    * Improved DUP calling by sequence mapping
+    * Improved SV genotyping
+    * Improved phasing of SVs sharing the same coordinates
 
 
 Version 1.4.1 - Oct 8, 2021
