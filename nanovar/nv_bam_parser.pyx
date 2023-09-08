@@ -48,7 +48,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     seed = 0
     basecov = 0
     ovlt = 0.9  # Set overlap tolerance
-    sig_index = list(range(0, 20, 2))
+    sig_index = list(range(0, 40, 2))
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
     fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
     beddata = []
