@@ -110,8 +110,8 @@ Default score 1.0 was estimated from simulated analysis. """)
     parser.add_argument("--debug", action='store_true',
                         help="run in debug mode")
 
-    parser.add_argument("--force", action='store_true',
-                        help="run full pipeline (i.e. do not skip index generation)")
+    # parser.add_argument("--force", action='store_true',
+    #                     help="run full pipeline (i.e. do not skip index generation)")
 
     parser.add_argument("-v", "--version", action='version',
                         version=__version__,
@@ -133,14 +133,14 @@ Default score 1.0 was estimated from simulated analysis. """)
     parser.add_argument("--st", type=str, metavar="path",
                         help="specify path to 'samtools' executable")
 
-    parser.add_argument("--mdb", type=str, metavar="path",
-                        help="specify path to 'makeblastdb' executable")
+    # parser.add_argument("--mdb", type=str, metavar="path",
+    #                     help="specify path to 'makeblastdb' executable")
 
-    parser.add_argument("--wmk", type=str, metavar="path",
-                        help="specify path to 'windowmasker' executable")
+    # parser.add_argument("--wmk", type=str, metavar="path",
+    #                     help="specify path to 'windowmasker' executable")
 
-    parser.add_argument("--hsb", type=str, metavar="path",
-                        help="specify path to 'hs-blastn' executable")
+    # parser.add_argument("--hsb", type=str, metavar="path",
+    #                     help="specify path to 'hs-blastn' executable")
 
     parser.add_argument("--pickle", action='store_true',
                         help=argparse.SUPPRESS)

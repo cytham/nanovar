@@ -31,9 +31,9 @@ from scipy.interpolate import make_interp_spline, BSpline
 
 
 # Generate upper overlap limit, depth of coverage, and coverage curve plot
-def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
+def ovl_upper(total_gsize, contig_len_dict, basecov, beddata, wk_dir):
     # matplotlib.use('Agg')
-    bed_str = normalbed(subdata)
+    bed_str = normalbed(beddata)
     bed = BedTool(bed_str, from_string=True)
     bed = bed.sort()
     n = ngenerate(total_gsize)
@@ -61,7 +61,11 @@ def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
     med = np.median(data2)
     medad = mad(data2)
     curve(data2, n, round((medad*6) + med, 0), wk_dir)
-    depth = round(float(basecov)/total_gsize, 2)
+    # Ignore 0 depth regions
+    depth = round(np.mean(data), 2)
+    # depth = round(float(basecov)/total_gsize, 2)
+    med = np.median(data) #
+    medad = mad(data) #
     maxovl = max(round((medad * 4) + med, 1), 10)  # minimum overlap threshold is set at 10
     maxovl3 = max(round((medad * 3) + med, 1), 10)
     # me = np.mean(data2)
@@ -90,13 +94,14 @@ def ngenerate(gsize):
         return int(gsize*0.9)
 
 
-# Function to generate bed file from subdata
-def normalbed(subdata):
+# Function to generate bed file from beddata
+def normalbed(beddata):
     totalbed = []
-    for line in subdata:
-        coord1 = int(line.split('\t')[1])
-        coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2])
-        totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
+    for line in beddata:
+        # coord1 = int(line.split('\t')[1])
+        # coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2])
+        # totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
+        totalbed.append(line[0] + '\t' + str(line[1]) + '\t' + str(line[2]) + '\t' + line[3])
     bed_str = '\n'.join(totalbed)
     return bed_str
 
@@ -123,7 +128,7 @@ def curve(data, n, upper_limit, wk_dir):
     spl = make_interp_spline(c, y)
     smooth = spl(xnew)
     params = {'axes.labelsize': 14, 'axes.titlesize': 17, 'legend.fontsize': 10, 'xtick.labelsize': 12, 'ytick.labelsize': 12,
-              'font.family': 'Arial, Helvetica, sans-serif'}
+              'font.family': 'sans-serif'}
     matplotlib.rcParams.update(params)
     fig = plt.figure(figsize=(8, 6))
     fig.patch.set_facecolor('#f6f7f9')

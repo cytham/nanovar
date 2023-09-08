@@ -22,8 +22,8 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import pysam
 import os
 import logging
-from nv_detect_algo import sv_detect
-from nv_parser import entry_parser, breakpoint_parser
+from .nv_detect_algo import sv_detect
+from .nv_parser import entry_parser, breakpoint_parser
 
 
 def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
@@ -34,7 +34,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         int total_score
         str qname
         str rname
-        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out
+        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out, beddata
         bint adv
         object seg
         int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
@@ -48,16 +48,21 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     seed = 0
     basecov = 0
     ovlt = 0.9  # Set overlap tolerance
-    sig_index = [0, 2, 4]
+    sig_index = list(range(0, 40, 2))
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
     fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
+    beddata = []
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
         if flag == 4:
             fasta2.write('>' + qname + '\n' + seg.query_sequence + '\n')
             fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
-            rlendict[qname] = len(seg.query_sequence)
+            # rlendict[qname] = len(seg.query_sequence)
+            continue
+        elif flag in (256, 272):  # Skip secondary alignments but save fasta if not done yet
+            continue
+        if seg.mapping_quality > 0 and seg.mapping_quality < 30:
             continue
         rname = seg.reference_name
         readlen = seg.infer_read_length()
@@ -68,6 +73,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         total_score = seg.get_tag('AS')
         cigar_tup = seg.cigartuples
         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
+        beddata.append([rname, rstart, rend, qname])  # 0, 16, 2048, 2064
         if flag in (0, 16):
             try:
                 if repeat_dict[qname]:
@@ -76,7 +82,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 repeat_dict[qname] = ''
                 fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
                 rlendict[qname] = readlen
-        try:
+        try:  # Save data for flags 0, 16, 2048, 2064
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
         except KeyError:
@@ -112,15 +118,17 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 qseg = aln[10]
                 sseg = aln[11]
                 del_list = aln[12]
-                ins_list = aln[13]
+                ins_list = aln[13]     
                 total_lines, contig_collect = info_parse(qname, rname, readlen, qlen, flag, nm, total_score, qseg, sseg,
                 del_list, ins_list, minalign)
+                contig_collect = sorted(set(contig_collect))
                 lines_sort = sorted(sorted(total_lines, key=lambda x: x[1], reverse=True), key=lambda y: y[0])
                 temp1 = [tup[2] for tup in lines_sort]
                 # Parse entries and correct overlap alignments
                 subdata = entry_parser(temp1, contig_collect, ovlt)
                 for entry in subdata:
-                    total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                    # total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                    total_subdata.append(entry)
                     # Add to base coverage
                     basecov += int(entry.split('\t')[2])
                 # SV detection
@@ -161,7 +169,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             # Parse entries and correct overlap alignments
             subdata = entry_parser(temp1, contig_collect, ovlt)
             for entry in subdata:
-                total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                # total_subdata.append('\t'.join(entry.split('\t')[0:5]))
+                total_subdata.append(entry)
                 # Add to base coverage
                 basecov += int(entry.split('\t')[2])
             # SV detection
@@ -176,7 +185,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 total_out.extend(final)
                 for i in final:
                     parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
-    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed
+    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed, beddata
 
 
 # Analyze CIGAR for Indels in segment and return read advancement call
@@ -263,7 +272,7 @@ def info_parse(qname, rname, readlen, qlen, flag, nm, total_score, qseg, sseg, d
     for i in range(nsegs):
         substart = sseg[i][0]
         substretch = sseg[i][1] - sseg[i][0]
-        if substretch < minlen:
+        if substretch < 20:
             continue
         qstart, qstretch, strand = query_sign(qseg[i][0], qseg[i][1], flag, readlen)
         ndel = del_list[i]

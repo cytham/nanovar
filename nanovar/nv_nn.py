@@ -38,7 +38,7 @@ def inference(cluster, parse, model):
         tmpkey.append(key)
     readarray = np.array(tmp, dtype=np.float64)
     nnmodel = load_model(model, compile=False)
-    predictions = nnmodel.predict(readarray)
+    predictions = nnmodel.predict(readarray, verbose=0)
     predlist = [float(x[0]) for x in predictions]
     probdict = {}
     for i in range(len(tmpkey)):
@@ -46,8 +46,9 @@ def inference(cluster, parse, model):
     nn_out = []
     for i in cluster:
         finalp = finalprob(i.split('\t')[8], i.split('\t')[11], probdict)
-        nn_out.append(i + '\t' + str(np.tanh(0.4 * float(odict[i.split('\t')[8]])) * finalp * readratiofilter(
-            normalcovratiodict[i.split('\t')[8]], normalcov[i.split('\t')[8]])))  # * nmapchrfilter(nmapdict[i.split('\t')[8]])))
+        corrected_p = str(round(np.tanh(0.4 * float(odict[i.split('\t')[8]])) * finalp * readratiofilter(
+            normalcovratiodict[i.split('\t')[8]], normalcov[i.split('\t')[8]]), 4))
+        nn_out.append(i + '\t' + corrected_p)  # * nmapchrfilter(nmapdict[i.split('\t')[8]])))
         # tanh(0.4B)*P where B = no. of breakend supporting reads and P = average confidence probability of breakend
         # This function alters output probability based on number of breakend supporting reads.
         # Visualize on fooplot.com
