@@ -558,40 +558,40 @@ def cluster(leftchrnamelist,
                                     if read not in pastbps:
                                         readlist.append(read)
                                         pastbps[read] = 1
-                                else:
-                                    if main == 'Del':
-                                        if classdict[read] in ['Del']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    elif main in ['Intra-Ins', 'Intra-Ins2']:
-                                        if classdict[read] in ['Nov_Ins', 'Intra-Ins', 'Intra-Ins2']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    elif main in ['Inter', 'Inter-Ins']:
-                                        if classdict[read] in ['Nov_Ins', 'Inter', 'Inter-Ins']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    elif main in ['Inv', 'Inv2']:
-                                        if classdict[read] in ['Nov_Ins', 'Inv', 'Inv2']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    elif main in 'TDupl':
-                                        if classdict[read] in ['Nov_Ins', 'TDupl']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    elif main == 'Nov_Ins':
-                                        if classdict[read] in ['Intra-Ins', 'Intra-Ins2', 'Inter', 'Inter-Ins', 'TDupl']:
-                                            if read not in pastbps:
-                                                readlist.append(read)
-                                                pastbps[read] = 1
-                                    else:
-                                        raise Exception('Error: Main SV type in cluster %s with lead %s is not recognised' %
-                                                        ((coord+coord2), lead))
+                                # else:
+                                #     if main == 'Del':
+                                #         if classdict[read] in ['Del']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     elif main in ['Intra-Ins', 'Intra-Ins2']:
+                                #         if classdict[read] in ['Nov_Ins', 'Intra-Ins', 'Intra-Ins2']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     elif main in ['Inter', 'Inter-Ins']:
+                                #         if classdict[read] in ['Nov_Ins', 'Inter', 'Inter-Ins']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     elif main in ['Inv', 'Inv2']:
+                                #         if classdict[read] in ['Nov_Ins', 'Inv', 'Inv2']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     elif main in 'TDupl':
+                                #         if classdict[read] in ['Nov_Ins', 'TDupl']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     elif main == 'Nov_Ins':
+                                #         if classdict[read] in ['Intra-Ins', 'Intra-Ins2', 'Inter', 'Inter-Ins', 'TDupl']:
+                                #             if read not in pastbps:
+                                #                 readlist.append(read)
+                                #                 pastbps[read] = 1
+                                #     else:
+                                #         raise Exception('Error: Main SV type in cluster %s with lead %s is not recognised' %
+                                #                         ((coord+coord2), lead))
                             if main == 'Nov_Ins':
                                 avg_coord = coord.split(':')[0] + ':' + \
                                             str(int(round((int(coord.split(':')[1]) + int(coord2.split(':')[1])) / 2, 0)))
