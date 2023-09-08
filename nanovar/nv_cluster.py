@@ -765,12 +765,12 @@ def svbed2(clustid2reads, clustid2class, clustid2coord):
         svtype = clustid2class[clustid]
         c = [x.strip('lr') for x in clustid2coord[clustid].split('-')]
         totalsvbed.append(c[0].split(':')[0] + '\t' + c[0].split(':')[1] + '\t' + str(int(c[0].split(':')[1]) + 1) + '\t' +
-                          clustid + '\t' + svtype + '\t' + '1')
+                          str(clustid) + '\t' + svtype + '\t' + '1')
         if svtype in ['Nov_Ins', 'bp_Nov_Ins']:
             pass
         else:
             totalsvbed.append(c[1].split(':')[0] + '\t' + c[1].split(':')[1] + '\t' + str(int(c[1].split(':')[1]) + 1) + '\t' +
-                              clustid + '\t' + svtype + '\t' + '2')
+                              str(clustid) + '\t' + svtype + '\t' + '2')
     return totalsvbed
 
 
