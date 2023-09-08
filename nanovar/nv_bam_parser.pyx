@@ -34,7 +34,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         int total_score
         str qname
         str rname
-        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out
+        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out, beddata
         bint adv
         object seg
         int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
@@ -51,6 +51,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     sig_index = [0, 2, 4, 6, 8]
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
     fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
+    beddata = []
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
@@ -72,6 +73,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         total_score = seg.get_tag('AS')
         cigar_tup = seg.cigartuples
         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
+        beddata.append([rname, rstart, rend, qname])  # 0, 16, 2048, 2064
         if flag in (0, 16):
             try:
                 if repeat_dict[qname]:
@@ -183,7 +185,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 total_out.extend(final)
                 for i in final:
                     parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
-    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed
+    return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed, beddata
 
 
 # Analyze CIGAR for Indels in segment and return read advancement call
