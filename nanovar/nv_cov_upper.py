@@ -31,9 +31,9 @@ from scipy.interpolate import make_interp_spline, BSpline
 
 
 # Generate upper overlap limit, depth of coverage, and coverage curve plot
-def ovl_upper(total_gsize, contig_len_dict, basecov, subdata, wk_dir):
+def ovl_upper(total_gsize, contig_len_dict, basecov, beddata, wk_dir):
     # matplotlib.use('Agg')
-    bed_str = normalbed(subdata)
+    bed_str = normalbed(beddata)
     bed = BedTool(bed_str, from_string=True)
     bed = bed.sort()
     n = ngenerate(total_gsize)
@@ -94,13 +94,14 @@ def ngenerate(gsize):
         return int(gsize*0.9)
 
 
-# Function to generate bed file from subdata
-def normalbed(subdata):
+# Function to generate bed file from beddata
+def normalbed(beddata):
     totalbed = []
-    for line in subdata:
-        coord1 = int(line.split('\t')[1])
-        coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2])
-        totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
+    for line in beddata:
+        # coord1 = int(line.split('\t')[1])
+        # coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2])
+        # totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
+        totalbed.append(line[0] + '\t' + line[1] + '\t' + line[2] + '\t' + line[3])
     bed_str = '\n'.join(totalbed)
     return bed_str
 
