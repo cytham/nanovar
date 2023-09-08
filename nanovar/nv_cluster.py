@@ -25,7 +25,7 @@ from statistics import median
 
 # SV clustering main function
 def sv_cluster(
-        subdata,
+        beddata,
         parse,
         buf,
         maxovl,
@@ -37,7 +37,7 @@ def sv_cluster(
     """Returns a dictionary of clusters to SV breakends (mm) or list of clustered SV breakends in strings (hsb)
 
 Keyword arguments:
-- subdata: BED information for all reads in input
+- beddata: BED information for all reads in input
 - parse: parse data from breakpoint_parser
 - buf: coordinate clustering buffer in base pairs
 - maxovl: maximum number of read overlap allowed for breakend-supporting or opposing- reads
@@ -65,8 +65,8 @@ Keyword arguments:
                                                                                                                       mincov
                                                                                                                       )
 
-        # Convert subdata to BED format
-        bed3 = normalbed(subdata)
+        # Convert beddata to BED format
+        bed3 = normalbed(beddata)
         bed3 = BedTool('\n'.join(bed3), from_string=True)
         bed3 = bed3.sort()
 
@@ -741,21 +741,19 @@ def mainclasssv(reads, classdict, hsb_switch):
     return mainsvclass
 
 
-# Function to generate BED from subdata
-def normalbed(subdata):
+# Function to generate BED from beddata
+def normalbed(beddata):
     totalbed = []
     len_buf = 100  # Arbituary length deduction buffer for normal reads,
-    for line in subdata:
-        if int(line.split('\t')[1]) > 200:  # only allow len_buf if read start is 200 bp away from contig start
-            coord1 = int(line.split('\t')[1]) + len_buf
+    for line in beddata:
+        if int(line[1]) > 200:  # only allow len_buf if read start is 200 bp away from contig start
+            coord1 = int(line[1]) + len_buf
         else:
-            coord1 = int(line.split('\t')[1])
+            coord1 = int(line[1])
         # note that coord2 might be close to contig end but cannot be adjusted as in coord1 due to unknown contig length.
-        coord2 = int(line.split('\t')[1]) + int(line.split('\t')[2]) - len_buf
+        coord2 = int(line[2]) - len_buf
         if coord2 - coord1 > 0:
-            totalbed.append(line.split('\t')[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line.split('\t')[4])
-        else:
-            pass
+            totalbed.append(line[0] + '\t' + str(coord1) + '\t' + str(coord2) + '\t' + line[3])
     return totalbed
 
 
