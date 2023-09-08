@@ -64,7 +64,7 @@ class VariantDetect:
         self.debug = debug
         self.cnv = cnv
         self.basecov, self.maxovl, self.depth, self.maxovl3 = 0, 0, 0, 0
-        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out, self.beddata = [], [], [], [], [], []
+        self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out, self.beddata = [], [], [], [], [], [], []
         self.rlendict, self.parse_dict, self.index2te  = {}, {}, {}
         # HTML SV table entry limit
         self.num_limit = 1000
