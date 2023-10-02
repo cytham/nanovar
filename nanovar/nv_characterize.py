@@ -32,8 +32,8 @@ from nanovar.nv_cov_upper import ovl_upper
 from nanovar.nv_vcf import create_vcf
 from nanovar.nv_report import create_report
 from nanovar.nv_dup_te_detect import dup_te_analyzer
-from cytocad.change_detection import cad
-from cytocad.ideogram import tagore_wrapper
+#from cytocad.change_detection import cad
+#from cytocad.ideogram import tagore_wrapper
 
 
 class VariantDetect:
