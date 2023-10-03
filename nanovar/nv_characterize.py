@@ -106,7 +106,10 @@ class VariantDetect:
 
     def cluster_nn2(self):
         logging.info("Clustering SV breakends")
-        cluster_out, _ = sv_cluster(self.beddata, self.total_out, self.buff, self.maxovl, self.mincov,
+        # cluster_out, _ = sv_cluster(self.beddata, self.total_out, self.buff, self.maxovl, self.mincov,
+        #                            self.contig, True, self.seed2)
+        # Removed maxovl filter
+        cluster_out, _ = sv_cluster(self.beddata, self.total_out, self.buff, 1000000, self.mincov,
                                    self.contig, True, self.seed2)
         logging.info("Neural network inference")
         if cluster_out:
