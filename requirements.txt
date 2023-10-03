@@ -53,6 +53,6 @@ tensorflow-estimator==2.13.0
 tensorflow-io-gcs-filesystem==0.33.0
 termcolor==2.3.0
 typing_extensions==4.5.0
-urllib3==1.26.16
+urllib3==1.26.17
 Werkzeug==2.3.7
 wrapt==1.15.0
