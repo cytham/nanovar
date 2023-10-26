@@ -106,23 +106,23 @@ def main():
     hg38_size_dict = {}
     if cnv:
         raise Exception("Error: CNV module presently not available on this version. Please remove '--cnv' option. Sorry, we are actively improving.")
-        # Check CytoCAD
-        try:
-            import cytocad
-            data_dir = os.path.join(os.path.dirname(cytocad.__file__), 'data')
-            hg38_size_path = os.path.join(data_dir, 'hg38_sizes_main.bed')
-            with open(hg38_size_path) as f:
-                for bed in f:
-                    line = bed.split('\t')
-                    hg38_size_dict[line[0]] = int(line[2])
-        except ImportError:
-            raise Exception("Error: cytocad module not found, please install CytoCAD - https://github.com/cytham/cytocad")
-        # Check tagore and rsvg
-        _ = check_exe(None, 'tagore')
-        _ = check_exe(None, 'rsvg-convert')
-        # Check hg38 build input
-        if cnv != 'hg38':
-            raise Exception("Error: Reference genome build %s is not recognised. CytoCAD only supports build hg38." % cnv)
+        # # Check CytoCAD
+        # try:
+        #     import cytocad
+        #     data_dir = os.path.join(os.path.dirname(cytocad.__file__), 'data')
+        #     hg38_size_path = os.path.join(data_dir, 'hg38_sizes_main.bed')
+        #     with open(hg38_size_path) as f:
+        #         for bed in f:
+        #             line = bed.split('\t')
+        #             hg38_size_dict[line[0]] = int(line[2])
+        # except ImportError:
+        #     raise Exception("Error: cytocad module not found, please install CytoCAD - https://github.com/cytham/cytocad")
+        # # Check tagore and rsvg
+        # _ = check_exe(None, 'tagore')
+        # _ = check_exe(None, 'rsvg-convert')
+        # # Check hg38 build input
+        # if cnv != 'hg38':
+        #     raise Exception("Error: Reference genome build %s is not recognised. CytoCAD only supports build hg38." % cnv)
 
     # Observe verbosity
     if quiet:
