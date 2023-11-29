@@ -445,7 +445,7 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     if leader == '':
         raise Exception("Error: Main SV class not found")
     if mainsvclass == 'Nov_Ins':
-        med_size = median(sv_sizes)
+        med_size = int(median(sv_sizes))
     else:
         med_size = 0
     return leader, mainsvclass, med_size
@@ -466,7 +466,7 @@ def leadread_bp(reads, svsizedict, classdict):
             break
     if leader == '':
         raise Exception("Error: Main SV class not found for reads %s" % ','.join(reads))
-    med_size = median(sv_sizes)
+    med_size = int(median(sv_sizes))
     return leader, mainsvclass, med_size
 
 
