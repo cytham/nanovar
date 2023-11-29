@@ -78,7 +78,6 @@ Keyword arguments:
 
         # Intersect all read regions to SV breakends
         intersect = bed3.intersect(bed4, wa=True, wb=True)
-        intersect.saveas('intersect_debug.bed')
 
         # Create a duplicated readteam dict where reads have their unique identifier removed
         # newdictnouniq = remove_uniq(readteam)
