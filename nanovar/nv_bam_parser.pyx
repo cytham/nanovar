@@ -74,7 +74,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         cigar_tup = seg.cigartuples
         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
         beddata.append([rname, rstart, rend, qname])  # 0, 16, 2048, 2064
-        if flag in (0, 16):
+        if flag in (0, 16, 2048, 2064):
             try:
                 if repeat_dict[qname]:
                     pass
