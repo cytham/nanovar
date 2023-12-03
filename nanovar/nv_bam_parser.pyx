@@ -34,7 +34,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         int total_score
         str qname
         str rname
-        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out, beddata
+        list qseg, sseg, del_list, ins_list, cigar_tup, total_subdata, total_lines, contig_collect, total_out, sig_index, detect_out, beddata, add_sup_seq
         bint adv
         object seg
         int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
@@ -45,6 +45,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         dict parse_dict = {}
         dict gapdict = {}
         dict fail_qual_seq = {}
+        dict fail_qual_len = {}
     pysam.set_verbosity(save)  # Revert verbosity level
     seed = 0
     basecov = 0
@@ -53,6 +54,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
     fasta = open(os.path.join(wk_dir, 'temp1.fa'), 'w')
     fasta2 = open(os.path.join(wk_dir, 'temp2.fa'), 'w')
     beddata = []
+    add_sup_seq = []
     for seg in sam:
         flag = seg.flag
         qname = seg.query_name
@@ -66,6 +68,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         if seg.mapping_quality > 0 and seg.mapping_quality < 30:
             if flag in (0, 16):
                 fail_qual_seq[qname] = seg.query_sequence
+                fail_qual_len[qname] = seg.infer_read_length()
             continue
         rname = seg.reference_name
         readlen = seg.infer_read_length()
@@ -90,12 +93,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 if repeat_dict[qname]:
                     pass
             except KeyError:
-                try:
-                    repeat_dict[qname] = ''
-                    fasta.write('>' + qname + '\n' + fail_qual_seq[qname] + '\n')
-                    rlendict[qname] = readlen
-                except KeyError:  # if no primary alignment recorded yet, discard alignment
-                    continue
+                add_sup_seq.append(qname)
         try:  # Save data for flags 0, 16, 2048, 2064
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
@@ -103,6 +101,14 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             main_dict[qname] = []
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
+    for sup in add_sup_seq:
+        try:
+            if repeat_dict[sup]:
+                pass
+        except KeyError:
+            repeat_dict[sup] = ''
+            fasta.write('>' + qname + '\n' + fail_qual_seq[sup] + '\n')
+            rlendict[sup] = fail_qual_len[sup] 
     fasta.close()
     fasta2.close()
     total_subdata, total_lines, contig_collect, total_out, detect_out = [], [], [], [], []
