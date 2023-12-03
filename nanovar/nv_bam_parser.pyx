@@ -44,6 +44,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         dict main_dict = {}
         dict parse_dict = {}
         dict gapdict = {}
+        dict fail_qual_seq = {}
     pysam.set_verbosity(save)  # Revert verbosity level
     seed = 0
     basecov = 0
@@ -63,6 +64,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         elif flag in (256, 272):  # Skip secondary alignments but save fasta if not done yet
             continue
         if seg.mapping_quality > 0 and seg.mapping_quality < 30:
+            if flag in (0, 16):
+                fail_qual_seq[qname] = seg.query_sequence
             continue
         rname = seg.reference_name
         readlen = seg.infer_read_length()
@@ -74,7 +77,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         cigar_tup = seg.cigartuples
         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
         beddata.append([rname, rstart, rend, qname])  # 0, 16, 2048, 2064
-        if flag in (0, 16, 2048, 2064):
+        if flag in (0, 16):
             try:
                 if repeat_dict[qname]:
                     pass
@@ -82,6 +85,17 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
                 repeat_dict[qname] = ''
                 fasta.write('>' + qname + '\n' + seg.query_sequence + '\n')
                 rlendict[qname] = readlen
+        elif flag in (2048, 2064):
+            try:
+                if repeat_dict[qname]:
+                    pass
+            except KeyError:
+                try:
+                    repeat_dict[qname] = ''
+                    fasta.write('>' + qname + '\n' + fail_qual_seq[qname] + '\n')
+                    rlendict[qname] = readlen
+                except KeyError:  # if no primary alignment recorded yet, discard alignment
+                    continue
         try:  # Save data for flags 0, 16, 2048, 2064
             main_dict[qname].append((adv, qname, rname, rstart, rend, readlen, qlen, flag, nm, total_score, qseg, sseg, del_list,
             ins_list))
