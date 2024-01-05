@@ -4,7 +4,7 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.5.1 - Dec *, 2023
+Version 1.5.1 - Jan 5, 2024
     * BND SVs are now represented as one entry in VCF
     * BND SVs now has an additional INFO attribute, CHR2, that records second chromosome name of BND
     * Fixed cytocad import bug
