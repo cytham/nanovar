@@ -48,7 +48,7 @@ def main():
     data_type = args.data_type
     genome_filter = args.filter_bed
     cnv = args.cnv
-    annnotate_ins = args.anno_ins
+    annotate_ins = args.annotate_ins
     minlen = args.minlen
     splitpct = args.splitpct
     minalign = args.minalign
@@ -106,8 +106,8 @@ def main():
     # wmk = check_exe(wmk, 'windowmasker')
     # hsb = check_exe(hsb, 'hs-blastn')
 
-    # If annotating ins with NanoINSight
-    if annnotate_ins:
+    # Pre-check if annotating INS with NanoINSight
+    if annotate_ins:
         nanoinsight.check_args(species)
         mafft_exe = nanoinsight.check_exe(ma, 'mafft')
         repmask_exe = nanoinsight.check_exe(rm, 'RepeatMasker')
