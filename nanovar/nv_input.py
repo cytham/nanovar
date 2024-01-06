@@ -71,6 +71,9 @@ pacbio-ccs - Pacific Biosciences CCS""")
 reference genome filter (i.e. hg38, hg19, mm10) or provide full 
 path to own BED file.""")
 
+    parser.add_argument("--annotate_ins", action='store_true',
+                        help="annotate INS SVs using NanoINSight")
+
     parser.add_argument("-c", "--mincov", type=int, metavar="int",
                         default=2,
                         help="minimum number of reads required to call a breakend [2]")
