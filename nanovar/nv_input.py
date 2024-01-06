@@ -73,8 +73,8 @@ path to own BED file.""")
 
     parser.add_argument("--annotate_ins", type=str, metavar="str",
                         default=None,
-                        help="""enable annotation of INS with NanoINSight 
-and specifying species of sample [None]
+                        help="""enable annotation of INS with NanoINSight and 
+specifying species of sample [None]
 Currently supported species are:
 'human', 'mouse', and 'rattus'.
 """)
