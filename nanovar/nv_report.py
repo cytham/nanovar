@@ -181,9 +181,9 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     if lcovlist:
         mean_cov = sum(lcovlist)/len(lcovlist)
         buffer = 10
-        max_cov = max(mean_cov + buffer, 10)
+        mcov = max(mean_cov + buffer, 10)
     else:
-        max_cov = 10
+        mcov = 10
     ax.scatter(lcovlist, scorelist, c='#3f5d7d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
     ax.annotate("Threshold=" + str(threshold), xy=(mcov - mcov/5, threshold+0.2))
