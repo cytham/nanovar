@@ -468,6 +468,7 @@ def main():
     # Annotate insertions
     if annotate_ins:
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Annotating INS with NanoINSight - ', end='', flush=True)
+        logging.info('Annotating INS with NanoINSight')
         vcf = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % input_name)
         sv_sup = os.path.join(wk_dir, 'sv_support_reads.tsv')
         ins_seq = os.path.join(wk_dir, 'ins_seq.fa')
