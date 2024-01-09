@@ -191,7 +191,7 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     plt.ylabel('Confidence score')
     plt.xlabel('Number of breakend-supporting reads')
     plt.ylim(bottom=-0.3)
-    plt.xlim(right=max_cov)
+    plt.xlim(right=mcov)
     plt.savefig(os.path.join(fwd, 'scatter2.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(), edgecolor='none')
 
 
