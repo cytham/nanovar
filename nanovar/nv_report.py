@@ -179,17 +179,21 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     fig.patch.set_facecolor('#f6f7f9')
     ax = fig.add_subplot(111)
     if lcovlist:
-        mcov = max(max(lcovlist), 10)
+        mean_cov = sum(lcovlist)/len(lcovlist)
+        buffer = 10
+        max_cov = max(mean_cov + buffer, 10)
+        min_cov = max(mean_cov - buffer, 0)
     else:
-        mcov = 10
+        max_cov = 10
+        min_cov = 0
     ax.scatter(lcovlist, scorelist, c='#3f5d7d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
-    ax.annotate("Threshold=" + str(threshold), xy=(mcov - mcov/5, threshold+0.2))
+    ax.annotate("Threshold=" + str(threshold), xy=(max_cov - max_cov/5, threshold+0.2))
     ax.set_facecolor('#ebebff')
     plt.ylabel('Confidence score')
     plt.xlabel('Number of breakend-supporting reads')
     plt.ylim(bottom=-0.3)
-    plt.xlim(right=mcov)
+    plt.xlim(left=min_cov, right=max_cov)
     plt.savefig(os.path.join(fwd, 'scatter2.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(), edgecolor='none')
 
 

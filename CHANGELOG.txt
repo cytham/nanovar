@@ -4,6 +4,16 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.6.0 - Jan 15, 2024
+    * Added NanoINSight INS annotation function (--annotate_ins [species])
+    * Fixed NanoVar report scatter plot xaxis range
+    * Changed Python version requirement to >=3.8
+    * Changed Biopython package version requirement to >=1.82
+    * Added full usage in README.md
+    * Added NanoINSight info in README.md
+    * Modified installation options in README.md
+
+
 Version 1.5.1 - Jan 5, 2024
     * BND SVs are now represented as one entry in VCF
     * BND SVs now has an additional INFO attribute, CHR2, that records second chromosome name of BND

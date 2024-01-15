@@ -71,6 +71,14 @@ pacbio-ccs - Pacific Biosciences CCS""")
 reference genome filter (i.e. hg38, hg19, mm10) or provide full 
 path to own BED file.""")
 
+    parser.add_argument("--annotate_ins", type=str, metavar="str",
+                        default=None,
+                        help="""enable annotation of INS with NanoINSight, 
+please specify species of sample [None]
+Currently supported species are:
+'human', 'mouse', and 'rattus'.
+""")
+
     parser.add_argument("-c", "--mincov", type=int, metavar="int",
                         default=2,
                         help="minimum number of reads required to call a breakend [2]")
@@ -132,6 +140,12 @@ Default score 1.0 was estimated from simulated analysis. """)
 
     parser.add_argument("--st", type=str, metavar="path",
                         help="specify path to 'samtools' executable")
+
+    parser.add_argument("--ma", type=str, metavar="path",
+                        help="specify path to 'mafft' executable for NanoINSight")
+
+    parser.add_argument("--rm", type=str, metavar="path",
+                        help="specify path to 'RepeatMasker' executable for NanoINSight")
 
     # parser.add_argument("--mdb", type=str, metavar="path",
     #                     help="specify path to 'makeblastdb' executable")

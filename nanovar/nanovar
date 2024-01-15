@@ -35,6 +35,7 @@ import threading
 from datetime import datetime
 from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe, align_mm
 from progress.spinner import Spinner
+import nanoinsight
 
 
 def main():
@@ -47,6 +48,7 @@ def main():
     data_type = args.data_type
     genome_filter = args.filter_bed
     cnv = args.cnv
+    annotate_ins = args.annotate_ins
     minlen = args.minlen
     splitpct = args.splitpct
     minalign = args.minalign
@@ -64,6 +66,8 @@ def main():
     ref_dir = os.path.join(os.path.dirname(nanovar.__file__), 'ref')
     mm = args.mm
     st = args.st
+    ma = args.ma
+    rm = args.rm
     # mdb = args.mdb
     # wmk = args.wmk
     # hsb = args.hsb
@@ -101,6 +105,13 @@ def main():
     # mdb = check_exe(mdb, 'makeblastdb')
     # wmk = check_exe(wmk, 'windowmasker')
     # hsb = check_exe(hsb, 'hs-blastn')
+
+    # Pre-check if annotating INS with NanoINSight
+    if annotate_ins:
+        species = annotate_ins
+        nanoinsight.check_args(species)
+        mafft_exe = nanoinsight.check_exe(ma, 'mafft')
+        repmask_exe = nanoinsight.check_exe(rm, 'RepeatMasker')
 
     # If additional CNV mode
     hg38_size_dict = {}
@@ -454,6 +465,18 @@ def main():
     run.vcf_report() #
     print('Done')
 
+    # Annotate insertions
+    if annotate_ins:
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Annotating INS with NanoINSight - ', end='', flush=True)
+        logging.info('Annotating INS with NanoINSight')
+        vcf = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % input_name)
+        sv_sup = os.path.join(wk_dir, 'sv_support_reads.tsv')
+        ins_seq = os.path.join(wk_dir, 'ins_seq.fa')
+        id_seq, fasta_dir = nanoinsight.create_fa(vcf, wk_dir, sv_sup, ins_seq)
+        con_fasta, threads_per_job = nanoinsight.create_cons(vcf, wk_dir, fasta_dir, id_seq, threads, mafft_exe, batch_size=100, num_parallel_workers=5)
+        nanoinsight.rep_annote(wk_dir, con_fasta, threads_per_job, species, repmask_exe)
+        print('Done')
+    
     # Delete temporary fasta file
     if not archivefasta:
         f = os.path.join(wk_dir, 'temp1.fa')
