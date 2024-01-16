@@ -123,7 +123,7 @@ There are three ways to install NanoVar:
 conda install -c bioconda nanovar
 
 # Or if encountered compatibility issues, install individual dependencies and then install NanoVar using pip
-conda create -n myenv python=3.11 samtools bedtools minimap2 -y
+conda create -n myenv -c bioconda python=3.11 samtools bedtools minimap2 -y
 conda activate myenv
 pip install nanovar
 ```
