@@ -20,7 +20,7 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
 * Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file)
-* Repeat element INS annotation using NanoINSight
+* Repeat element INS annotation using [NanoINSight](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight)
 <!--
 * Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
 | `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
@@ -179,17 +179,17 @@ If you encounter "isnan" error during compilation, please refer to [this](https:
 -->
 
 ## Annotating INS variants with NanoINSight
-NanoVar allows the concurrent repeat element annotation of INS variants using [NanoINSight](https://github.com/benoukraflab/nanoinsight).
+NanoVar allows the concurrent repeat element annotation of INS variants using [NanoINSight](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight).
 
 To run NanoINSight, simply add "--annotate_ins [species]" when running NanoVar.
 ```
 nanovar -t 24 -f hg38 --annotate_ins human sample.bam ref.fa working_dir
 ```
-To understand NanoINSight output files, please visit its repository [here](https://github.com/benoukraflab/nanoinsight).
+To understand NanoINSight output files, please visit its repository [here](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight).
 
 ### Installation of NanoINSight dependencies
 
-NanoINSight requires the installation of MAFFT and RepeatMasker. Please refer to [here](https://github.com/benoukraflab/nanoinsight) for instructions on how to install them, or install them through Conda as shown below:
+NanoINSight requires the installation of MAFFT and RepeatMasker. Please refer to [here](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight) for instructions on how to install them, or install them through Conda as shown below:
 
 ```
 conda install -c bioconda mafft repeatmasker -y
