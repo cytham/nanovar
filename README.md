@@ -2,7 +2,7 @@
 [![Build Status](https://app.travis-ci.com/cytham/nanovar.svg?branch=master)](https://app.travis-ci.com/github/cytham/nanovar)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
 [![PyPI versions](https://img.shields.io/pypi/v/nanovar)](https://pypi.org/project/nanovar/)
-[![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)
+<!--[![Conda](https://img.shields.io/conda/v/bioconda/nanovar)](https://anaconda.org/bioconda/nanovar)-->
 [![Github release](https://img.shields.io/github/v/release/cytham/nanovar?include_prereleases)](../../releases)
 [![PyPI license](https://img.shields.io/pypi/l/nanovar)](./LICENSE.txt)
   
@@ -19,7 +19,8 @@ NanoVar is a genomic structural variant (SV) caller that utilizes low-depth long
 * Requires 4x and 8x sequencing depth for detecting homozygous and heterozygous SVs respectively.  
 * Rapid computational speed (Takes <3 hours to map and analyze 12 gigabases datasets (4x) using 24 CPU threads)  
 * Approximates SV genotype
-* Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file) 
+* Identifies full-length LINE and SINE insertions (Marked by "TE=" in the INFO column of VCF file)
+* Repeat element INS annotation using [NanoINSight](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight)
 <!--
 * Detect large chromosomal copy-number variation using [CytoCAD](https://github.com/cytham/cytocad)
 | `--cnv` | hg38 | Perform large CNV detection using CytoCAD (Only works for hg38 genome)
@@ -36,14 +37,14 @@ nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir
 | Parameter | Argument | Comment |
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
-| `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10|
+| `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10 |
 | - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
 
 See [wiki](https://github.com/cytham/nanovar/wiki) for entire list of options.
 
-#### Output
+### Output
 | Output file | Comment |
 | :--- | :--- |
 | ${sample}.nanovar.pass.vcf | Final VCF filtered output file (1-based) |
@@ -51,15 +52,76 @@ See [wiki](https://github.com/cytham/nanovar/wiki) for entire list of options.
 
 For more information, see [wiki](https://github.com/cytham/nanovar/wiki).
 
-### Operating system: 
+### Full usage
+```
+usage: nanovar [options] [FASTQ/FASTA/BAM] [REFERENCE_GENOME] [WORK_DIRECTORY]
+
+NanoVar is a neural network enhanced structural variant (SV) caller that handles low-depth long-read sequencing data.
+
+positional arguments:
+  [FASTQ/FASTA/BAM]     path to long reads or mapped BAM file.
+                        Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or .bam
+  [reference_genome]    path to reference genome in FASTA. Genome indexes created
+                        will overwrite indexes created by other aligners such as bwa.
+  [work_directory]      path to work directory. Directory will be created
+                        if it does not exist.
+
+options:
+  -h, --help            show this help message and exit
+  --cnv hg38            also detects large genomic copy-number variations
+                        using CytoCAD (e.g. loss/gain of whole chromosomes).
+                        Only works with hg38 genome assembly. Please state 'hg38' [None]
+  -x str, --data_type str
+                        type of long-read data [ont]
+                        ont - Oxford Nanopore Technologies
+                        pacbio-clr - Pacific Biosciences CLR
+                        pacbio-ccs - Pacific Biosciences CCS
+  -f file, --filter_bed file
+                        BED file with genomic regions to be excluded [None]
+                        (e.g. telomeres and centromeres) Either specify name of in-built
+                        reference genome filter (i.e. hg38, hg19, mm10) or provide full
+                        path to own BED file.
+  --annotate_ins str    enable annotation of INS with NanoINSight,
+                        please specify species of sample [None]
+                        Currently supported species are:
+                        'human', 'mouse', and 'rattus'.
+  -c int, --mincov int  minimum number of reads required to call a breakend [2]
+  -l int, --minlen int  minimum length of SV to be detected [25]
+  -p float, --splitpct float
+                        minimum percentage of unmapped bases within a long read
+                        to be considered as a split-read. 0.05<=p<=0.50 [0.05]
+  -a int, --minalign int
+                        minimum alignment length for single alignment reads [200]
+  -b int, --buffer int  nucleotide length buffer for SV breakend clustering [50]
+  -s float, --score float
+                        score threshold for defining PASS/FAIL SVs in VCF [1.0]
+                        Default score 1.0 was estimated from simulated analysis.
+  --homo float          lower limit of a breakend read ratio to classify a homozygous state [0.75]
+                        (i.e. Any breakend with homo<=ratio<=1.00 is classified as homozygous)
+  --hetero float        lower limit of a breakend read ratio to classify a heterozygous state [0.35]
+                        (i.e. Any breakend with hetero<=ratio<homo is classified as heterozygous)
+  --debug               run in debug mode
+  -v, --version         show version and exit
+  -q, --quiet           hide verbose
+  -t int, --threads int
+                        number of available threads for use [1]
+  --model path          specify path to custom-built model
+  --mm path             specify path to 'minimap2' executable
+  --st path             specify path to 'samtools' executable
+  --ma path             specify path to 'mafft' executable for NanoINSight
+  --rm path             specify path to 'RepeatMasker' executable for NanoINSight
+```
+
+### Operating system
 * Linux (x86_64 architecture, tested in Ubuntu 14.04, 16.04, 18.04)  
 
-### Installation:
+### Installation
 There are three ways to install NanoVar:
-#### Option 1: Conda (Recommended)
+#### Option 1: Conda environment (Recommended)
 ```
-# Installing from bioconda automatically installs all dependencies 
-conda install -c bioconda nanovar
+conda create -n myenv -c bioconda python=3.11 samtools bedtools minimap2 -y
+conda activate myenv
+pip install nanovar
 ```
 #### Option 2: PyPI (See dependencies below)
 ```
@@ -73,7 +135,7 @@ git clone https://github.com/cytham/nanovar.git
 cd nanovar 
 pip install .
 ```
-### Installation of dependencies
+#### Installation of dependencies
 * bedtools >=2.26.0
 * samtools >=1.3.0
 * minimap2 >=2.17
@@ -116,6 +178,24 @@ cp hs-blastn ~/bin
 If you encounter "isnan" error during compilation, please refer to [this](https://github.com/cytham/nanovar/issues/7#issuecomment-644546378).
 -->
 
+## Annotating INS variants with NanoINSight
+NanoVar allows the concurrent repeat element annotation of INS variants using [NanoINSight](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight).
+
+To run NanoINSight, simply add "--annotate_ins [species]" when running NanoVar.
+```
+nanovar -t 24 -f hg38 --annotate_ins human sample.bam ref.fa working_dir
+```
+To understand NanoINSight output files, please visit its repository [here](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight).
+
+### Installation of NanoINSight dependencies
+
+NanoINSight requires the installation of MAFFT and RepeatMasker. Please refer to [here](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight) for instructions on how to install them, or install them through Conda as shown below:
+
+```
+conda install -c bioconda mafft repeatmasker -y
+```
+
+ 
 ## Documentation
 See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
 
@@ -132,6 +212,7 @@ Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterizat
 
 * **Tham Cheng Yong** - [cytham](https://github.com/cytham)
 * **Roberto Tirado Magallanes** - [rtmag](https://github.com/rtmag)
+* **Asmaa Samy** - [AsmaaSamyMohamedMahmoud](https://github.com/AsmaaSamyMohamedMahmoud)
 * **Touati Benoukraf** - [benoukraflab](https://github.com/benoukraflab)
 
 ## License

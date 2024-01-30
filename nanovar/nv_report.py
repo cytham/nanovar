@@ -41,7 +41,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     fwd_fig = './fig'
     threshold = thres
     len_cap = 100000
-    num_header = len(contig_len_dict) + 27  # This has to adjusted according to number of headers in VCF
+    num_header = len(contig_len_dict) + 28  # This has to adjusted according to number of headers in VCF
     # vcf_path = os.path.join(wk_dir, '%s.nanovar.total.vcf' % read_name)
     vcf_path_pass = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name)
     vcf_data = open(vcf_path_pass, 'r').read().splitlines()
@@ -118,7 +118,9 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                                  str(ratio), i.split('\t')[9].split(':')[0], i.split('\t')[2]])
                     svdict['BND'] += 1
                     try:
-                        if int(sv_len) <= len_cap:
+                        if int(sv_len) == 0:
+                            bndnolen += 1
+                        elif int(sv_len) <= len_cap:
                             bndlen.append(svlencap(int(sv_len)))
                         else:
                             bndcap += 1
@@ -177,17 +179,21 @@ def scatter_plots(fwd, scorelist, ratiolist, lcovlist, threshold):
     fig.patch.set_facecolor('#f6f7f9')
     ax = fig.add_subplot(111)
     if lcovlist:
-        mcov = max(max(lcovlist), 10)
+        mean_cov = sum(lcovlist)/len(lcovlist)
+        buffer = 10
+        max_cov = max(mean_cov + buffer, 10)
+        min_cov = max(mean_cov - buffer, 0)
     else:
-        mcov = 10
+        max_cov = 10
+        min_cov = 0
     ax.scatter(lcovlist, scorelist, c='#3f5d7d', alpha=0.1)
     ax.axhline(y=threshold, linewidth=1, color='firebrick')
-    ax.annotate("Threshold=" + str(threshold), xy=(mcov - mcov/5, threshold+0.2))
+    ax.annotate("Threshold=" + str(threshold), xy=(max_cov - max_cov/5, threshold+0.2))
     ax.set_facecolor('#ebebff')
     plt.ylabel('Confidence score')
     plt.xlabel('Number of breakend-supporting reads')
     plt.ylim(bottom=-0.3)
-    plt.xlim(right=mcov)
+    plt.xlim(left=min_cov, right=max_cov)
     plt.savefig(os.path.join(fwd, 'scatter2.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(), edgecolor='none')
 
 

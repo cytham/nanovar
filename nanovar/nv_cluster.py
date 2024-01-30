@@ -78,7 +78,6 @@ Keyword arguments:
 
         # Intersect all read regions to SV breakends
         intersect = bed3.intersect(bed4, wa=True, wb=True)
-        intersect.saveas('intersect_debug.bed')
 
         # Create a duplicated readteam dict where reads have their unique identifier removed
         # newdictnouniq = remove_uniq(readteam)
@@ -446,7 +445,7 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     if leader == '':
         raise Exception("Error: Main SV class not found")
     if mainsvclass == 'Nov_Ins':
-        med_size = median(sv_sizes)
+        med_size = int(median(sv_sizes))
     else:
         med_size = 0
     return leader, mainsvclass, med_size
@@ -467,7 +466,7 @@ def leadread_bp(reads, svsizedict, classdict):
             break
     if leader == '':
         raise Exception("Error: Main SV class not found for reads %s" % ','.join(reads))
-    med_size = median(sv_sizes)
+    med_size = int(median(sv_sizes))
     return leader, mainsvclass, med_size
 
 

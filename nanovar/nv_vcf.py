@@ -143,10 +143,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Intra-Ins(1)' or bp_name == 'Intra-Ins(2)':
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
@@ -156,10 +159,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TPO' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inter-Ins(1)' or bp_name == 'Inter-Ins(2)':
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
@@ -169,10 +175,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TPO' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'InterTx':
             sv_len = '0'
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
@@ -182,10 +191,13 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
             out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
-            out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
-                       filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
-                       str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+                       str(dnn) + ';SV2=TRA' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
+            # out.append(str(chrm2) + '\t' + str(coord2) + '\t' + str(sv_id) + '\tN\t' + str(b) + '\t' + str(phred) + '\t' +
+            #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
+            #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         else:
             raise Exception("Error: Unrecognised breakpoint name")
         tmpread = []
@@ -229,6 +241,7 @@ def add_header(vcf_file, read_path, ref_path, mm_cmd, read_name, contig_len_dict
     vcf_file.write('##INFO=<ID=SV2,Number=1,Type=String,Description="BND SV assessment: TPO - Transposition, '
                    'TRA - Translocation">\n')
     vcf_file.write('##INFO=<ID=TE,Number=.,Type=String,Description="Identity of transposable element insertion">\n')
+    vcf_file.write('##INFO=<ID=CHR2,Number=1,Type=String,Description="Second chromosome name for BND SVs">\n')
     vcf_file.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n')
     vcf_file.write('##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth">\n')
     vcf_file.write('##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Read depth for each allele">\n')

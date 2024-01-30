@@ -4,6 +4,25 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.6.0 - Jan 15, 2024
+    * Added NanoINSight INS annotation function (--annotate_ins [species])
+    * Fixed NanoVar report scatter plot xaxis range
+    * Changed Python version requirement to >=3.8
+    * Changed Biopython package version requirement to >=1.82
+    * Added full usage in README.md
+    * Added NanoINSight info in README.md
+    * Modified installation options in README.md
+
+
+Version 1.5.1 - Jan 5, 2024
+    * BND SVs are now represented as one entry in VCF
+    * BND SVs now has an additional INFO attribute, CHR2, that records second chromosome name of BND
+    * Fixed cytocad import bug
+    * Fixed intersect_debug bug
+    * Fixed SVLEN float value bug
+    * Fixed missing FASTA entries bug
+
+
 Version 1.5.0 - Sept 8, 2023
     * Fixed font warning during report generation
     * NanoVar no longer relies on HS-BLASTn (This would fixed multiple run errors)
