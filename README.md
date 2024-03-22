@@ -1,3 +1,11 @@
+## Update: Currently not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.0.post1
+
+`pip install tensorflow-cpu==2.15.0.post1`
+
+Please see issue [here](https://github.com/cytham/nanovar/issues/77)
+
+We are actively working on this, thank you for understanding.
+
 ## NanoVar - Structural variant caller using low-depth long-read sequencing
 [![Build Status](https://app.travis-ci.com/cytham/nanovar.svg?branch=master)](https://app.travis-ci.com/github/cytham/nanovar)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/nanovar)](https://pypi.org/project/nanovar/)
