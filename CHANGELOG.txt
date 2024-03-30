@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.6.1 - Mar 30, 2024
+    * Fix Tensorflow 2.16 compatibility issue, restrict tensorflow-cpu<=2.15.1 in setup.py
+
+
 Version 1.6.0 - Jan 15, 2024
     * Added NanoINSight INS annotation function (--annotate_ins [species])
     * Fixed NanoVar report scatter plot xaxis range
