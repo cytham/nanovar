@@ -107,9 +107,14 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
             if repeat_dict[sup]:
                 pass
         except KeyError:
-            repeat_dict[sup] = ''
-            fasta.write('>' + sup + '\n' + fail_qual_seq[sup] + '\n')
-            rlendict[sup] = fail_qual_len[sup] 
+            # Some supplementary alignments do not have primary alignments (in the case of a subset BAM), thus sequence not found and read excluded
+            if sup in fail_qual_seq:
+                repeat_dict[sup] = ''
+                fasta.write('>' + sup + '\n' + fail_qual_seq[sup] + '\n')
+                rlendict[sup] = fail_qual_len[sup]
+            else:
+                # Log read excluded
+                logging.info('Read %s missing full FASTA sequence and therefore omitted.' % sup)
     fasta.close()
     fasta2.close()
     total_subdata, total_lines, contig_collect, total_out, detect_out = [], [], [], [], []
