@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.6.2 - Apr 29, 2024
+    * Fixed bug where some supplementary alignments do not have primary alignments, in the case of a subsample BAM input
+
+
 Version 1.6.1 - Mar 30, 2024
     * Fix Tensorflow 2.16 compatibility issue, restrict tensorflow-cpu<=2.15.1 in setup.py
 
