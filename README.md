@@ -1,4 +1,4 @@
-## Please note: Current v1.6.1 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
+## Please note: Current v1.6.2 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
 
 `pip install tensorflow-cpu==2.15.1`
 
