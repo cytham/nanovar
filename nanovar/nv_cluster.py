@@ -643,7 +643,12 @@ def arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict,
             else:
                 if len(clustid2coord[clustid].split('-')) == 1:
                     output.append(
-                        ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                        # ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                        # infodict[bestread].split('\t')[6].split('~')[0] + '~' + clustid2coord[clustid].strip('lr') + '-' +
+                        # str(int(clustid2coord[clustid].strip('lr').split(':')[1]) + 1) + '\t' +
+                        # '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        # ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
                         infodict[bestread].split('\t')[6].split('~')[0] + '~' + clustid2coord[clustid].strip('lr') + '-' +
                         str(int(clustid2coord[clustid].strip('lr').split(':')[1]) + 1) + '\t' +
                         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
@@ -653,22 +658,22 @@ def arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict,
                     chrm = clustid2coord[clustid].split('-')[0].split(':')[0]
                     coord1 = str(min(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
                     coord2 = str(max(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
-                    if svtype == 'Nov_Ins':
-                        output.append(
-                            ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
-                            infodict[bestread].split('\t')[6].split('~')[0] + '~' +
-                            chrm + ':' + coord1 + '-' + coord2 + '\t' +
-                            '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
-                        )
-                    else:
-                        output.append(
-                            '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
-                            infodict[bestread].split('\t')[6].split('~')[0] + '~' +
-                            chrm + ':' + coord1 + '-' + coord2 + '\t' +
-                            '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
-                        )
+                    # if svtype == 'Nov_Ins':
+                    #     output.append(
+                    #         ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                    #         infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                    #         chrm + ':' + coord1 + '-' + coord2 + '\t' +
+                    #         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                    #         ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                    #     )
+                    # else:
+                    output.append(
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                        chrm + ':' + coord1 + '-' + coord2 + '\t' +
+                        '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                    )
                 else:
                     raise Exception('Error: Cluster name error')
             n += 1
@@ -757,8 +762,8 @@ def clusterorder(_cluster, d_chrm1, d_coord1, mode):
 
 
 # Modify sv size in INS
-def ins_size_mod(line, size):
-    return '\t'.join(line[0:3] + [line[3].split(' ')[0] + ' ' + str(size) + '~' + line[3].split('~')[1]] + line[4:])
+# def ins_size_mod(line, size):
+#     return '\t'.join(line[0:3] + [line[3].split(' ')[0] + ' ' + str(size) + '~' + line[3].split('~')[1]] + line[4:])
     
 
 # Note: Some bps seen in parse_file would be missing
