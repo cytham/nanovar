@@ -42,6 +42,8 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
     vcf_pass = open(os.path.join(wk_dir, '%s.nanovar.pass.vcf' % read_name), 'w')
     add_header(vcf_total, read_path, ref_path, mm_cmd, read_name, contig_len_dict, thres, depth, nv_cmd)
     add_header(vcf_pass, read_path, ref_path, mm_cmd, read_name, contig_len_dict, thres, depth, nv_cmd)
+    sv_sup = open(os.path.join(wk_dir, 'sv_support_reads.tsv'), 'w')
+    sv_sup.write('SV-ID\tSupporting_reads (readname~index1,readname~index2...)\n')
     tmpread = []
     out = []
     for i in k:
@@ -210,6 +212,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         else:
             raise Exception("Error: Unrecognised breakpoint name")
+        sv_sup.write(new_sv_id + '\t' + tmpread[0].split('\t')[8] + ',' + tmpread[0].split('\t')[11] + '\n')
         tmpread = []
     out_sort1 = natsorted(out, key=lambda x: x.split('\t')[1])  # sort by POS
     total_vcf = natsorted(out_sort1, key=lambda x: x.split('\t')[0])  # sort by CHROM
@@ -219,6 +222,7 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             vcf_pass.write(e + '\n')
     vcf_total.close()
     vcf_pass.close()
+    sv_sup.close()
 
 
 # Write VCF header
