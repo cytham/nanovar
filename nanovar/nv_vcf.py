@@ -61,31 +61,34 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
         geno = genotyper(ratio, homo_t, het_t)
         if bp_name == 'Nov_Ins':
             sv = '<INS>'
+            new_sv_id = 'NV.INS.' + sv_id.split('nv_')[1]
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             if sv_id in index2te:
                 te = ";TE=" + ','.join(sorted(index2te[sv_id]))
             else:
                 te = ''
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
                        str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'E-Nov_Ins_bp' or bp_name == 'S-Nov_Ins_bp':
             pass
             sv = '<INS>'
+            new_sv_id = 'NV.INS.' + sv_id.split('nv_')[1]
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             if sv_id in index2te:
                 te = ";TE=" + ','.join(sorted(index2te[sv_id]))
             else:
                 te = ''
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
                        str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Del':
             sv = '<DEL>'
+            new_sv_id = 'NV.DEL.' + sv_id.split('nv_')[1]
             sv_len = int(tmpread[0].split('\t')[3].split(' ')[1].split('~')[0])
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
@@ -94,11 +97,12 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 coord1 = max(1, int(mid - round(sv_len/2, 0)))
                 coord2 = int(mid + round(sv_len/2, 0) + 1)
             sv_len = '-' + str(coord2 - coord1)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DEL;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inv':
             sv = '<INV>'
+            new_sv_id = 'NV.INV.' + sv_id.split('nv_')[1]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             if coord2 - coord1 < minlen:
@@ -106,11 +110,12 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 coord1 = max(1, int(mid - round(minlen / 2, 0)))
                 coord2 = int(mid + round(minlen / 2, 0) + 1)
             sv_len = str(coord2 - coord1)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inv(1)' or bp_name == 'Inv(2)':
             sv = '<INV>'
+            new_sv_id = 'NV.INV.' + sv_id.split('nv_')[1]
             # sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
@@ -119,11 +124,12 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 coord1 = max(1, int(mid - round(minlen / 2, 0)))
                 coord2 = int(mid + round(minlen / 2, 0) + 1)
             sv_len = str(coord2 - coord1)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INV;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'TDupl':
             sv = '<DUP>'
+            new_sv_id = 'NV.DUP.' + sv_id.split('nv_')[1]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             if coord2 - coord1 < minlen:
@@ -131,17 +137,18 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 coord1 = max(1, int(mid - round(minlen / 2, 0)))
                 coord2 = int(mid + round(minlen / 2, 0) + 1)
             sv_len = str(coord2 - coord1)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(sv) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DUP;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Intra-Ins':
+            new_sv_id = 'NV.BND.' + sv_id.split('nv_')[1]
             sv_len = '0'
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + ';SV2=TRA' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
@@ -151,13 +158,14 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
             #            str(dnn) + ';SV2=TRA' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Intra-Ins(1)' or bp_name == 'Intra-Ins(2)':
+            new_sv_id = 'NV.BND.' + sv_id.split('nv_')[1]
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[1].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[0])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1].split('-')[1])
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + ';SV2=TPO' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
@@ -167,13 +175,14 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
             #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inter-Ins(1)' or bp_name == 'Inter-Ins(2)':
+            new_sv_id = 'NV.BND.' + sv_id.split('nv_')[1]
             sv_len = tmpread[0].split('\t')[3].split(' ')[1].split('~')[0]
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + ';SV2=TPO' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
@@ -183,13 +192,14 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
             #            filt + '\t' + 'SVTYPE=BND;END=' + str(coord2+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
             #            str(dnn) + ';SV2=TPO' + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'InterTx':
+            new_sv_id = 'NV.BND.' + sv_id.split('nv_')[1]
             sv_len = '0'
             strands = tmpread[0].split('\t')[3].split(' ')[1].split('~')[1].split(',')
             chrm2 = tmpread[0].split('\t')[6].split('~')[2].split(':')[0]
             coord1 = int(tmpread[0].split('\t')[6].split('~')[1].split(':')[1])
             coord2 = int(tmpread[0].split('\t')[6].split('~')[2].split(':')[1])
             a, b = breakend_alt(strands, chrm1, coord1, chrm2, coord2)
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=BND;END=' + str(coord1+1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + ';SV2=TRA' + ';CHR2=' + str(chrm2) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
             # out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(sv_id) + '\tN\t' + str(a) + '\t' + str(phred) + '\t' +
