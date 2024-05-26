@@ -435,19 +435,25 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     leader = ''
     sv_sizes = []
     for read in reads:
-        sizedict[read] = svsizedict[read]
+        # sizedict[read] = svsizedict[read]
         sv_sizes.append(svsizedict[read])
-    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
-    for read in sizedictsort:
-        if classdict[read] == mainsvclass:
+    # sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    # for read in sizedictsort:
+    #     if classdict[read] == mainsvclass:
+    #         leader = read
+    #         break
+    med_size = int(median(sv_sizes))
+    # Change leader read to read with the median size instead of largest size
+    for read in reads:
+        if svsizedict[read] == med_size and classdict[read] == mainsvclass:
             leader = read
             break
     if leader == '':
         raise Exception("Error: Main SV class not found")
-    if mainsvclass == 'Nov_Ins':
-        med_size = int(median(sv_sizes))
-    else:
-        med_size = 0
+    # if mainsvclass == 'Nov_Ins':
+    #     med_size = int(median(sv_sizes))
+    # else:
+    #     med_size = 0
     return leader, mainsvclass, med_size
 
 
@@ -457,16 +463,22 @@ def leadread_bp(reads, svsizedict, classdict):
     leader = ''
     sv_sizes = []
     for read in reads:
-        sizedict[read] = svsizedict[read]
+        # sizedict[read] = svsizedict[read]
         sv_sizes.append(svsizedict[read])
-    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
-    for read in sizedictsort:
-        if classdict[read] == mainsvclass:  # Read with the largest SV size and correspond to mainsvclass will be the leader
+    # sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    # for read in sizedictsort:
+    #     if classdict[read] == mainsvclass:  # Read with the largest SV size and correspond to mainsvclass will be the leader
+    #         leader = read
+    #         break
+    med_size = int(median(sv_sizes))
+    # Change leader read to read with the median size instead of largest size
+    for read in reads:
+        if svsizedict[read] == med_size and classdict[read] == mainsvclass:
             leader = read
             break
     if leader == '':
         raise Exception("Error: Main SV class not found for reads %s" % ','.join(reads))
-    med_size = int(median(sv_sizes))
+    # med_size = int(median(sv_sizes))
     return leader, mainsvclass, med_size
 
 
