@@ -70,9 +70,9 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 te = ";TE=" + ','.join(sorted(index2te[sv_id]))
             else:
                 te = ''
-            ref_seq = alt_seq[sv_id][0]
-            alt_seq = alt_seq[sv_id]
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_seq, alt_seq) + str(phred) + '\t' +
+            ref_bases = alt_seq[sv_id][0]
+            alt_bases = alt_seq[sv_id]
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_bases, alt_bases) + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
                        str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -86,9 +86,9 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 te = ";TE=" + ','.join(sorted(index2te[sv_id]))
             else:
                 te = ''
-            ref_seq = alt_seq[sv_id][0]
-            alt_seq = alt_seq[sv_id]
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_seq, alt_seq) + str(phred) + '\t' +
+            ref_bases = alt_seq[sv_id][0]
+            alt_bases = alt_seq[sv_id]
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_bases, alt_bases) + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=INS;END=' + str(coord1 + 1) + ';SVLEN=' + str(sv_len) + ';SR=' + str(
                 covl) + ';NN=' +
                        str(dnn) + te + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
@@ -103,9 +103,9 @@ def create_vcf(wk_dir, thres, nn_out, ref_path, read_path, read_name, mm_cmd, co
                 coord1 = max(1, int(mid - round(sv_len/2, 0)))
                 coord2 = int(mid + round(sv_len/2, 0) + 1)
             sv_len = '-' + str(coord2 - coord1)
-            ref_seq = alt_seq[sv_id]
-            alt_seq = alt_seq[sv_id][0]
-            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_seq, alt_seq) + str(phred) + '\t' +
+            ref_bases = alt_seq[sv_id]
+            alt_bases = alt_seq[sv_id][0]
+            out.append(str(chrm1) + '\t' + str(coord1) + '\t' + str(new_sv_id) + '\t{}\t{}\t'.format(ref_bases, alt_bases) + str(phred) + '\t' +
                        filt + '\t' + 'SVTYPE=DEL;END=' + str(coord2) + ';SVLEN=' + str(sv_len) + ';SR=' + str(covl) + ';NN=' +
                        str(dnn) + '\tGT:DP:AD\t' + geno + ':' + dp + ':' + str(normcov) + ',' + str(covl))
         elif bp_name == 'Inv':
