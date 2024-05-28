@@ -22,6 +22,7 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 import os
 import logging
 from pybedtools import BedTool
+from Bio.Seq import Seq
 
 def get_alt_seq(wk_dir, out_nn, ref_path):
     bed_str = ''
@@ -30,10 +31,17 @@ def get_alt_seq(wk_dir, out_nn, ref_path):
     for line in out_nn:
        sv_type = line.split('\t')[3].split(' ')[0]
        sv_id = line.split('\t')[6].split('~')[0]
+       strand = line.split('\t')[3].split('~')[1].split(',')[0]
        bed_line = make_bed(line, sv_type, sv_id)
        bed_str += bed_line
        if sv_type in ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp']:
-           ins_id_seq[sv_id] = ins_read_seq[line.split('\t')[8]]
+           if strand == '+':
+               ins_id_seq[sv_id] = ins_read_seq[line.split('\t')[8]]
+           elif strand == '-':
+               seq = Seq(ins_read_seq[line.split('\t')[8]])
+               ins_id_seq[sv_id] = seq.reverse_complement()
+           else:
+               raise Exception('{} strand symbol invalid'.format(strand))
     bed = BedTool(bed_str, from_string=True)
     fasta = bed.sequence(fi=ref_path, nameOnly=True)
     alt_seq = {}
