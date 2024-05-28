@@ -69,7 +69,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
                     sv_type = i.split('\t')[4].strip('<>')
                     sv_len = i.split('\t')[7].split(';')[2].split('=')[1]
                     data.append([str(n), sv_type, i.split('\t')[0], i.split('\t')[1],
-                                 i.split('\t')[4], i.split('\t')[7].split(';')[1].split('=')[1],
+                                 '-', i.split('\t')[7].split(';')[1].split('=')[1],
                                  sv_len, i.split('\t')[5],
                                  str(lcov), str(ncov), str(ratio), i.split('\t')[9].split(':')[0],
                                  i.split('\t')[2]])
