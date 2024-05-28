@@ -23,23 +23,29 @@ import os
 import logging
 from pybedtools import BedTool
 
-def get_alt_seq(out_nn, ref_path):
+def get_alt_seq(wk_dir, out_nn, ref_path):
     bed_str = ''
+    ins_id_seq = {}
+    ins_read_seq = get_ins_seq(wk_dir)
     for line in out_nn:
-       bed_line = make_bed(line)
+       sv_type = line.split('\t')[3].split(' ')[0]
+       sv_id = line.split('\t')[6].split('~')[0]
+       bed_line = make_bed(line, sv_type, sv_id)
        bed_str += bed_line
+       if sv_type in ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp']:
+           ins_id_seq[sv_id] = ins_read_seq[line.split('\t')[8]]
     bed = BedTool(bed_str, from_string=True)
     fasta = bed.sequence(fi=ref_path, nameOnly=True)
     alt_seq = {}
     with open(fasta.seqfn) as f:
         for r in f:
             alt_seq[r.strip('>\n')] = next(f).upper().strip()
+    for i in ins_id_seq:
+        alt_seq[i] = alt_seq[i] + ins_id_seq[i]
     return alt_seq
 
-def make_bed(line):
+def make_bed(line, sv_type, sv_id):
     data = line.split('\t')
-    sv_type = data[3].split(' ')[0]
-    sv_id = data[6].split('~')[0]
     chrm = data[6].split('~')[1].split(':')[0]
     if sv_type in ['Inter-Ins(1)', 'Inter-Ins(2)', 'InterTx']:
         end = int(data[6].split('~')[1].split(':')[1])
@@ -52,3 +58,11 @@ def make_bed(line):
         start = end - 1
     bed_line = '\t'.join([chrm, str(start), str(end), sv_id]) + '\n'
     return bed_line
+
+def get_ins_seq(wk_dir):
+    with open(os.path.join(wk_dir, 'ins_seq.fa')) as f:
+        ins_read_seq = {}
+        for r in f:
+            id = r.split('::')[0].strip('>')
+            ins_read_seq[id] = next(f).strip()
+        return ins_read_seq
