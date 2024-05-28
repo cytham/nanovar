@@ -201,7 +201,7 @@ class VariantDetect:
     
     def vcf_report(self):
         logging.info("Creating VCF")
-        alt_seq = get_alt_seq(self.out_nn, self.refpath)
+        alt_seq = get_alt_seq(self.dir, self.out_nn, self.refpath)
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
                    self.homo_t, self.het_t, self.minlen, self.depth, self.index2te, self.nv_cmd, alt_seq)
         logging.info("Creating HTML report")
