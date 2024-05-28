@@ -65,8 +65,10 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
         if float(i.split('\t')[5]) >= threshold:
             if ratio <= ratio_limit:
                 n += 1
-                if i.split('\t')[4].startswith('<'):
-                    sv_type = i.split('\t')[4].strip('<>')
+                sv_type = i.split('\t')[2].split('.')[1]
+                if sv_type != 'BND':
+                # if i.split('\t')[4].startswith('<'):
+                    # sv_type = i.split('\t')[4].strip('<>')
                     sv_len = i.split('\t')[7].split(';')[2].split('=')[1]
                     data.append([str(n), sv_type, i.split('\t')[0], i.split('\t')[1],
                                  '-', i.split('\t')[7].split(';')[1].split('=')[1],
