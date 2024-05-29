@@ -435,8 +435,9 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     leader = ''
     sv_sizes = []
     for read in reads:
-        # sizedict[read] = svsizedict[read]
-        sv_sizes.append(svsizedict[read])
+            if classdict[read] == mainsvclass:
+                # sizedict[read] = svsizedict[read]
+                sv_sizes.append(svsizedict[read])
     # sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
     # for read in sizedictsort:
     #     if classdict[read] == mainsvclass:
