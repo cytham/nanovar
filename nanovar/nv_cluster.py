@@ -21,6 +21,7 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 from collections import OrderedDict, defaultdict
 from pybedtools import BedTool
 from statistics import median
+import math
 
 
 # SV clustering main function
@@ -443,7 +444,8 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     #     if classdict[read] == mainsvclass:
     #         leader = read
     #         break
-    med_size = int(median(sv_sizes))
+    # med_size = int(median(sv_sizes))
+    med_size = sorted(sv_sizes)[math.ceil((len(sv_sizes)+1)/2) - 1]
     # Change leader read to read with the median size instead of largest size
     for read in reads:
         if svsizedict[read] == med_size and classdict[read] == mainsvclass:
@@ -471,7 +473,8 @@ def leadread_bp(reads, svsizedict, classdict):
     #     if classdict[read] == mainsvclass:  # Read with the largest SV size and correspond to mainsvclass will be the leader
     #         leader = read
     #         break
-    med_size = int(median(sv_sizes))
+    # med_size = int(median(sv_sizes))
+    med_size = sorted(sv_sizes)[math.ceil((len(sv_sizes)+1)/2) - 1]
     # Change leader read to read with the median size instead of largest size
     for read in reads:
         if svsizedict[read] == med_size and classdict[read] == mainsvclass:
