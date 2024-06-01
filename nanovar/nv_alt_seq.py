@@ -65,6 +65,7 @@ def make_bed(line, sv_type, sv_id):
         end = int(data[6].split('~')[1].split(':')[1].split('-')[0])
         start = end - 1
     start = max(start, 0)
+    end = max(end, 1)
     bed_line = '\t'.join([chrm, str(start), str(end), sv_id]) + '\n'
     return bed_line
 
