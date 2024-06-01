@@ -35,11 +35,11 @@ def get_alt_seq(wk_dir, out_nn, ref_path):
        bed_line = make_bed(line, sv_type, sv_id)
        bed_str += bed_line
        if sv_type in ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp']:
+           ins_seq = ins_seq_except(ins_read_seq, line.split('\t')[8])
            if strand == '+':
-               ins_id_seq[sv_id] = ins_read_seq[line.split('\t')[8]]
+               ins_id_seq[sv_id] = ins_seq
            elif strand == '-':
-               seq = Seq(ins_read_seq[line.split('\t')[8]])
-               ins_id_seq[sv_id] = seq.reverse_complement()
+               ins_id_seq[sv_id] = str(Seq(ins_seq).reverse_complement())
            else:
                raise Exception('{} strand symbol invalid'.format(strand))
     bed = BedTool(bed_str, from_string=True)
@@ -74,3 +74,10 @@ def get_ins_seq(wk_dir):
             id = r.split('::')[0].strip('>')
             ins_read_seq[id] = next(f).strip()
         return ins_read_seq
+
+def ins_seq_except(ins_read_seq, read_id):
+    try:
+        return ins_read_seq[read_id]
+    except KeyError:  # Not found in ins_seq.fa, below score threshold
+        return 'N'
+
