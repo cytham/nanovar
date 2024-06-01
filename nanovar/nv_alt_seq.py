@@ -64,7 +64,7 @@ def make_bed(line, sv_type, sv_id):
     else:  # ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp', 'Inv', 'Inv(1)', 'Inv(2)', 'TDupl', 'Intra-Ins', 'Intra-Ins(1)', 'Intra-Ins(2)']
         end = int(data[6].split('~')[1].split(':')[1].split('-')[0])
         start = end - 1
-    start = min(start, 0)
+    start = max(start, 0)
     bed_line = '\t'.join([chrm, str(start), str(end), sv_id]) + '\n'
     return bed_line
 
