@@ -213,7 +213,7 @@ def main():
             raise Exception("Error: Input BAM file is not a BAM file.")
     elif filename.lower().endswith(cram_suffix):
         save = pysam.set_verbosity(0)  # Suppress index missing warning
-        sam = pysam.AlignmentFile(file_path, "rc")
+        sam = pysam.AlignmentFile(file_path, "rc", reference_filename=ref_path)
         pysam.set_verbosity(save)  # Revert verbosity level
         try:
             assert sam.is_cram, "Error: Input CRAM file is not a CRAM file."
