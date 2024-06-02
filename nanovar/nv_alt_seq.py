@@ -60,7 +60,7 @@ def make_bed(line, sv_type, sv_id):
         start = end - 1
     elif sv_type == 'Del':
         start = int(data[6].split('~')[1].split(':')[1].split('-')[0]) - 1
-        end = data[6].split('~')[1].split(':')[1].split('-')[1]
+        end = int(data[6].split('~')[1].split(':')[1].split('-')[1])
     else:  # ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp', 'Inv', 'Inv(1)', 'Inv(2)', 'TDupl', 'Intra-Ins', 'Intra-Ins(1)', 'Intra-Ins(2)']
         end = int(data[6].split('~')[1].split(':')[1].split('-')[0])
         start = end - 1
