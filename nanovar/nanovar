@@ -178,6 +178,7 @@ def main():
     filename = os.path.basename(file_path)
     read_suffix = ['.fa', '.fq', '.fasta', '.fastq', '.fa.gzip', '.fq.gzip', '.fa.gz', '.fq.gz', '.fasta.gz', '.fastq.gz']
     bam_suffix = '.bam'
+    cram_suffix = '.cram'
     contig_list = []
     if any(filename.lower().endswith(s) for s in read_suffix):
         input_name = os.path.basename(file_path).rsplit('.f', 1)[0]
@@ -210,9 +211,25 @@ def main():
         except AssertionError:
             logging.critical("Error: Input BAM file is not a BAM file.")
             raise Exception("Error: Input BAM file is not a BAM file.")
+    elif filename.lower().endswith(cram_suffix):
+        save = pysam.set_verbosity(0)  # Suppress index missing warning
+        sam = pysam.AlignmentFile(file_path, "rc")
+        pysam.set_verbosity(save)  # Revert verbosity level
+        try:
+            assert sam.is_cram, "Error: Input CRAM file is not a CRAM file."
+            input_name = os.path.basename(file_path).rsplit('.cram', 1)[0]
+            input_type = 'cram'
+            fastx_check = []
+            # Get CRAM contigs from header
+            header = sam.header.to_dict()
+            for h in header['SQ']:
+                contig_list.append(h['SN'])
+        except AssertionError:
+            logging.critical("Error: Input CRAM file is not a CRAM file.")
+            raise Exception("Error: Input CRAM file is not a CRAM file.")
     else:
-        logging.critical("Error: Input file is not recognised, please ensure file suffix has '.fa' or '.fq' or '.bam'")
-        raise Exception("Error: Input file is not recognised, please ensure file suffix has '.fa' or '.fq' or '.bam'")
+        logging.critical("Error: Input file is not recognised, please ensure file suffix has '.fa' or '.fq' or '.bam' or '.cram'")
+        raise Exception("Error: Input file is not recognised, please ensure file suffix has '.fa' or '.fq' or '.bam' or '.cram'")
 
     if gzip_check(ref_path):
         logging.critical("Error: Input reference file is gzipped, please unzip it")
@@ -235,7 +252,7 @@ def main():
     logging.info('Number of threads: %s\n' % str(threads))
     if input_type == 'raw':
         logging.info('Total number of reads in FASTQ/FASTA: %s\n' % str(fastx_check[1]))
-    elif input_type == 'bam':
+    elif input_type == 'bam' or input_type == 'cram':
         logging.info('Total number of reads in FASTQ/FASTA: -\n')
     logging.info('NanoVar started')
 
@@ -248,22 +265,22 @@ def main():
         contig_len_dict[seq_record.id] = len(seq_record)
         total_gsize += len(seq_record)
 
-    # Check if contig sizes from BAM is same as hg38 if CNV mode
+    # Check if contig sizes from BAM/CRAM is same as hg38 if CNV mode
     if cnv:
         for chrom in hg38_size_dict:
             if chrom in contig_len_dict:
                 if contig_len_dict[chrom] != hg38_size_dict[chrom]:
-                    raise Exception("Error: Contig %s in BAM (%i) has different length in hg38 genome assembly (%i)" %
+                    raise Exception("Error: Contig %s in BAM/CRAM (%i) has different length in hg38 genome assembly (%i)" %
                                     (chrom, contig_len_dict[chrom], hg38_size_dict[chrom]))
             else:
-                raise Exception("Error: hg38 contig %s is absent in BAM" % chrom)
+                raise Exception("Error: hg38 contig %s is absent in BAM/CRAM" % chrom)
 
-    # Check BAM contigs in reference genome
-    if input_type == 'bam':
+    # Check BAM/CRAM contigs in reference genome
+    if input_type == 'bam' or input_type == 'cram':
         for c in contig_list:
             if c not in contig_len_dict:
-                logging.critical("Error: Contig %s in BAM is absent in reference genome" % c)
-                raise Exception("Error: Contig %s in BAM is absent in reference genome" % c)
+                logging.critical("Error: Contig %s in BAM/CRAM is absent in reference genome" % c)
+                raise Exception("Error: Contig %s in BAM/CRAM is absent in reference genome" % c)
 
     # Check contig id for invalid symbols
     contig_omit = checkcontignames(contig_len_dict)
@@ -327,8 +344,8 @@ def main():
         mma = align_mm(ref_path, file_path, wk_dir, input_name, ref_name, threads_mm, mm, data_type, st)
         bam_path = mma[1]
         print('Done')
-    elif input_type == 'bam':
-        logging.info('Input BAM file, skipping minimap2 alignment')
+    elif input_type == 'bam' or input_type == 'cram':
+        logging.info('Input BAM/CRAM file, skipping minimap2 alignment')
         mma = ['-', '']
         bam_path = file_path
     # else:
