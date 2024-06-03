@@ -41,9 +41,10 @@ class VariantDetect:
 
     def __init__(self, wk_dir, bam, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
                  contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug,
-                 contig_omit, cnv, nv_cmd):
+                 contig_omit, cnv, nv_cmd, sam):
         self.dir = wk_dir
         self.bam = bam
+        self.sam = sam
         self.splitpct = splitpct
         self.minalign = minalign
         self.filter = filter_path
@@ -79,7 +80,7 @@ class VariantDetect:
     def bam_parse_detect(self):
         random.seed(1)
         self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out, self.seed, self.beddata \
-            = bam_parse(self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
+            = bam_parse(self.sam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
         writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
         writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
         writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)

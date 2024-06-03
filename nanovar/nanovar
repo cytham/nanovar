@@ -343,6 +343,9 @@ def main():
         print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Read mapping using minimap2 - ', end='', flush=True)
         mma = align_mm(ref_path, file_path, wk_dir, input_name, ref_name, threads_mm, mm, data_type, st)
         bam_path = mma[1]
+        save = pysam.set_verbosity(0)  # Suppress index missing warning
+        sam = pysam.AlignmentFile(bam_path, "rb")
+        pysam.set_verbosity(save)  # Revert verbosity level
         print('Done')
     elif input_type == 'bam' or input_type == 'cram':
         logging.info('Input BAM/CRAM file, skipping minimap2 alignment')
@@ -371,7 +374,7 @@ def main():
     logging.info('Parsing BAM and detecting SVs')
     run = VariantDetect(wk_dir, bam_path, splitpct, minalign, filter_path, minlen, buff, model_path,
                         total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, mma[0],
-                        mincov, homo_t, het_t, debug, contig_omit, cnv, nv_cmd)
+                        mincov, homo_t, het_t, debug, contig_omit, cnv, nv_cmd, sam)
     run.bam_parse_detect()
     run.coverage_stats()
     print('Done')
