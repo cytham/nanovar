@@ -32,6 +32,7 @@ from nanovar.nv_cov_upper import ovl_upper
 from nanovar.nv_vcf import create_vcf
 from nanovar.nv_report import create_report
 from nanovar.nv_dup_te_detect import dup_te_analyzer
+from nanovar.nv_alt_seq import get_alt_seq
 #from cytocad.change_detection import cad
 #from cytocad.ideogram import tagore_wrapper
 
@@ -40,9 +41,10 @@ class VariantDetect:
 
     def __init__(self, wk_dir, bam, splitpct, minalign, filter_path, minlen, buff, model_path, total_gsize,
                  contig_len_dict, thres, read_path, read_name, ref_path, ref_name, map_cmd, mincov, homo_t, het_t, debug,
-                 contig_omit, cnv, nv_cmd):
+                 contig_omit, cnv, nv_cmd, sam):
         self.dir = wk_dir
         self.bam = bam
+        self.sam = sam
         self.splitpct = splitpct
         self.minalign = minalign
         self.filter = filter_path
@@ -65,7 +67,7 @@ class VariantDetect:
         self.cnv = cnv
         self.basecov, self.maxovl, self.depth, self.maxovl3 = 0, 0, 0, 0
         self.total_out, self.total_subdata, self.out_nn, self.ins_out, self.out_rest, self.detect_out, self.beddata = [], [], [], [], [], [], []
-        self.rlendict, self.parse_dict, self.index2te  = {}, {}, {}
+        self.rlendict, self.parse_dict, self.index2te = {}, {}, {}
         # HTML SV table entry limit
         self.num_limit = 1000
         # HTML SV table SV ratio limit
@@ -78,7 +80,7 @@ class VariantDetect:
     def bam_parse_detect(self):
         random.seed(1)
         self.total_subdata, self.total_out, self.basecov, self.parse_dict, self.rlendict, self.maps, self.detect_out, self.seed, self.beddata \
-            = bam_parse(self.bam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
+            = bam_parse(self.sam, self.minlen, self.splitpct, self.minalign, self.dir, self.filter, self.contig_omit)
         writer(os.path.join(self.dir, 'subdata.tsv'), self.total_subdata, self.debug)
         writer(os.path.join(self.dir, 'detect.tsv'), self.detect_out, self.debug)
         writer(os.path.join(self.dir, 'parse1.tsv'), self.total_out, self.debug)
@@ -117,7 +119,7 @@ class VariantDetect:
         else:
             self.out_nn = []
         # Generate sv_overlap file
-        svread_ovl(self.dir, self.out_nn)
+        #svread_ovl(self.dir, self.out_nn)
 
     # def cluster_extract(self):
     #     logging.info("Clustering SV breakends")
@@ -200,8 +202,9 @@ class VariantDetect:
     
     def vcf_report(self):
         logging.info("Creating VCF")
+        alt_seq = get_alt_seq(self.dir, self.out_nn, self.refpath)
         create_vcf(self.dir, self.thres, self.out_nn, self.refpath, self.rpath, self.rname, self.mapcmd, self.contig,
-                   self.homo_t, self.het_t, self.minlen, self.depth, self.index2te, self.nv_cmd)
+                   self.homo_t, self.het_t, self.minlen, self.depth, self.index2te, self.nv_cmd, alt_seq)
         logging.info("Creating HTML report")
         create_report(self.dir, self.contig, self.thres, self.rpath, self.refpath, self.rlendict, self.rname,
                       self.num_limit, self.ratio_limit)

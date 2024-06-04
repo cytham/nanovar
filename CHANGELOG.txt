@@ -4,6 +4,13 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.7.0 - Jun 4, 2024
+    * Added alternative sequence for INS and DEL in VCF
+    * Added CRAM input support
+    * Modified SV ID format with addition of SV type, from nv_SV?-????? to NV.INS.SV?-?????
+    * SV size now takes the median size amongst clustered reads, instead of the largest
+
+
 Version 1.6.2 - Apr 29, 2024
     * Fixed bug where some supplementary alignments do not have primary alignments, in the case of a subsample BAM input
 

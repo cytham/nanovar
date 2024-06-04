@@ -21,6 +21,7 @@ along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 from collections import OrderedDict, defaultdict
 from pybedtools import BedTool
 from statistics import median
+import math
 
 
 # SV clustering main function
@@ -435,19 +436,27 @@ def leadread(reads, svsizedict, classdict, hsb_switch):
     leader = ''
     sv_sizes = []
     for read in reads:
-        sizedict[read] = svsizedict[read]
-        sv_sizes.append(svsizedict[read])
-    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
-    for read in sizedictsort:
-        if classdict[read] == mainsvclass:
+            if classdict[read] == mainsvclass:
+                # sizedict[read] = svsizedict[read]
+                sv_sizes.append(svsizedict[read])
+    # sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    # for read in sizedictsort:
+    #     if classdict[read] == mainsvclass:
+    #         leader = read
+    #         break
+    # med_size = int(median(sv_sizes))
+    med_size = sorted(sv_sizes)[math.ceil((len(sv_sizes)+1)/2) - 1]
+    # Change leader read to read with the median size instead of largest size
+    for read in reads:
+        if svsizedict[read] == med_size and classdict[read] == mainsvclass:
             leader = read
             break
     if leader == '':
         raise Exception("Error: Main SV class not found")
-    if mainsvclass == 'Nov_Ins':
-        med_size = int(median(sv_sizes))
-    else:
-        med_size = 0
+    # if mainsvclass == 'Nov_Ins':
+    #     med_size = int(median(sv_sizes))
+    # else:
+    #     med_size = 0
     return leader, mainsvclass, med_size
 
 
@@ -457,16 +466,23 @@ def leadread_bp(reads, svsizedict, classdict):
     leader = ''
     sv_sizes = []
     for read in reads:
-        sizedict[read] = svsizedict[read]
+        # sizedict[read] = svsizedict[read]
         sv_sizes.append(svsizedict[read])
-    sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
-    for read in sizedictsort:
-        if classdict[read] == mainsvclass:  # Read with the largest SV size and correspond to mainsvclass will be the leader
+    # sizedictsort = [key for (key, value) in sorted(sizedict.items(), key=lambda y: y[1], reverse=True)]
+    # for read in sizedictsort:
+    #     if classdict[read] == mainsvclass:  # Read with the largest SV size and correspond to mainsvclass will be the leader
+    #         leader = read
+    #         break
+    # med_size = int(median(sv_sizes))
+    med_size = sorted(sv_sizes)[math.ceil((len(sv_sizes)+1)/2) - 1]
+    # Change leader read to read with the median size instead of largest size
+    for read in reads:
+        if svsizedict[read] == med_size and classdict[read] == mainsvclass:
             leader = read
             break
     if leader == '':
         raise Exception("Error: Main SV class not found for reads %s" % ','.join(reads))
-    med_size = int(median(sv_sizes))
+    # med_size = int(median(sv_sizes))
     return leader, mainsvclass, med_size
 
 
@@ -631,7 +647,12 @@ def arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict,
             else:
                 if len(clustid2coord[clustid].split('-')) == 1:
                     output.append(
-                        ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                        # ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                        # infodict[bestread].split('\t')[6].split('~')[0] + '~' + clustid2coord[clustid].strip('lr') + '-' +
+                        # str(int(clustid2coord[clustid].strip('lr').split(':')[1]) + 1) + '\t' +
+                        # '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        # ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
                         infodict[bestread].split('\t')[6].split('~')[0] + '~' + clustid2coord[clustid].strip('lr') + '-' +
                         str(int(clustid2coord[clustid].strip('lr').split(':')[1]) + 1) + '\t' +
                         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
@@ -641,22 +662,22 @@ def arrange(svnormalcov, clustid2coord, clustid2reads, maxovl, mincov, infodict,
                     chrm = clustid2coord[clustid].split('-')[0].split(':')[0]
                     coord1 = str(min(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
                     coord2 = str(max(int(clustid2coord[clustid].split('-')[0].split(':')[1]), int(clustid2coord[clustid].split('-')[1].split(':')[1])))
-                    if svtype == 'Nov_Ins':
-                        output.append(
-                            ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
-                            infodict[bestread].split('\t')[6].split('~')[0] + '~' +
-                            chrm + ':' + coord1 + '-' + coord2 + '\t' +
-                            '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
-                        )
-                    else:
-                        output.append(
-                            '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
-                            infodict[bestread].split('\t')[6].split('~')[0] + '~' +
-                            chrm + ':' + coord1 + '-' + coord2 + '\t' +
-                            '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
-                            ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
-                        )
+                    # if svtype == 'Nov_Ins':
+                    #     output.append(
+                    #         ins_size_mod(infodict[bestread].split('\t')[0:6], clustid2ins_size[clustid]) + '\tnv_SV' + str(n) + '-' +
+                    #         infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                    #         chrm + ':' + coord1 + '-' + coord2 + '\t' +
+                    #         '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                    #         ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                    #     )
+                    # else:
+                    output.append(
+                        '\t'.join(infodict[bestread].split('\t')[0:6]) + '\tnv_SV' + str(n) + '-' +
+                        infodict[bestread].split('\t')[6].split('~')[0] + '~' +
+                        chrm + ':' + coord1 + '-' + coord2 + '\t' +
+                        '\t'.join(infodict[bestread].split('\t')[7:]) + '\t' + str(lcov) + '\t' +
+                        ','.join(dotter(clustid2reads[clustid])) + '\t' + str(svnormalcov[clustid])
+                    )
                 else:
                     raise Exception('Error: Cluster name error')
             n += 1
@@ -745,8 +766,8 @@ def clusterorder(_cluster, d_chrm1, d_coord1, mode):
 
 
 # Modify sv size in INS
-def ins_size_mod(line, size):
-    return '\t'.join(line[0:3] + [line[3].split(' ')[0] + ' ' + str(size) + '~' + line[3].split('~')[1]] + line[4:])
+# def ins_size_mod(line, size):
+#     return '\t'.join(line[0:3] + [line[3].split(' ')[0] + ' ' + str(size) + '~' + line[3].split('~')[1]] + line[4:])
     
 
 # Note: Some bps seen in parse_file would be missing

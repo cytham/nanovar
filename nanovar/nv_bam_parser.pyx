@@ -26,7 +26,7 @@ from .nv_detect_algo import sv_detect
 from .nv_parser import entry_parser, breakpoint_parser
 
 
-def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
+def bam_parse(object sam, unsigned int minlen, float splitpct, unsigned int minalign, str wk_dir, filter_file, contig_omit):
     cdef:
         unsigned int readlen, rstart, rend, flag, qlen, nm, seed
         unsigned long long basecov
@@ -38,8 +38,8 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         set add_sup_seq
         bint adv
         object seg
-        int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
-        object sam = pysam.AlignmentFile(bam, "rb")
+        #int save = pysam.set_verbosity(0)  # Suppress BAM index missing warning
+        #object sam = pysam.AlignmentFile(bam, "rb")
         dict repeat_dict = {}
         dict rlendict = {}
         dict main_dict = {}
@@ -47,7 +47,7 @@ def bam_parse(bam, unsigned int minlen, float splitpct, unsigned int minalign, s
         dict gapdict = {}
         dict fail_qual_seq = {}
         dict fail_qual_len = {}
-    pysam.set_verbosity(save)  # Revert verbosity level
+    #pysam.set_verbosity(save)  # Revert verbosity level
     seed = 0
     basecov = 0
     ovlt = 0.9  # Set overlap tolerance
