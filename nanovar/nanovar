@@ -461,6 +461,7 @@ def main():
         #               total_gsize, contig_len_dict, score_threshold, file_path, input_name, ref_path, ref_name, mma[0],
         #               mincov, homo_t, het_t, debug, contig_omit, cnv, run.rlendict, run.total_subdata, run.total_out,
         #               run.out_nn, [])  #
+        run.sam = None # Remove pysam instance 
         with open(os.path.join(wk_dir, "nv_run.pkl"), "wb") as f:
             #pickle.dump(saveobjects, f)
             pickle.dump(run, f) #
