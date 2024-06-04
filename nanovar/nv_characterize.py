@@ -119,7 +119,7 @@ class VariantDetect:
         else:
             self.out_nn = []
         # Generate sv_overlap file
-        svread_ovl(self.dir, self.out_nn)
+        #svread_ovl(self.dir, self.out_nn)
 
     # def cluster_extract(self):
     #     logging.info("Clustering SV breakends")
