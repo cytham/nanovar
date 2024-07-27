@@ -147,7 +147,7 @@ def main():
     # Print initiation message
     now = datetime.now()
     now_str = now.strftime("[%d/%m/%Y %H:%M:%S]")
-    print(now_str, "- NanoVar started")
+    print(now_str, "- NanoVar-%s started" % __version__)
     if spin_switch:
         task = TaskProgress()
         msg = 'Checking integrity of input files'
