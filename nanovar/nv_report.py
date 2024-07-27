@@ -216,7 +216,7 @@ def sv_len_dict(fwd, totalsvlen, tab):
     ax.set_facecolor('#ebebff')
     ax.xaxis.grid(False)
     ax.yaxis.grid(color='white', linewidth=1)
-    if not all(x == [] for x in totalsvlen):  # Fix ValueError for log scale when no data
+    if not all(len(x) == 0 for x in totalsvlen):  # Fix ValueError for log scale when no data
         ax.set_yscale('log')
     plt.yticks([100, 1000, 10000, 100000], ['100', '1,000', '10,000', '100,000'], rotation=45)
     plt.ylabel('SV length (bp)')
