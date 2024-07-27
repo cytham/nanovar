@@ -56,8 +56,9 @@ def make_bed(line, sv_type, sv_id):
     data = line.split('\t')
     chrm = data[6].split('~')[1].split(':')[0]
     if sv_type in ['Inter-Ins(1)', 'Inter-Ins(2)', 'InterTx']:
-        end = int(data[6].split('~')[1].split(':')[1])
-        start = end - 1
+        # end = int(data[6].split('~')[1].split(':')[1])
+        # start = end - 1  # Including Inter-Ins/InterTx might be causing issue #89
+        return ''
     elif sv_type == 'Del':
         start = int(data[6].split('~')[1].split(':')[1].split('-')[0]) - 1
         end = int(data[6].split('~')[1].split(':')[1].split('-')[1])
