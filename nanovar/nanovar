@@ -27,6 +27,7 @@ import os
 import sys
 import time
 import pysam
+import shutil
 import logging
 import nanovar
 import random
@@ -240,8 +241,8 @@ def main():
     logging.info('Read type: %s' % data_type)
     logging.info('Reference genome: %s' % ref_path)
     logging.info('Working directory: %s' % wk_dir)
-    logging.info('minimap2 path: %s' % mm)
-    logging.info('samtools path: %s' % st)
+    logging.info('minimap2 path: %s' % shutil.which(mm))
+    logging.info('samtools path: %s' % shutil.which(st))
     logging.info('Model: %s' % model_path)
     logging.info('Filter file: %s' % genome_filter)
     logging.info('Minimum number of reads for calling a breakend: %s' % str(mincov))
