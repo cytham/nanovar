@@ -62,9 +62,13 @@ def make_bed(line, sv_type, sv_id):
     elif sv_type == 'Del':
         start = int(data[6].split('~')[1].split(':')[1].split('-')[0]) - 1
         end = int(data[6].split('~')[1].split(':')[1].split('-')[1])
-    else:  # ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp', 'Inv', 'Inv(1)', 'Inv(2)', 'TDupl', 'Intra-Ins', 'Intra-Ins(1)', 'Intra-Ins(2)']
+    elif sv_type in ['Nov_Ins', 'E-Nov_Ins_bp', 'S-Nov_Ins_bp']:
         end = int(data[6].split('~')[1].split(':')[1].split('-')[0])
         start = end - 1
+    else:  # ['Inv', 'Inv(1)', 'Inv(2)', 'TDupl', 'Intra-Ins', 'Intra-Ins(1)', 'Intra-Ins(2)']
+        # end = int(data[6].split('~')[1].split(':')[1].split('-')[0])
+        # start = end - 1 # Might be causing issue #89
+        return ''
     start = max(start, 0)
     end = max(end, 1)
     bed_line = '\t'.join([chrm, str(start), str(end), sv_id]) + '\n'
