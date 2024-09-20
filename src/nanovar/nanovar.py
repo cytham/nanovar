@@ -112,7 +112,7 @@ def main():
         try:
             import nanoinsight
         except ImportError:
-            raise Exception("Error: nanoinsight module not found. Please install by 'pip instal nanoinsight'.")
+            raise Exception("Error: nanoinsight module not found. Please install by 'pip install nanoinsight'.")
         species = annotate_ins
         nanoinsight.check_args(species)
         mafft_exe = nanoinsight.check_exe(ma, 'mafft')
