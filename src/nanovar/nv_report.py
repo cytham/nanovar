@@ -26,7 +26,8 @@ import datetime
 import numpy as np
 import nanovar
 import matplotlib
-import htmlark
+# import htmlark
+import base64
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
@@ -472,6 +473,8 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     """
     html.write(begin)
 
+    # Get img url
+    donut_uri = base64.b64encode(open(fwd + "/sv_type_donut.png", 'rb').read()).decode('utf-8')
     # Create table body
     row = ""
     for i in data:
@@ -489,7 +492,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <div id="image">
             <figure>
                 <h4 style="text-align:center;"><u>2. Distribution of SV types</u></h4>
-                <img src=""" + '"' + fwd + """/sv_type_donut.png" alt="2. Distribution of SV types" title=""" + '"' + fwd + \
+                <img src=""" + '"data:image/png;base64,{}'.format(donut_uri) + fwd + """/sv_type_donut.png" alt="2. Distribution of SV types" title=""" + '"' + fwd + \
            '/sv_type_donut.png' + '"' + """>
             </figure>
             <br>
@@ -572,8 +575,8 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     """
     html.write(row)
     html.close()
-    packed_html = htmlark.convert_page(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name), ignore_errors=True)
-    html_final = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
-    _ = html_final.write(packed_html)
-    html_final.close()
-    os.remove(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name))
+    # packed_html = htmlark.convert_page(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name), ignore_errors=True)
+    # html_final = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
+    # _ = html_final.write(packed_html)
+    # html_final.close()
+    # os.remove(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name))
