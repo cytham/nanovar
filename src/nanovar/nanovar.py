@@ -35,8 +35,8 @@ import pickle
 import threading
 from datetime import datetime
 from nanovar import __version__, input_parser, gzip_check, fastx_valid, bed_valid, check_exe, align_mm
-from progress.spinner import Spinner
-import nanoinsight
+#from progress.spinner import Spinner
+#import nanoinsight
 
 
 def main():

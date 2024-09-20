@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/nanovar/version.py"
+
+[project]
+name = "nanovar"
+dynamic = ["version"]
+dependencies = [
+  "numpy>=1.17.3", 
+  "scipy>=1.2.1",
+  "biopython>=1.82",
+  "pybedtools>=0.8.2",
+  "matplotlib>=2.2.3",
+  "tensorflow-cpu>=2.0.0, <=2.15.1",
+  "natsort>=6.2.0",
+  "pysam>=0.15.3"
+]
+requires-python = ">= 3.8"
+authors = [
+  {name = "CY Tham", email = "chengyong.tham@u.nus.edu"},
+]
+description = "Structural variant caller using low-depth long reads"
+readme = "README.md"
+classifiers=[
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.8",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+keywords=["nanovar", "structural variant caller", "sv", "nanopore", "long read", "low coverage", "low depth"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/cytham/nanovar"
+Repository = "https://github.com/cytham/nanovar.git"
+Issues = "https://github.com/cytham/nanovar/issues"
+Changelog = "https://github.com/cytham/nanovar/blob/main/CHANGELOG.txt"
+
+[project.scripts]
+nanovar = "nanovar.nanovar:main"
