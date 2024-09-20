@@ -1,9 +1,11 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+#requires = ["hatchling"]
+#build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.hatch.version]
-path = "src/nanovar/version.py"
+#[tool.hatch.version]
+#path = "src/nanovar/version.py"
 
 [project]
 name = "nanovar"
@@ -34,6 +36,14 @@ keywords=["nanovar", "structural variant caller", "sv", "nanopore", "long read",
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools]
+ext-modules = [
+  {name = "nanovar.nv_bam_parser", sources = ["src/nanovar/nv_bam_parser.pyx"]}
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "nanovar.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/cytham/nanovar"
