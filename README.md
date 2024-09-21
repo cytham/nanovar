@@ -1,4 +1,4 @@
-## Please note: Current v1.7.0 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
+## Please note: Current v1.8.0 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
 
 `pip install tensorflow-cpu==2.15.1`
 
@@ -130,6 +130,10 @@ There are three ways to install NanoVar:
 conda create -n myenv -c bioconda python=3.11 samtools bedtools minimap2 -y
 conda activate myenv
 pip install nanovar
+
+or
+
+conda create -n myenv -c bioconda python=3.11 nanovar
 ```
 #### Option 2: PyPI (See dependencies below)
 ```
@@ -200,6 +204,7 @@ To understand NanoINSight output files, please visit its repository [here](https
 NanoINSight requires the installation of MAFFT and RepeatMasker. Please refer to [here](https://github.com/AsmaaSamyMohamedMahmoud/NanoINSight) for instructions on how to install them, or install them through Conda as shown below:
 
 ```
+pip install nanoinsight
 conda install -c bioconda mafft repeatmasker -y
 ```
 
