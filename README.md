@@ -127,13 +127,14 @@ options:
 There are three ways to install NanoVar:
 #### Option 1: Conda environment (Recommended)
 ```
-conda create -n myenv -c bioconda python=3.11 samtools bedtools minimap2 -y
+conda create -n myenv -c bioconda python=3.11 samtools bedtools minimap2
 conda activate myenv
 pip install nanovar
 
 or
 
 conda create -n myenv -c bioconda python=3.11 nanovar
+conda activate myenv
 ```
 #### Option 2: PyPI (See dependencies below)
 ```
