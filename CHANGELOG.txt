@@ -3,6 +3,23 @@ NanoVar Changelog
 
 Release Summary:
 
+Version 1.8.0 - Sep 21, 2024
+    * Migrated to pyproject.toml and removed setup.py
+    * Modified nanoinsight installation to manual and optional (for conda compatibility)
+    * Removed htmlark (for conda compatibility)
+    * Removed progress package requirement
+    * Fixed for #89 bedtools getfasta bug
+    * Fixed y-axis log scale bug in report
+    * Added samtools and minimap2 path in logs
+    * Added version in stdout logs
+
+
+Version 1.7.1 - Not released
+    * Quick fix for #89 bedtools getfasta bug
+    * Fixed y-axis log scale bug in report
+    * Added samtools and minimap2 path in logs
+    * Added version in stdout logs
+
 
 Version 1.7.0 - Jun 4, 2024
     * Added alternative sequence for INS and DEL in VCF
