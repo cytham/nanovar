@@ -4,7 +4,7 @@ NanoVar Changelog
 Release Summary:
 
 
-Version 1.8.0 - Sep 21, 2024
+Version 1.8.0 - Sep 26, 2024
     * Migrated to pyproject.toml and removed setup.py
     * Increased default minimum SV read coverage from 2 to 4
     * Modified nanoinsight installation to manual and optional (for conda compatibility)
