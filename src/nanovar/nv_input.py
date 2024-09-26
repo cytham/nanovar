@@ -80,8 +80,8 @@ Currently supported species are:
 """)
 
     parser.add_argument("-c", "--mincov", type=int, metavar="int",
-                        default=2,
-                        help="minimum number of reads required to call a breakend [2]")
+                        default=4,
+                        help="minimum number of reads required to call a breakend [4]")
 
     parser.add_argument("-l", "--minlen", type=int, metavar="int",
                         default=25,

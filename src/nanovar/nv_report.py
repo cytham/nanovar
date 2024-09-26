@@ -19,20 +19,23 @@ You should have received a copy of the GNU General Public License
 along with NanoVar.  If not, see <https://www.gnu.org/licenses/>.
 """
 
-
 import os
 import math
 import datetime
 import numpy as np
 import nanovar
 import matplotlib
-import htmlark
+# import htmlark
+import base64
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from distutils.dir_util import copy_tree
 from nanovar import __version__
-
+import base64
+import mimetypes
+from bs4 import BeautifulSoup
+from urllib.parse import quote
 
 # Create HTML report
 def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict, read_name, num_limit, ratio_limit):
@@ -146,7 +149,7 @@ def create_report(wk_dir, contig_len_dict, thres, read_path, ref_path, rlen_dict
     css = os.path.join(os.path.dirname(nanovar.__file__), 'css')
     js = os.path.join(os.path.dirname(nanovar.__file__), 'js')
     # Write HTML
-    create_html(data2, fwd_fig, wk_dir, vcf_path_pass, timenow, read_name, read_path, ref_path, threshold, n, totalsv, css, js)
+    create_html(data2, fwd, wk_dir, vcf_path_pass, timenow, read_name, read_path, ref_path, threshold, n, totalsv, css, js)
     #css_to = os.path.join(os.getcwd(), wk_dir, 'css')
     #js_to = os.path.join(os.getcwd(), wk_dir, 'js')
     #null = copy_tree(css, css_to)
@@ -216,7 +219,8 @@ def sv_len_dict(fwd, totalsvlen, tab):
     ax.set_facecolor('#ebebff')
     ax.xaxis.grid(False)
     ax.yaxis.grid(color='white', linewidth=1)
-    ax.set_yscale('log')
+    if not all(len(x) == 0 for x in totalsvlen):  # Fix ValueError for log scale when no data
+        ax.set_yscale('log')
     plt.yticks([100, 1000, 10000, 100000], ['100', '1,000', '10,000', '100,000'], rotation=45)
     plt.ylabel('SV length (bp)')
     plt.savefig(os.path.join(fwd, 'sv_lengths.png'), bbox_inches='tight', dpi=100, facecolor=fig.get_facecolor(),
@@ -309,7 +313,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <meta http-equiv="x-ua-compatible" content="ie=edge">
         <title>NanoVar Report</title>
         <!-- Font Awesome -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="{}/font-awesome.min.css" rel="stylesheet">
         <!-- Bootstrap core CSS -->
         <link href="{}/bootstrap.min.css" rel="stylesheet">
         <!-- Material Design Bootstrap -->
@@ -318,7 +322,7 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
         <link href="{}/jquery.dataTables.min.css" rel="stylesheet">
         <!-- DataTable buttons CSS -->
         <link href="{}/buttons.dataTables.min.css" rel="stylesheet">
-        """.format(css, css, css, css) + """
+        """.format(css, css, css, css, css) + """
         <style>
             body {
                 background-color: #f6f7f9;
@@ -571,7 +575,37 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
     """
     html.write(row)
     html.close()
-    packed_html = htmlark.convert_page(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name), ignore_errors=True)
+    text = open(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name)).read()
+    soup = BeautifulSoup(text, "html.parser")
+    tag_list = []
+    tag_list += soup('img')
+    css_tags = soup('link')
+    for css in css_tags:
+        if 'stylesheet' in css['rel']:
+            tag_list.append(css)
+    js_tags = soup('script')
+    for script in js_tags:
+        if 'src' in script.attrs:
+            tag_list.append(script)
+    for tag in tag_list:
+        tag_url = tag['href'] if tag.name == 'link' else tag['src']
+        with open(tag_url, 'rb') as f:
+            data = f.read()
+        mtype, _ = mimetypes.guess_type(tag_url)
+        if tag.name == 'link':
+            en_data = quote(data.decode())
+            tag['href'] = "data:{},{}".format(mtype, en_data)
+        elif tag.name == 'script':
+            en_data = quote(data.decode())
+            tag['src'] = "data:{},{}".format(mtype, en_data)
+        elif tag.name == 'img':
+            mtype = mtype + ';base64'
+            en_data = base64.b64encode(data).decode()
+            tag['src'] = "data:{},{}".format(mtype, en_data)
+    packed_html = str(soup)
+    with open(os.path.join(wk_dir, f"{read_name}.nanovar.pass.report.html"), "w", encoding = 'utf-8') as file: 
+        file.write(str(soup.prettify()))
+    # packed_html = htmlark.convert_page(os.path.join(wk_dir, '%s.nanovar.pass.report-tmp.html' % read_name), ignore_errors=True)
     html_final = open(os.path.join(wk_dir, '%s.nanovar.pass.report.html' % read_name), 'w')
     _ = html_final.write(packed_html)
     html_final.close()

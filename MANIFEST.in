@@ -1,7 +1,7 @@
 include *.txt
-include nanovar/*.c
-recursive-include nanovar/gaps *.bed
-recursive-include nanovar/model *.h5
-recursive-include nanovar/css *.css
-recursive-include nanovar/js *.js
-recursive-include nanovar/ref *L1*
+include src/nanovar/*.c
+recursive-include src/nanovar/gaps *.bed
+recursive-include src/nanovar/model *.h5
+recursive-include src/nanovar/css *.css
+recursive-include src/nanovar/js *.js
+recursive-include src/nanovar/ref *L1*
