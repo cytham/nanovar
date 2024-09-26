@@ -93,7 +93,7 @@ options:
                         please specify species of sample [None]
                         Currently supported species are:
                         'human', 'mouse', and 'rattus'.
-  -c int, --mincov int  minimum number of reads required to call a breakend [2]
+  -c int, --mincov int  minimum number of reads required to call a breakend [4]
   -l int, --minlen int  minimum length of SV to be detected [25]
   -p float, --splitpct float
                         minimum percentage of unmapped bases within a long read
