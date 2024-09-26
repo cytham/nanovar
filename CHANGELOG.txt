@@ -3,11 +3,13 @@ NanoVar Changelog
 
 Release Summary:
 
+
 Version 1.8.0 - Sep 21, 2024
     * Migrated to pyproject.toml and removed setup.py
+    * Increased default minimum SV read coverage from 2 to 4
     * Modified nanoinsight installation to manual and optional (for conda compatibility)
-    * Removed htmlark (for conda compatibility)
-    * Removed progress package requirement
+    * Removed "htmlark" package requirement (for conda compatibility)
+    * Removed "progress" package requirement
     * Fixed for #89 bedtools getfasta bug
     * Fixed y-axis log scale bug in report
     * Added samtools and minimap2 path in logs
