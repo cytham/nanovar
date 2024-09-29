@@ -1,4 +1,4 @@
-## Please note: Current v1.8.0 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
+## Please note: Current v1.8.1 not compatible with Tensorflow >= 2.16.0, please downgrade to 2.15.1
 
 `pip install tensorflow-cpu==2.15.1`
 
@@ -209,6 +209,7 @@ pip install nanoinsight
 conda install -c bioconda mafft repeatmasker -y
 ```
 
+Note: If encountered "numpy.dtype size changed" tensorflow error while running NanoVar, ensure numpy version is <2.0.0 (i.e. pip install numpy 1.26.4).
  
 ## Documentation
 See [wiki](https://github.com/cytham/nanovar/wiki) for more information.

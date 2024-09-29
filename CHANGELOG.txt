@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.8.1 - Sep 29, 2024
+    * Patch to restrict NumPy version to <2.0.0 for TF compatibility
+
+
 Version 1.8.0 - Sep 26, 2024
     * Migrated to pyproject.toml and removed setup.py
     * Increased default minimum SV read coverage from 2 to 4
