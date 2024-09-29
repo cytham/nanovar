@@ -5,7 +5,7 @@ Release Summary:
 
 
 Version 1.8.1 - Sep 29, 2024
-    * Patch to restrict NumPy version to <2.0.0 for TF compatibility (encountered after mafft or repeatmasker installation)
+    * Patch to restrict NumPy version to <2.0.0 for TF compatibility
 
 
 Version 1.8.0 - Sep 26, 2024
