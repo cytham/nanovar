@@ -209,6 +209,7 @@ pip install nanoinsight
 conda install -c bioconda mafft repeatmasker -y
 ```
 
+Note: If encountered "numpy.dtype size changed" tensorflow error while running NanoVar, ensure numpy version is <2.0.0 (i.e. pip install numpy 1.26.4).
  
 ## Documentation
 See [wiki](https://github.com/cytham/nanovar/wiki) for more information.
