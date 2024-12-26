@@ -227,7 +227,7 @@ Tham, CY., Tirado-Magallanes, R., Goh, Y. et al. NanoVar: accurate characterizat
 
 * **Tham Cheng Yong** - [cytham](https://github.com/cytham)
 * **Roberto Tirado Magallanes** - [rtmag](https://github.com/rtmag)
-* **Asmaa Samy** - [AsmaaSamyMohamedMahmoud](https://github.com/AsmaaSamyMohamedMahmoud)
+* **Asmaa Samy** - [asmmahmoud](https://github.com/asmmahmoud)
 * **Touati Benoukraf** - [benoukraflab](https://github.com/benoukraflab)
 
 ## License
