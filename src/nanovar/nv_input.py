@@ -115,6 +115,12 @@ Default score 1.0 was estimated from simulated analysis. """)
                         help="""lower limit of a breakend read ratio to classify a heterozygous state [0.35]
 (i.e. Any breakend with hetero<=ratio<homo is classified as heterozygous)""")
 
+    parser.add_argument("--sv_bam_out", action='store_true',
+                        help="""Outputs a BAM file containing only 
+SV-supporting reads with their 
+corresponding SV-ID(s) stored in 
+the "nv" tag separated by comma.""")
+
     parser.add_argument("--debug", action='store_true',
                         help="run in debug mode")
 
