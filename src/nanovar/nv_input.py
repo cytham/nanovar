@@ -53,10 +53,8 @@ if it does not exist.""")
 
     parser.add_argument("--cnv", type=str, metavar="hg38",
                         default=None,
-                        help="""Detects large genomic copy-number variations 
-using CytoCAD (e.g. loss/gain of whole chromosomes). 
-Only works with hg38 genome assembly. Please state 'hg38' [None]""",
                         help=argparse.SUPPRESS)
+    # help="""Detects large genomic copy-number variations using CytoCAD (e.g. loss/gain of whole chromosomes). Only works with hg38 genome assembly. Please state 'hg38' [None]"""
 
     parser.add_argument("-x", "--data_type", type=str, metavar="str",
                         default='ont',
