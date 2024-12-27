@@ -5,9 +5,11 @@ Generate SV-supporting reads BAM file.
 
 # Test
 wk_dir = '.'
-vcf = 'sample.nanovar.pass.vcf'
-sv_supp_tsv = 'sv_support_reads.tsv'
+vcf_file = 'sample.nanovar.pass.vcf'
+sv_supp_tsv_file = 'sv_support_reads.tsv'
 in_bam_path = 'input.bam'
+vcf = os.path.join(wk_dir, vcf_file)
+sv_supp_tsv = os.path.join(wk_dir, sv_supp_tsv_file)
 in_bam = pysam.AlignmentFile(in_bam_path, "rb")
 create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir)
 
@@ -18,8 +20,6 @@ import pandas as pd
 import pysam
 
 def create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir):
-    vcf = os.path.join(wk_dir, vcf)
-    sv_supp_tsv = os.path.join(wk_dir, sv_supp_tsv)
     pass_ids = parse_pass_sv(vcf)
     supp_dict = parse_supp_tsv(sv_supp_tsv, pass_ids)
     out_bam = os.path.join(wk_dir, "sv_support_reads.bam")
