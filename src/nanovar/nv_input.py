@@ -27,8 +27,7 @@ from nanovar import __version__
 
 # Parse input
 def input_parser(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(description="NanoVar is a neural network enhanced structural variant (SV) caller that \
-handles low-depth long-read sequencing data.",
+    parser = argparse.ArgumentParser(description="NanoVar is a long-read structural variant (SV) caller.",
                                      formatter_class=argparse.RawTextHelpFormatter, usage=msg())  # RawDescriptionHelpFormatter)
 
     def restrict_float(f):
@@ -39,28 +38,29 @@ handles low-depth long-read sequencing data.",
 
     parser.add_argument("input", type=str,
                         metavar="[FASTQ/FASTA/BAM]",
-                        help="""path to long reads or mapped BAM file.
+                        help="""Path to long reads or mapped BAM file.
 Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or .bam""")
 
     parser.add_argument("ref", type=str,
                         metavar="[reference_genome]",
-                        help="""path to reference genome in FASTA. Genome indexes created 
+                        help="""Path to reference genome in FASTA. Genome indexes created 
 will overwrite indexes created by other aligners such as bwa.""")
 
     parser.add_argument("dir", type=str,
                         metavar="[work_directory]",
-                        help="""path to work directory. Directory will be created 
+                        help="""Path to work directory. Directory will be created 
 if it does not exist.""")
 
     parser.add_argument("--cnv", type=str, metavar="hg38",
                         default=None,
-                        help="""also detects large genomic copy-number variations 
+                        help="""Detects large genomic copy-number variations 
 using CytoCAD (e.g. loss/gain of whole chromosomes). 
-Only works with hg38 genome assembly. Please state 'hg38' [None]""")
+Only works with hg38 genome assembly. Please state 'hg38' [None]""",
+                        help=argparse.SUPPRESS)
 
     parser.add_argument("-x", "--data_type", type=str, metavar="str",
                         default='ont',
-                        help="""type of long-read data [ont]
+                        help="""Type of long-read data [ont]
 ont - Oxford Nanopore Technologies
 pacbio-clr - Pacific Biosciences CLR
 pacbio-ccs - Pacific Biosciences CCS""")
@@ -73,7 +73,7 @@ path to own BED file.""")
 
     parser.add_argument("--annotate_ins", type=str, metavar="str",
                         default=None,
-                        help="""enable annotation of INS with NanoINSight, 
+                        help="""Enable annotation of INS with NanoINSight, 
 please specify species of sample [None]
 Currently supported species are:
 'human', 'mouse', and 'rattus'.
@@ -81,86 +81,84 @@ Currently supported species are:
 
     parser.add_argument("-c", "--mincov", type=int, metavar="int",
                         default=4,
-                        help="minimum number of reads required to call a breakend [4]")
+                        help="Minimum number of reads required to call a breakend [4]")
 
     parser.add_argument("-l", "--minlen", type=int, metavar="int",
                         default=25,
-                        help="minimum length of SV to be detected [25]")
+                        help="Minimum length of SV to be detected [25]")
 
     parser.add_argument("-p", "--splitpct", type=restrict_float, metavar="float",
                         default=0.05,
-                        help="""minimum percentage of unmapped bases within a long read 
+                        help="""Minimum percentage of unmapped bases within a long read 
 to be considered as a split-read. 0.05<=p<=0.50 [0.05]""")
 
     parser.add_argument("-a", "--minalign", type=int, metavar="int",
                         default=200,
-                        help="minimum alignment length for single alignment reads [200]")
+                        help="Minimum alignment length for single alignment reads [200]")
 
     parser.add_argument("-b", "--buffer", type=int, metavar="int",
                         default=50,
-                        help="nucleotide length buffer for SV breakend clustering [50]")
+                        help="Nucleotide length buffer for SV breakend clustering [50]")
 
     parser.add_argument("-s", "--score", type=float, metavar="float",
                         default=1.0,
-                        help="""score threshold for defining PASS/FAIL SVs in VCF [1.0]
+                        help="""Score threshold for defining PASS/FAIL SVs in VCF [1.0]
 Default score 1.0 was estimated from simulated analysis. """)
 
     parser.add_argument("--homo", type=float, metavar="float",
                         default=0.75,
-                        help="""lower limit of a breakend read ratio to classify a homozygous state [0.75]
+                        help="""Lower limit of a breakend read ratio to classify a homozygous state [0.75]
 (i.e. Any breakend with homo<=ratio<=1.00 is classified as homozygous)""")
 
     parser.add_argument("--hetero", type=float, metavar="float",
                         default=0.35,
-                        help="""lower limit of a breakend read ratio to classify a heterozygous state [0.35]
+                        help="""Lower limit of a breakend read ratio to classify a heterozygous state [0.35]
 (i.e. Any breakend with hetero<=ratio<homo is classified as heterozygous)""")
 
     parser.add_argument("--sv_bam_out", action='store_true',
-                        help="""Outputs a BAM file containing only 
-SV-supporting reads with their 
-corresponding SV-ID(s) stored in 
-the "nv" tag separated by comma.""")
+                        help="""Outputs a BAM file containing only SV-supporting reads with 
+their corresponding SV-ID(s) stored in the "nv" tag separated by comma.""")
 
     parser.add_argument("--debug", action='store_true',
-                        help="run in debug mode")
+                        help="Run in debug mode")
 
     # parser.add_argument("--force", action='store_true',
-    #                     help="run full pipeline (i.e. do not skip index generation)")
+    #                     help="Run full pipeline (i.e. do not skip index generation)")
 
     parser.add_argument("-v", "--version", action='version',
                         version=__version__,
-                        help="show version and exit")
+                        help="Show version and exit")
 
     parser.add_argument("-q", "--quiet", action='store_true',
-                        help="hide verbose")
+                        help="Hide verbose")
 
     parser.add_argument("-t", "--threads", type=int, metavar="int",
                         default=1,
-                        help="number of available threads for use [1]")
+                        help="Number of available threads for use [1]")
 
     parser.add_argument("--model", type=str, metavar="path",
-                        help="specify path to custom-built model")
+                        help="Specify path to custom-built model")
 
     parser.add_argument("--mm", type=str, metavar="path",
-                        help="specify path to 'minimap2' executable")
+                        help="Specify path to 'minimap2' executable")
 
     parser.add_argument("--st", type=str, metavar="path",
-                        help="specify path to 'samtools' executable")
+                        help="Specify path to 'samtools' executable")
 
     parser.add_argument("--ma", type=str, metavar="path",
-                        help="specify path to 'mafft' executable for NanoINSight")
+                        help="Specify path to 'mafft' executable for NanoINSight")
 
     parser.add_argument("--rm", type=str, metavar="path",
-                        help="specify path to 'RepeatMasker' executable for NanoINSight")
+                        help="Specify path to 'RepeatMasker' executable for NanoINSight")
 
     # parser.add_argument("--mdb", type=str, metavar="path",
-    #                     help="specify path to 'makeblastdb' executable")
+    #                     help="Specify path to 'makeblastdb' executable")
 
     # parser.add_argument("--wmk", type=str, metavar="path",
-    #                     help="specify path to 'windowmasker' executable")
+    #                     help="Specify path to 'windowmasker' executable")
 
     # parser.add_argument("--hsb", type=str, metavar="path",
-    #                     help="specify path to 'hs-blastn' executable")
+    #                     help="Specify path to 'hs-blastn' executable")
 
     parser.add_argument("--pickle", action='store_true',
                         help=argparse.SUPPRESS)
