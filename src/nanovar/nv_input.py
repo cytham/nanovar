@@ -37,9 +37,9 @@ def input_parser(args=sys.argv[1:]):
         return f
 
     parser.add_argument("input", type=str,
-                        metavar="[FASTQ/FASTA/BAM]",
-                        help="""Path to long reads or mapped BAM file.
-Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or .bam""")
+                        metavar="[FASTQ/FASTA/BAM/CRAM]",
+                        help="""Path to long reads or mapped BAM/CRAM file.
+Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz/bam/cram""")
 
     parser.add_argument("ref", type=str,
                         metavar="[reference_genome]",
