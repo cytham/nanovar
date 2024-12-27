@@ -46,7 +46,7 @@ nanovar [Options] -t 24 -f hg38 sample.fq/sample.bam ref.fa working_dir
 | :--- | :--- | :--- |
 | `-t` | num_threads | Indicate number of CPU threads to use |
 | `-f` (Optional) | gap_file (Optional) | Choose built-in gap BED file or specify own file to exclude gap regions in the reference genome. Built-in gap files include: hg19, hg38 and mm10 |
-| - | sample.fq/sample.bam | Input long-read FASTA/FASTQ file or mapped BAM file |
+| - | sample.fq/sample.bam/sample.cram | Input long-read FASTA/FASTQ file or mapped BAM/CRAM file |
 | - | ref.fa | Input reference genome in FASTA format |
 | - | working_dir | Specify working directory |
 
@@ -67,8 +67,8 @@ usage: nanovar [options] [FASTQ/FASTA/BAM] [REFERENCE_GENOME] [WORK_DIRECTORY]
 NanoVar is a neural network enhanced structural variant (SV) caller that handles low-depth long-read sequencing data.
 
 positional arguments:
-  [FASTQ/FASTA/BAM]     path to long reads or mapped BAM file.
-                        Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz or .bam
+  [FASTQ/FASTA/BAM]     path to long reads or mapped BAM/CRAM file.
+                        Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz/bam/cram
   [reference_genome]    path to reference genome in FASTA. Genome indexes created
                         will overwrite indexes created by other aligners such as bwa.
   [work_directory]      path to work directory. Directory will be created
