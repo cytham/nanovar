@@ -180,4 +180,4 @@ def gzip_check(path):
 
 # Custom usage message
 def msg():
-    return "nanovar [options] [FASTQ/FASTA/BAM] [REFERENCE_GENOME] [WORK_DIRECTORY]"
+    return "nanovar [options] [FASTQ/FASTA/BAM/CRAM] [REFERENCE_GENOME] [WORK_DIRECTORY]"
