@@ -512,8 +512,8 @@ def create_html(data, fwd, wk_dir, vcf_path, timenow, read_name, read_path, ref_
             <br>
             <br>
             <figure>
-                <h4 style="text-align:center;"><u>5. Scatter plot between SV confidence score and read depth</u></h4>
-                <img src=""" + '"' + fwd + """/scatter2.png" alt="5. Scatter plot between SV confidence score and read depth" 
+                <h4 style="text-align:center;"><u>5. Scatter plot between SV confidence score and supporting read depth</u></h4>
+                <img src=""" + '"' + fwd + """/scatter2.png" alt="5. Scatter plot between SV confidence score and supporting read depth" 
                 title=""" + '"' + fwd + '/scatter2.png' + '"' + """>
             </figure>
             <br>
