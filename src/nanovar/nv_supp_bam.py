@@ -20,10 +20,10 @@ import os
 import pandas as pd
 import pysam
 
-def create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir, input_type, ref_path):
+def create_sv_supp_bam(vcf, sv_supp_tsv, in_bam_path, wk_dir, input_type, ref_path):
     pass_ids = parse_pass_sv(vcf)
     supp_dict = parse_supp_tsv(sv_supp_tsv, pass_ids)
-    in_bam = input_type_func(file_path, input_type, ref_path)
+    in_bam = input_type_func(in_bam_path, input_type, ref_path)
     out_bam = os.path.join(wk_dir, "sv_support_reads.bam")
     with pysam.AlignmentFile(out_bam, "wb", template=in_bam) as bam_out:
         for seg in in_bam:
