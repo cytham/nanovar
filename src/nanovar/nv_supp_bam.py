@@ -8,10 +8,11 @@ wk_dir = '.'
 vcf_file = 'sample.nanovar.pass.vcf'
 sv_supp_tsv_file = 'sv_support_reads.tsv'
 in_bam_path = 'input.bam'
+input_type = 'bam'
+ref_path = 'ref.fa'
 vcf = os.path.join(wk_dir, vcf_file)
 sv_supp_tsv = os.path.join(wk_dir, sv_supp_tsv_file)
-in_bam = pysam.AlignmentFile(in_bam_path, "rb")
-create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir)
+create_sv_supp_bam(vcf, sv_supp_tsv, in_bam_path, wk_dir, input_type, ref_path)
 
 """
 
@@ -19,9 +20,10 @@ import os
 import pandas as pd
 import pysam
 
-def create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir):
+def create_sv_supp_bam(vcf, sv_supp_tsv, in_bam, wk_dir, input_type, ref_path):
     pass_ids = parse_pass_sv(vcf)
     supp_dict = parse_supp_tsv(sv_supp_tsv, pass_ids)
+    in_bam = input_type_func(file_path, input_type, ref_path)
     out_bam = os.path.join(wk_dir, "sv_support_reads.bam")
     with pysam.AlignmentFile(out_bam, "wb", template=in_bam) as bam_out:
         for seg in in_bam:
@@ -57,3 +59,10 @@ def parse_pass_sv(vcf):
             if not line.startswith('#'):
                 pass_ids[line.split('\t')[2]] = 0
     return pass_ids
+
+def input_type_func(file_path, input_type, ref_path):
+    if input_type in ['bam', 'raw']:
+        sam = pysam.AlignmentFile(file_path, "rb")
+    elif input_type == 'cram':
+        sam = pysam.AlignmentFile(file_path, "rc", reference_filename=ref_path)
+    return sam
