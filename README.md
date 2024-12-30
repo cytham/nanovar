@@ -62,25 +62,23 @@ For more information, see [wiki](https://github.com/cytham/nanovar/wiki).
 
 ### Full usage
 ```
-usage: nanovar [options] [FASTQ/FASTA/BAM] [REFERENCE_GENOME] [WORK_DIRECTORY]
+usage: nanovar [options] [FASTQ/FASTA/BAM/CRAM] [REFERENCE_GENOME] [WORK_DIRECTORY]
 
-NanoVar is a neural network enhanced structural variant (SV) caller that handles low-depth long-read sequencing data.
+NanoVar is a long-read structural variant (SV) caller.
 
 positional arguments:
-  [FASTQ/FASTA/BAM]     path to long reads or mapped BAM/CRAM file.
+  [FASTQ/FASTA/BAM/CRAM]
+                        Path to long reads or mapped BAM/CRAM file.
                         Formats: fasta/fa/fa.gzip/fa.gz/fastq/fq/fq.gzip/fq.gz/bam/cram
-  [reference_genome]    path to reference genome in FASTA. Genome indexes created
+  [reference_genome]    Path to reference genome in FASTA. Genome indexes created
                         will overwrite indexes created by other aligners such as bwa.
-  [work_directory]      path to work directory. Directory will be created
+  [work_directory]      Path to work directory. Directory will be created
                         if it does not exist.
 
 options:
   -h, --help            show this help message and exit
-  --cnv hg38            also detects large genomic copy-number variations
-                        using CytoCAD (e.g. loss/gain of whole chromosomes).
-                        Only works with hg38 genome assembly. Please state 'hg38' [None]
   -x str, --data_type str
-                        type of long-read data [ont]
+                        Type of long-read data [ont]
                         ont - Oxford Nanopore Technologies
                         pacbio-clr - Pacific Biosciences CLR
                         pacbio-ccs - Pacific Biosciences CCS
@@ -89,35 +87,37 @@ options:
                         (e.g. telomeres and centromeres) Either specify name of in-built
                         reference genome filter (i.e. hg38, hg19, mm10) or provide full
                         path to own BED file.
-  --annotate_ins str    enable annotation of INS with NanoINSight,
+  --annotate_ins str    Enable annotation of INS with NanoINSight,
                         please specify species of sample [None]
                         Currently supported species are:
                         'human', 'mouse', and 'rattus'.
-  -c int, --mincov int  minimum number of reads required to call a breakend [4]
-  -l int, --minlen int  minimum length of SV to be detected [25]
+  -c int, --mincov int  Minimum number of reads required to call a breakend [4]
+  -l int, --minlen int  Minimum length of SV to be detected [25]
   -p float, --splitpct float
-                        minimum percentage of unmapped bases within a long read
+                        Minimum percentage of unmapped bases within a long read
                         to be considered as a split-read. 0.05<=p<=0.50 [0.05]
   -a int, --minalign int
-                        minimum alignment length for single alignment reads [200]
-  -b int, --buffer int  nucleotide length buffer for SV breakend clustering [50]
+                        Minimum alignment length for single alignment reads [200]
+  -b int, --buffer int  Nucleotide length buffer for SV breakend clustering [50]
   -s float, --score float
-                        score threshold for defining PASS/FAIL SVs in VCF [1.0]
+                        Score threshold for defining PASS/FAIL SVs in VCF [1.0]
                         Default score 1.0 was estimated from simulated analysis.
-  --homo float          lower limit of a breakend read ratio to classify a homozygous state [0.75]
+  --homo float          Lower limit of a breakend read ratio to classify a homozygous state [0.75]
                         (i.e. Any breakend with homo<=ratio<=1.00 is classified as homozygous)
-  --hetero float        lower limit of a breakend read ratio to classify a heterozygous state [0.35]
+  --hetero float        Lower limit of a breakend read ratio to classify a heterozygous state [0.35]
                         (i.e. Any breakend with hetero<=ratio<homo is classified as heterozygous)
-  --debug               run in debug mode
-  -v, --version         show version and exit
-  -q, --quiet           hide verbose
+  --sv_bam_out          Outputs a BAM file containing only SV-supporting reads with
+                        their corresponding SV-ID(s) stored in the "nv" tag separated by comma.
+  --debug               Run in debug mode
+  -v, --version         Show version and exit
+  -q, --quiet           Hide verbose
   -t int, --threads int
-                        number of available threads for use [1]
-  --model path          specify path to custom-built model
-  --mm path             specify path to 'minimap2' executable
-  --st path             specify path to 'samtools' executable
-  --ma path             specify path to 'mafft' executable for NanoINSight
-  --rm path             specify path to 'RepeatMasker' executable for NanoINSight
+                        Number of available threads for use [1]
+  --model path          Specify path to custom-built model
+  --mm path             Specify path to 'minimap2' executable
+  --st path             Specify path to 'samtools' executable
+  --ma path             Specify path to 'mafft' executable for NanoINSight
+  --rm path             Specify path to 'RepeatMasker' executable for NanoINSight
 ```
 
 ### Operating system
