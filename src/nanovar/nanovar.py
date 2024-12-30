@@ -389,7 +389,7 @@ def main():
         from .nv_supp_bam import create_sv_supp_bam
         vcf = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % input_name)
         sv_sup = os.path.join(wk_dir, 'sv_support_reads.tsv')
-        create_sv_supp_bam(vcf, sv_sup, bam_path, wk_dir, input_type)
+        create_sv_supp_bam(vcf, sv_sup, bam_path, wk_dir, input_type, ref_path)
         print('Done')
     
     # Delete temporary fasta file
