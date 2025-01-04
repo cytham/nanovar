@@ -4,6 +4,10 @@ NanoVar Changelog
 Release Summary:
 
 
+Version 1.8.2 - Jan 6, 2025
+    * Added '--sv_bam_out' option to output SV-supporting reads in BAM format, with SV-IDs labeled on the 'nv' tag
+
+
 Version 1.8.1 - Sep 29, 2024
     * Patch to restrict NumPy version to <2.0.0 for TF compatibility
 
