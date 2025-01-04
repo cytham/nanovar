@@ -45,9 +45,10 @@ def parse_supp_tsv(sv_sup_tsv, pass_ids):
                 _ = pass_ids[row['SV-ID']]  # If passed SV-ID
                 id = _id.split('~')[0]
                 try:
-                    supp_dict[id].append(row['SV-ID'])
+                    supp_dict[id].add(row['SV-ID'])
                 except KeyError:
-                    supp_dict[id] = [row['SV-ID']]
+                    supp_dict[id] = set()
+                    supp_dict[id].add(row['SV-ID'])
             except KeyError:
                 pass
     return supp_dict
