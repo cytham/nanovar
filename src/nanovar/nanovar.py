@@ -381,6 +381,16 @@ def main():
         con_fasta, threads_per_job = nanoinsight.create_cons(vcf, wk_dir, fasta_dir, id_seq, threads, mafft_exe, batch_size=100, num_parallel_workers=5)
         nanoinsight.rep_annote(wk_dir, con_fasta, threads_per_job, species, repmask_exe)
         print('Done')
+
+    # Output SV-supporting BAM
+    if args.sv_bam_out:
+        print(datetime.now().strftime("[%d/%m/%Y %H:%M:%S]"), '- Creating SV-supporting BAM - ', end='', flush=True)
+        logging.info('Creating SV-supporting BAM')
+        from .nv_supp_bam import create_sv_supp_bam
+        vcf = os.path.join(wk_dir, '%s.nanovar.pass.vcf' % input_name)
+        sv_sup = os.path.join(wk_dir, 'sv_support_reads.tsv')
+        create_sv_supp_bam(vcf, sv_sup, bam_path, wk_dir, input_type, ref_path)
+        print('Done')
     
     # Delete temporary fasta file
     if not archivefasta:
