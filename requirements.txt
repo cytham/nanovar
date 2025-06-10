@@ -42,7 +42,7 @@ pyparsing==3.2.1
 pysam==0.22.1
 python-dateutil==2.9.0.post0
 pytz==2024.2
-requests==2.32.3
+requests==2.32.4
 requests-oauthlib==2.0.0
 rsa==4.9
 scipy==1.15.0
