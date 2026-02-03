@@ -33,7 +33,7 @@ opt_einsum==3.4.0
 packaging==24.2
 pandas==2.2.3
 pillow==11.1.0
-pip==24.3.1
+pip==26.0
 protobuf==4.25.5
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
