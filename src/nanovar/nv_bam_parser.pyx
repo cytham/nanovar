@@ -76,8 +76,8 @@ def bam_parse(object sam, unsigned int minlen, float splitpct, unsigned int mina
         rstart = seg.reference_start
         rend = seg.reference_end
         qlen = seg.query_alignment_length
-        nm = seg.get_tag('NM')
-        total_score = seg.get_tag('AS')
+        nm = seg.get_tag('NM') if seg.has_tag('NM') else 0
+        total_score = seg.get_tag('AS') if seg.has_tag('AS') else compute_alignment_score(seg, nm)
         cigar_tup = seg.cigartuples
         adv, qseg, sseg, del_list, ins_list = read_cigar(cigar_tup, minlen, splitpct, rstart, rend, readlen)
         beddata.append([rname, rstart, rend, qname])  # 0, 16, 2048, 2064
@@ -209,6 +209,31 @@ def bam_parse(object sam, unsigned int minlen, float splitpct, unsigned int mina
                 for i in final:
                     parse_dict[i.split('\t')[8]] = '\t'.join(i.split('\t')[0:5]) + '\tmm\t' + '\t'.join(i.split('\t')[6:])
     return total_subdata, total_out, basecov, parse_dict, rlendict, len(repeat_dict), detect_out, seed, beddata
+
+
+# Compute a substitute alignment score from CIGAR and NM when the AS tag is
+# absent. Some aligners/pipelines (e.g. certain PacBio HiFi pipelines) do not
+# output the AS tag, which previously crashed NanoVar with
+# `KeyError: "tag 'AS' not present"` (issue #93). Approximates the minimap2
+# scoring scheme: match +2, mismatch -3, gap open -3, gap extension -1.
+cdef int compute_alignment_score(object seg, unsigned int nm):
+    cdef:
+        unsigned int n_m = 0, n_i = 0, n_d = 0
+        int op, ln, mismatches, matches
+    for op, ln in seg.cigartuples:
+        if op == 0 or op == 7 or op == 8:  # M, =, X
+            n_m += ln
+        elif op == 1:  # I
+            n_i += ln
+        elif op == 2:  # D
+            n_d += ln
+    mismatches = <int>nm - <int>n_i - <int>n_d
+    if mismatches < 0:
+        mismatches = 0
+    matches = <int>n_m - mismatches
+    if matches < 0:
+        matches = 0
+    return matches * 2 - mismatches * 3 - <int>(n_i + n_d) * 3
 
 
 # Analyze CIGAR for Indels in segment and return read advancement call
